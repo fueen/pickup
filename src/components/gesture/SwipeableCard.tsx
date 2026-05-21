@@ -20,6 +20,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const markProgress = useSharedValue(0);
+  const skipProgress = useSharedValue(0);
   const isAnimating = useSharedValue(false);
   const hapticFired = useSharedValue(false);
   const { impactMedium } = useHaptics();
@@ -42,6 +43,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
         translateX.value = 0;
         translateY.value = 0;
         markProgress.value = 0;
+        skipProgress.value = 0;
         isAnimating.value = false;
         runOnJS(onSkip)();
       });
@@ -50,6 +52,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       isAnimating.value = true;
       const direction = ty < 0 ? -1 : 1;
       translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+        skipProgress.value = 0;
         isAnimating.value = false;
         runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
       });
@@ -58,6 +61,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       translateY.value = withTiming(0, { duration: 300 });
       translateX.value = withTiming(0, { duration: 300 });
       markProgress.value = 0;
+      skipProgress.value = 0;
     }
   }, [onMarkDelete, onMarkKeep, onSkip]);
 
@@ -69,11 +73,21 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       if (isAnimating.value) return;
       translateY.value = e.translationY * 0.8;
       translateX.value = e.translationX * 0.8;
+      const dx = e.translationX;
       const dy = e.translationY;
       const maxDist = 200;
-      const progressY = Math.max(-1, Math.min(1, dy / maxDist));
-      markProgress.value = Math.abs(dy) > Math.abs(e.translationX) * 1.2 ? progressY : 0;
-      const overThreshold = Math.abs(progressY) >= Tokens.photo.markThreshold;
+      const isHorizontal = Math.abs(dx) > Math.abs(dy) * 1.2;
+      if (isHorizontal) {
+        const progressX = Math.max(-1, Math.min(1, dx / maxDist));
+        skipProgress.value = progressX;
+        markProgress.value = 0;
+      } else {
+        const progressY = Math.max(-1, Math.min(1, dy / maxDist));
+        markProgress.value = Math.abs(dy) > Math.abs(dx) * 1.2 ? progressY : 0;
+        skipProgress.value = 0;
+      }
+      const overThreshold = Math.abs(markProgress.value) >= Tokens.photo.markThreshold
+        || Math.abs(skipProgress.value) >= Tokens.photo.markThreshold;
       if (overThreshold && !hapticFired.value) {
         hapticFired.value = true;
         runOnJS(impactMedium)();
@@ -96,7 +110,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       <Animated.View style={[styles.container, cardStyle]}>
         {children}
         <DeleteOverlay progress={markProgress} />
-        <ActionIndicator progress={markProgress} />
+        <ActionIndicator progress={markProgress} skipProgress={skipProgress} />
       </Animated.View>
     </GestureDetector>
   );
