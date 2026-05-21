@@ -42,9 +42,9 @@ export function usePhotoEngine() {
       setPermissionStatus('denied');
       return 'denied' as PermissionStatus;
     } catch (e) {
-      const message = e instanceof Error ? e.message : 'unknown error';
+      const message = e instanceof Error ? e.message : '未知错误';
       if (message.includes('rejected') || message.includes('not available')) {
-        setError('原生模块未加载。请使用 development build 运行：npx expo run:ios 或 npx expo run:android');
+        setError('原生模块未加载，请使用 development build 运行');
       } else {
         setError(`权限请求失败：${message}`);
       }
@@ -57,11 +57,25 @@ export function usePhotoEngine() {
     setIsLoading(true);
     setError(null);
     try {
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        mediaType: ['photo'],
-        first: 99999,
-      });
-      const photos: PhotoAsset[] = assets.map((a) => ({
+      // Fetch all photos with pagination
+      let allAssets: MediaLibrary.Asset[] = [];
+      let cursor: string | undefined;
+      let hasMore = true;
+
+      while (hasMore) {
+        const page = await MediaLibrary.getAssetsAsync({
+          mediaType: ['photo'],
+          first: 500,
+          after: cursor,
+        });
+        allAssets = allAssets.concat(page.assets);
+        hasMore = page.hasNextPage;
+        cursor = page.endCursor;
+      }
+
+      console.log(`[pickup] Total photos found: ${allAssets.length}`);
+
+      const photos: PhotoAsset[] = allAssets.map((a) => ({
         id: a.id,
         uri: a.uri,
         width: a.width,
@@ -101,7 +115,7 @@ export function usePhotoEngine() {
         [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
       ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load photos');
+      setError(e instanceof Error ? e.message : '加载照片失败');
     } finally {
       setIsLoading(false);
     }
@@ -126,9 +140,9 @@ export function usePhotoEngine() {
       AsyncStorage.multiSet([
         [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
         [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
-      ]).catch((e) => console.warn('Failed to persist viewed state:', e));
+      ]).catch((e) => console.warn('保存浏览状态失败:', e));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load next group');
+      setError(e instanceof Error ? e.message : '加载下一组失败');
     }
   }, [allPhotos, viewedPhotoIds]);
 

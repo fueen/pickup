@@ -25,7 +25,7 @@ export function generateRandomGroup(
 
   // Return all available photos if still less than groupSize
   if (candidates.length === 0) {
-    throw new Error('No photos available');
+    throw new Error('没有可用的照片');
   }
 
   const size = Math.min(candidates.length, groupSize);

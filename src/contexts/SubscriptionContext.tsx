@@ -86,7 +86,7 @@ export function SubscriptionProvider({
       const offs = await getOfferings();
       setOfferings(offs);
     } catch (e) {
-      console.warn('RevenueCat load failed:', e);
+      console.warn('RevenueCat 加载失败:', e);
     }
   };
 
@@ -136,7 +136,7 @@ export function SubscriptionProvider({
       setSubType(getSubscriptionType(info));
       return true;
     } catch (e) {
-      setPurchaseError(e instanceof Error ? e.message : 'Purchase failed');
+      setPurchaseError(e instanceof Error ? e.message : '购买失败');
       return false;
     } finally {
       setPurchaseInProgress(false);
@@ -152,7 +152,7 @@ export function SubscriptionProvider({
       setSubType(getSubscriptionType(info));
       return true;
     } catch (e) {
-      setPurchaseError(e instanceof Error ? e.message : 'Restore failed');
+      setPurchaseError(e instanceof Error ? e.message : '恢复购买失败');
       return false;
     } finally {
       setRestoreInProgress(false);
