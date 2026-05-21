@@ -7,11 +7,11 @@ interface Props { progress: SharedValue<number>; }
 
 export function ActionIndicator({ progress }: Props) {
   const deleteStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(progress.value, [-0.8, -Tokens.photo.markThreshold], [1, 0]);
+    const opacity = interpolate(progress.value, [-0.5, 0], [1, 0]);
     return { opacity };
   });
   const keepStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(progress.value, [Tokens.photo.markThreshold, 0.8], [1, 0]);
+    const opacity = interpolate(progress.value, [0, 0.5], [0, 1]);
     return { opacity };
   });
   return (

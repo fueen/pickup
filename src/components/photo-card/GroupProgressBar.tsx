@@ -1,10 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Tokens } from '../../design-tokens';
 
-interface Props { current: number; total: number; markedDelete: number; markedKeep: number; }
+interface Props {
+  current: number;
+  total: number;
+  markedDelete: number;
+  markedKeep: number;
+  onSelectIndex?: (index: number) => void;
+}
 
-export function GroupProgressBar({ current, total, markedDelete, markedKeep }: Props) {
+export function GroupProgressBar({ current, total, markedDelete, markedKeep, onSelectIndex }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.dots}>
@@ -16,7 +22,17 @@ export function GroupProgressBar({ current, total, markedDelete, markedKeep }: P
             bgColor = Tokens.color.textPrimary;
           }
           return (
-            <View key={i} style={[styles.dot, { backgroundColor: bgColor }, i === current && styles.dotCurrent]} />
+            <TouchableOpacity
+              key={i}
+              onPress={() => onSelectIndex?.(i)}
+              activeOpacity={0.6}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={[
+                styles.dot,
+                { backgroundColor: bgColor },
+                i === current && styles.dotCurrent,
+              ]}
+            />
           );
         })}
       </View>
@@ -28,7 +44,7 @@ export function GroupProgressBar({ current, total, markedDelete, markedKeep }: P
 const styles = StyleSheet.create({
   container: { position: 'absolute', bottom: 50, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: Tokens.spacing.s },
-  dot: { width: 8, height: 8, borderRadius: 4, marginHorizontal: 3 },
-  dotCurrent: { transform: [{ scale: 1.4 }] },
+  dot: { width: 12, height: 12, borderRadius: 6, marginHorizontal: 4 },
+  dotCurrent: { transform: [{ scale: 1.5 }] },
   counter: { ...Tokens.typography.caption, color: Tokens.color.textSecondary },
 });

@@ -150,6 +150,7 @@ export default function BrowseScreen() {
         total={currentGroup.length}
         markedDelete={markedForDelete.size}
         markedKeep={markedForKeep.size}
+        onSelectIndex={setGroupIndex}
       />
       <LimitReachedModal
         visible={limitModalVisible}

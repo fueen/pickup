@@ -28,19 +28,14 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
     'worklet';
     if (isAnimating.value) return;
 
-    const isVertical = Math.abs(ty) > Math.abs(tx);
+    const absTY = Math.abs(ty);
+    const absTX = Math.abs(tx);
     const threshold = Tokens.photo.markThreshold * 200;
 
-    if (isVertical && Math.abs(ty) >= threshold) {
-      // Up = delete, Down = keep
-      isAnimating.value = true;
-      const direction = ty < 0 ? -1 : 1;
-      translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
-        isAnimating.value = false;
-        runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
-      });
-    } else if (!isVertical && Math.abs(tx) > 80) {
-      // Horizontal swipe = skip — instant dismiss, no bounce
+    // Prefer horizontal (skip) only when clearly horizontal
+    const isHorizontal = absTX > 80 && absTX > absTY * 1.2;
+
+    if (isHorizontal) {
       isAnimating.value = true;
       const direction = tx < 0 ? -1 : 1;
       translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 250 }, () => {
@@ -49,6 +44,14 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
         markProgress.value = 0;
         isAnimating.value = false;
         runOnJS(onSkip)();
+      });
+    } else if (absTY >= threshold) {
+      // Up = delete, Down = keep
+      isAnimating.value = true;
+      const direction = ty < 0 ? -1 : 1;
+      translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+        isAnimating.value = false;
+        runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
       });
     } else {
       // Snap back
@@ -69,7 +72,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       const dy = e.translationY;
       const maxDist = 200;
       const progressY = Math.max(-1, Math.min(1, dy / maxDist));
-      markProgress.value = Math.abs(dy) > Math.abs(e.translationX) ? progressY : 0;
+      markProgress.value = Math.abs(dy) > Math.abs(e.translationX) * 1.2 ? progressY : 0;
       const overThreshold = Math.abs(progressY) >= Tokens.photo.markThreshold;
       if (overThreshold && !hapticFired.value) {
         hapticFired.value = true;
