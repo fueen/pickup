@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
+import { useStatsContext } from '../src/contexts/StatsContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
@@ -15,6 +16,7 @@ export default function ReviewScreen() {
   const { currentGroup, markedForDelete, setMarkedForDelete, clearMarkedPhotos, loadNextGroup } = usePhotoContext();
   const { dispatch } = useSessionContext();
   const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
+  const { recordDeleted } = useStatsContext();
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -49,6 +51,7 @@ export default function ReviewScreen() {
     const ids = photosToDelete.map((p) => p.id);
     const result = await deletePhotos(ids);
     if (result.successCount > 0) {
+      recordDeleted(result.successCount, result.freedBytes);
       clearMarkedPhotos();
       dispatch({ type: 'RESET_SESSION' });
     }
@@ -56,7 +59,7 @@ export default function ReviewScreen() {
     setShowConfirm(false);
     loadNextWithLimit();
     router.back();
-  }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch]);
+  }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
 
   // Handle zero-delete case
   if (photosToDelete.length === 0 && !deleting) {

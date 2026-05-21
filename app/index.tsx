@@ -1,9 +1,10 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
+import { useStatsContext } from '../src/contexts/StatsContext';
 import { PhotoCard } from '../src/components/photo-card/PhotoCard';
 import { GroupProgressBar } from '../src/components/photo-card/GroupProgressBar';
 import { SwipeableCard } from '../src/components/gesture/SwipeableCard';
@@ -24,8 +25,10 @@ export default function BrowseScreen() {
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
   const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
+  const { recordViewed } = useStatsContext();
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+  const lastViewedGroupRef = useRef<string>('');
 
   useEffect(() => {
     if (permissionStatus === 'undetermined') {
@@ -38,6 +41,17 @@ export default function BrowseScreen() {
       loadPhotos();
     }
   }, [permissionStatus]);
+
+  // Record viewed when a new group starts (groupIndex === 0)
+  useEffect(() => {
+    if (groupIndex === 0 && currentGroup.length > 0) {
+      const groupId = currentGroup.map((p) => p.id).join(',');
+      if (groupId !== lastViewedGroupRef.current) {
+        lastViewedGroupRef.current = groupId;
+        recordViewed(Tokens.photo.groupSize);
+      }
+    }
+  }, [groupIndex, currentGroup, recordViewed]);
 
   const advanceToNext = useCallback(() => {
     if (groupIndex + 1 >= Tokens.photo.groupSize) {
