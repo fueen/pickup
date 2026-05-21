@@ -82,7 +82,7 @@ export default function BrowseScreen() {
     } else {
       setGroupIndex(groupIndex + 1);
     }
-  }, [groupIndex, setGroupIndex, router]);
+  }, [groupIndex, currentGroup.length, setGroupIndex, router]);
 
   const handleMarkDelete = useCallback(() => {
     const photo = currentGroup[groupIndex];

@@ -32,7 +32,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
     const threshold = Tokens.photo.markThreshold * 200;
 
     if (isVertical && Math.abs(ty) >= threshold) {
-      // Up = keep, Down = delete
+      // Up = delete, Down = keep
       isAnimating.value = true;
       const direction = ty < 0 ? -1 : 1;
       translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
