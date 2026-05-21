@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(gh auth *)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(git push *)",
+      "Bash(curl -sI --connect-timeout 10 https://github.com)",
+      "Bash(curl -sI --connect-timeout 5 --proxy http://127.0.0.1:7890 https://github.com)",
+      "Bash(git config *)"
+    ]
+  }
+}
