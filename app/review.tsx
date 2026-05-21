@@ -57,14 +57,14 @@ export default function ReviewScreen() {
     setDeleting(false);
     setShowConfirm(false);
     loadNextWithLimit();
-    router.back();
+    router.replace('/');
   }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
 
   // Handle zero-delete case
   useEffect(() => {
     if (photosToDelete.length === 0 && !deleting) {
       const ok = loadNextWithLimit();
-      if (ok) router.back();
+      if (ok) router.replace('/');
     }
   }, [photosToDelete.length, deleting, loadNextWithLimit, router]);
 

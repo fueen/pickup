@@ -70,7 +70,7 @@ export default function PaywallScreen() {
   const handlePurchase = async () => {
     if (packages.length === 0) return;
     const ok = await purchase(packages[effectiveSelected]);
-    if (ok) router.back();
+    if (ok) router.replace('/');
   };
 
   const handleRestore = async () => {
