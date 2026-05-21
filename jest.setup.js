@@ -1,3 +1,5 @@
+jest.mock('react-native');
+
 jest.mock('expo-media-library', () => ({
   getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'undetermined', canAskAgain: true })),
   requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),

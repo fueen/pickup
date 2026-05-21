@@ -22,14 +22,18 @@ export function usePhotoEngine() {
 
   const requestPermissions = useCallback(async () => {
     const { status, canAskAgain } = await MediaLibrary.getPermissionsAsync();
-    if (status === 'granted' || status === 'limited') {
-      setPermissionStatus(status);
-      return status;
+    const statusStr: string = status;
+    if (statusStr === 'granted' || statusStr === 'limited') {
+      setPermissionStatus(statusStr as PermissionStatus);
+      return statusStr as PermissionStatus;
     }
     if (canAskAgain) {
       const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+      const newStatusStr: string = newStatus;
       const mapped: PermissionStatus =
-        newStatus === 'granted' || newStatus === 'limited' ? newStatus : 'denied';
+        newStatusStr === 'granted' || newStatusStr === 'limited'
+          ? (newStatusStr as PermissionStatus)
+          : 'denied';
       setPermissionStatus(mapped);
       return mapped;
     }
