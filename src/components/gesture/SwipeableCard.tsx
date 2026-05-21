@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Tokens } from '../../design-tokens';
 import { DeleteOverlay } from './DeleteOverlay';
 import { ActionIndicator } from './ActionIndicator';
@@ -22,39 +22,44 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
   const markProgress = useSharedValue(0);
   const isAnimating = useSharedValue(false);
   const hapticFired = useSharedValue(false);
-  const { impactMedium, notifySuccess, notifyWarning } = useHaptics();
+  const { impactMedium } = useHaptics();
 
   const handleEnd = useCallback((ty: number, tx: number) => {
     'worklet';
     if (isAnimating.value) return;
-    if (Math.abs(ty) >= Tokens.photo.markThreshold * 200) {
+
+    const isVertical = Math.abs(ty) > Math.abs(tx);
+    const threshold = Tokens.photo.markThreshold * 200;
+
+    if (isVertical && Math.abs(ty) >= threshold) {
+      // Up = keep, Down = delete
       isAnimating.value = true;
       const direction = ty < 0 ? -1 : 1;
-      translateY.value = withSpring(direction * SCREEN_HEIGHT * 1.5, { damping: 0.7, stiffness: 150 }, () => {
+      translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
         isAnimating.value = false;
-        if (direction < 0) runOnJS(onMarkDelete)();
-        else runOnJS(onMarkKeep)();
+        runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
       });
-    } else if (Math.abs(tx) > Math.abs(ty) && Math.abs(tx) > 80) {
+    } else if (!isVertical && Math.abs(tx) > 80) {
+      // Horizontal swipe = skip — instant dismiss, no bounce
       isAnimating.value = true;
       const direction = tx < 0 ? -1 : 1;
-      translateX.value = withSpring(direction * SCREEN_WIDTH * 1.5, { damping: 0.7, stiffness: 150 }, () => {
-        isAnimating.value = false;
+      translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 250 }, () => {
         translateX.value = 0;
         translateY.value = 0;
         markProgress.value = 0;
+        isAnimating.value = false;
         runOnJS(onSkip)();
       });
     } else {
-      translateY.value = withSpring(0, { damping: 0.7, stiffness: 150 });
-      translateX.value = withSpring(0, { damping: 0.7, stiffness: 150 });
+      // Snap back
+      translateY.value = withTiming(0, { duration: 300 });
+      translateX.value = withTiming(0, { duration: 300 });
       markProgress.value = 0;
     }
   }, [onMarkDelete, onMarkKeep, onSkip]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
-      if (isAnimating.value) return;
       hapticFired.value = false;
     })
     .onUpdate((e) => {
