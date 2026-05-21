@@ -26,6 +26,7 @@ import {
 import { Tokens } from '../design-tokens';
 
 const DAILY_USAGE_KEY = 'dailyUsage';
+const DEV_PRO_KEY = 'devProEnabled';
 
 export interface SubscriptionContextValue {
   isPro: boolean;
@@ -37,6 +38,8 @@ export interface SubscriptionContextValue {
   todayGroupCount: number;
   isLimitReached: boolean;
   canBrowseNextGroup: boolean;
+  devProEnabled: boolean;
+  setDevPro: (v: boolean) => Promise<void>;
   purchase: (pkg: PurchasesPackage) => Promise<boolean>;
   restore: () => Promise<boolean>;
   incrementGroupCount: () => void;
@@ -56,12 +59,14 @@ export function SubscriptionProvider({
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [todayGroupCount, setTodayGroupCount] = useState(0);
+  const [devProEnabled, setDevProEnabled] = useState(false);
   const listenerRef = useRef<CustomerInfoUpdateListener | null>(null);
 
   useEffect(() => {
     configurePurchases();
     loadSubscriptionState();
     loadDailyUsage();
+    loadDevPro();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -124,8 +129,20 @@ export function SubscriptionProvider({
   }, []);
 
   const isLimitReached =
-    !isPro && todayGroupCount >= Tokens.photo.freeDailyLimit;
-  const canBrowseNextGroup = isPro || !isLimitReached;
+    !isPro && !devProEnabled && todayGroupCount >= Tokens.photo.freeDailyLimit;
+  const canBrowseNextGroup = isPro || devProEnabled || !isLimitReached;
+
+  const loadDevPro = async () => {
+    try {
+      const raw = await AsyncStorage.getItem(DEV_PRO_KEY);
+      setDevProEnabled(raw === 'true');
+    } catch { /* ignore */ }
+  };
+
+  const setDevPro = async (v: boolean) => {
+    setDevProEnabled(v);
+    await AsyncStorage.setItem(DEV_PRO_KEY, v ? 'true' : 'false');
+  };
 
   const purchase = useCallback(async (pkg: PurchasesPackage): Promise<boolean> => {
     setPurchaseInProgress(true);
@@ -171,6 +188,8 @@ export function SubscriptionProvider({
         todayGroupCount,
         isLimitReached,
         canBrowseNextGroup,
+        devProEnabled,
+        setDevPro,
         purchase,
         restore,
         incrementGroupCount,

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PurchasesPackage } from 'react-native-purchases';
@@ -171,8 +172,9 @@ export default function PaywallScreen() {
 
         {/* Footer legal */}
         <Text style={styles.legal}>
-          确认购买后将从你的 Apple ID
-          扣款。订阅会自动续订，可在设置中管理或取消。
+          {Platform.OS === 'ios'
+            ? '确认购买后将从你的 Apple ID 扣款。订阅会自动续订，可在设置中管理或取消。'
+            : '确认购买后将从你的 Google Play 账户扣款。订阅会自动续订，可在 Google Play 订阅管理中取消。'}
         </Text>
       </ScrollView>
     </View>

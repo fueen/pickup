@@ -18,7 +18,7 @@ export const Tokens = {
   },
   photo: {
     groupSize: 15,
-    freeDailyLimit: 3,
+    freeDailyLimit: 20,
     markThreshold: 0.4,
   },
   typography: {

@@ -138,6 +138,7 @@ export default function BrowseScreen() {
   return (
     <View style={styles.container}>
       <SwipeableCard
+        key={currentPhoto.id}
         onMarkDelete={handleMarkDelete}
         onMarkKeep={handleMarkKeep}
         onSkip={handleSkip}

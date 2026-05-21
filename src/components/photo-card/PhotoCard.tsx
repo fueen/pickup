@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   container: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: Tokens.color.background, justifyContent: 'center', alignItems: 'center' },
   image: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT * 0.75 },
   header: { position: 'absolute', top: 60, left: Tokens.spacing.l, right: Tokens.spacing.l },
-  date: { ...Tokens.typography.caption, color: Tokens.color.textSecondary, textShadowColor: 'rgba(0,0,0,0.8)', textShadowRadius: 4 },
+  date: { fontSize: 17, fontWeight: '600', color: Tokens.color.textPrimary, letterSpacing: -0.3, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
   liveBadge: { position: 'absolute', top: 60, right: Tokens.spacing.l, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: Tokens.spacing.s, paddingVertical: 2, borderRadius: Tokens.radius.button },
   liveText: { ...Tokens.typography.caption, color: Tokens.color.textPrimary, fontWeight: '700' },
 });

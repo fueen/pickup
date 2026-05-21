@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Linking,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
@@ -31,7 +32,7 @@ function formatBytes(bytes: number): string {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { isPro, subscriptionType } = useSubscriptionContext();
+  const { isPro, subscriptionType, devProEnabled, setDevPro } = useSubscriptionContext();
   const {
     totalViewed,
     totalDeleted,
@@ -113,7 +114,7 @@ export default function SettingsScreen() {
             onPress={() =>
               Alert.alert(
                 '使用指南',
-                '1. 浏览照片，左滑删除右滑保留\n2. 每15张一组，完成一组后确认删除\n3. Pro用户无限使用，免费用户每日3组',
+                '1. 浏览照片，左滑删除右滑保留\n2. 每15张一组，完成一组后确认删除\n3. Pro用户无限使用，免费用户每日20组',
               )
             }
           />
@@ -137,6 +138,9 @@ export default function SettingsScreen() {
             showArrow={false}
           />
         </SettingsSection>
+
+        {/* Dev Tools — tap version text 5 times to reveal */}
+        <DevToolsSection devProEnabled={devProEnabled} onToggleDevPro={setDevPro} />
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -167,6 +171,53 @@ function subscriptionLabelStyle(isPro: boolean) {
     color: isPro ? Tokens.color.safe : Tokens.color.textSecondary,
     fontWeight: '600' as const,
   };
+}
+
+function DevToolsSection({
+  devProEnabled,
+  onToggleDevPro,
+}: {
+  devProEnabled: boolean;
+  onToggleDevPro: (v: boolean) => Promise<void>;
+}) {
+  const [visible, setVisible] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+
+  if (!visible) {
+    return (
+      <View style={{ marginTop: 20, alignItems: 'center' }}>
+        <Text
+          style={{ color: Tokens.color.textMuted, fontSize: 12 }}
+          onPress={() => {
+            const next = tapCount + 1;
+            setTapCount(next);
+            if (next >= 5) setVisible(true);
+          }}
+        >
+          连续点击5次开启开发者工具
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <SettingsSection title="开发者工具">
+      <SettingsRow
+        label="开发者 Pro 模式"
+        rightContent={
+          <Switch
+            value={devProEnabled}
+            onValueChange={onToggleDevPro}
+            trackColor={{
+              false: Tokens.color.surfaceElevated,
+              true: Tokens.color.safe,
+            }}
+          />
+        }
+        showArrow={false}
+      />
+    </SettingsSection>
+  );
 }
 
 const styles = StyleSheet.create({

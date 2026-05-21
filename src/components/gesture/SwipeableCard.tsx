@@ -53,7 +53,10 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
   }, [onMarkDelete, onMarkKeep, onSkip]);
 
   const panGesture = Gesture.Pan()
-    .onBegin(() => { isAnimating.value = false; hapticFired.value = false; })
+    .onBegin(() => {
+      if (isAnimating.value) return;
+      hapticFired.value = false;
+    })
     .onUpdate((e) => {
       if (isAnimating.value) return;
       translateY.value = e.translationY * 0.8;
@@ -71,7 +74,10 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
         hapticFired.value = false;
       }
     })
-    .onEnd((e) => { handleEnd(e.translationY, e.translationX); });
+    .onEnd((e) => {
+      if (isAnimating.value) return;
+      handleEnd(e.translationY, e.translationX);
+    });
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
