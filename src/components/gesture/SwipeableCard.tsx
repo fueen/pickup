@@ -71,7 +71,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
         hapticFired.value = false;
       }
     })
-    .onEnd((e) => { runOnJS(handleEnd)(e.translationY, e.translationX); });
+    .onEnd((e) => { handleEnd(e.translationY, e.translationX); });
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
