@@ -14,9 +14,10 @@ interface Props {
   onMarkDelete: () => void;
   onMarkKeep: () => void;
   onSkip: () => void;
+  onPrevious: () => void;
 }
 
-export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Props) {
+export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip, onPrevious }: Props) {
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const markProgress = useSharedValue(0);
@@ -38,14 +39,15 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
 
     if (isHorizontal) {
       isAnimating.value = true;
-      const direction = tx < 0 ? -1 : 1;
+      const goingLeft = tx < 0;
+      const direction = goingLeft ? -1 : 1;
       translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 250 }, () => {
         translateX.value = 0;
         translateY.value = 0;
         markProgress.value = 0;
         skipProgress.value = 0;
         isAnimating.value = false;
-        runOnJS(onSkip)();
+        runOnJS(goingLeft ? onSkip : onPrevious)();
       });
     } else if (absTY >= threshold) {
       // Up = delete, Down = keep
@@ -63,7 +65,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       markProgress.value = 0;
       skipProgress.value = 0;
     }
-  }, [onMarkDelete, onMarkKeep, onSkip]);
+  }, [onMarkDelete, onMarkKeep, onSkip, onPrevious]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {

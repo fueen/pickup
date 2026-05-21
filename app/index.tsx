@@ -107,6 +107,12 @@ export default function BrowseScreen() {
     advanceToNext();
   }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
+  const handlePrevious = useCallback(() => {
+    if (groupIndex > 0) {
+      setGroupIndex(groupIndex - 1);
+    }
+  }, [groupIndex, setGroupIndex]);
+
   if (error) {
     return (
       <View style={styles.centered}>
@@ -142,6 +148,7 @@ export default function BrowseScreen() {
         onMarkDelete={handleMarkDelete}
         onMarkKeep={handleMarkKeep}
         onSkip={handleSkip}
+        onPrevious={handlePrevious}
       >
         <PhotoCard photo={currentPhoto} />
       </SwipeableCard>

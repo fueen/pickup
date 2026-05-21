@@ -17,8 +17,14 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
     const opacity = interpolate(progress.value, [0, 0.5], [0, 1]);
     return { opacity };
   });
-  const skipStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(Math.abs(skipProgress.value), [Tokens.photo.markThreshold, 0.5], [0, 1]);
+  const skipLeftStyle = useAnimatedStyle(() => {
+    const v = skipProgress.value;
+    const opacity = v < 0 ? interpolate(-v, [Tokens.photo.markThreshold, 0.5], [0, 1]) : 0;
+    return { opacity };
+  });
+  const skipRightStyle = useAnimatedStyle(() => {
+    const v = skipProgress.value;
+    const opacity = v > 0 ? interpolate(v, [Tokens.photo.markThreshold, 0.5], [0, 1]) : 0;
     return { opacity };
   });
   return (
@@ -29,11 +35,11 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
       <Animated.View style={[styles.indicator, styles.keep, keepStyle]}>
         <Animated.Text style={styles.text}>保留</Animated.Text>
       </Animated.View>
-      <Animated.View style={[styles.indicator, styles.skipLeft, skipStyle]}>
+      <Animated.View style={[styles.indicator, styles.skipLeft, skipLeftStyle]}>
         <Animated.Text style={styles.text}>跳过</Animated.Text>
       </Animated.View>
-      <Animated.View style={[styles.indicator, styles.skipRight, skipStyle]}>
-        <Animated.Text style={styles.text}>跳过</Animated.Text>
+      <Animated.View style={[styles.indicator, styles.skipRight, skipRightStyle]}>
+        <Animated.Text style={styles.text}>上一张</Animated.Text>
       </Animated.View>
     </>
   );
