@@ -1,14 +1,16 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
+import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { PhotoCard } from '../src/components/photo-card/PhotoCard';
 import { GroupProgressBar } from '../src/components/photo-card/GroupProgressBar';
 import { SwipeableCard } from '../src/components/gesture/SwipeableCard';
 import { PermissionGate } from '../src/components/photo-card/PermissionGate';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { EmptyGate } from '../src/components/photo-card/EmptyGate';
+import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { Tokens } from '../src/design-tokens';
 
 export default function BrowseScreen() {
@@ -21,6 +23,9 @@ export default function BrowseScreen() {
     requestPermissions, loadPhotos, loadNextGroup,
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
+  const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
+
+  const [limitModalVisible, setLimitModalVisible] = useState(false);
 
   useEffect(() => {
     if (permissionStatus === 'undetermined') {
@@ -80,6 +85,17 @@ export default function BrowseScreen() {
 
   const currentPhoto = currentGroup[groupIndex];
   if (!currentPhoto) {
+    if (!canBrowseNextGroup) {
+      return (
+        <View style={styles.centered}>
+          <LimitReachedModal
+            visible={true}
+            onClose={() => setLimitModalVisible(false)}
+          />
+        </View>
+      );
+    }
+    incrementGroupCount();
     loadNextGroup();
     return <LoadingGate />;
   }
@@ -98,6 +114,10 @@ export default function BrowseScreen() {
         total={Tokens.photo.groupSize}
         markedDelete={markedForDelete.size}
         markedKeep={markedForKeep.size}
+      />
+      <LimitReachedModal
+        visible={limitModalVisible}
+        onClose={() => setLimitModalVisible(false)}
       />
     </View>
   );

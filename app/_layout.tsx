@@ -5,12 +5,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
 import { SessionProvider } from '../src/contexts/SessionContext';
+import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <PhotoProvider>
-        <SessionProvider>
+      <SubscriptionProvider>
+        <PhotoProvider>
+          <SessionProvider>
           <StatusBar style="light" />
           <Stack
             screenOptions={{
@@ -21,6 +23,7 @@ export default function RootLayout() {
           />
         </SessionProvider>
       </PhotoProvider>
+    </SubscriptionProvider>
     </GestureHandlerRootView>
   );
 }

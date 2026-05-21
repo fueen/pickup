@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
+import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
+import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
 
@@ -12,10 +14,12 @@ export default function ReviewScreen() {
   const router = useRouter();
   const { currentGroup, markedForDelete, setMarkedForDelete, clearMarkedPhotos, loadNextGroup } = usePhotoContext();
   const { dispatch } = useSessionContext();
+  const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
+  const [limitModalVisible, setLimitModalVisible] = useState(false);
 
   const photosToDelete = currentGroup.filter(
     (p) => markedForDelete.has(p.id) && !deselectedIds.has(p.id)
@@ -29,6 +33,16 @@ export default function ReviewScreen() {
     });
   }, []);
 
+  const loadNextWithLimit = useCallback(() => {
+    if (!canBrowseNextGroup) {
+      setLimitModalVisible(true);
+      return false;
+    }
+    incrementGroupCount();
+    loadNextGroup();
+    return true;
+  }, [canBrowseNextGroup, incrementGroupCount, loadNextGroup]);
+
   const handleConfirmDelete = useCallback(async () => {
     if (photosToDelete.length === 0) return;
     setDeleting(true);
@@ -40,13 +54,13 @@ export default function ReviewScreen() {
     }
     setDeleting(false);
     setShowConfirm(false);
-    loadNextGroup();
+    loadNextWithLimit();
     router.back();
-  }, [photosToDelete, clearMarkedPhotos, loadNextGroup, router, dispatch]);
+  }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch]);
 
   // Handle zero-delete case
   if (photosToDelete.length === 0 && !deleting) {
-    loadNextGroup();
+    loadNextWithLimit();
     router.back();
     return null;
   }
@@ -77,6 +91,11 @@ export default function ReviewScreen() {
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <LimitReachedModal
+        visible={limitModalVisible}
+        onClose={() => setLimitModalVisible(false)}
       />
     </View>
   );
