@@ -10,7 +10,6 @@ export function generateRandomGroup(
   let candidates = allPhotos.filter((p) => !viewedPhotoIds.has(p.id));
 
   if (candidates.length < groupSize) {
-    // Refill from viewed photos in viewedOrder (FIFO by view time).
     const order =
       viewedOrder.length > 0
         ? viewedOrder
@@ -24,13 +23,13 @@ export function generateRandomGroup(
     candidates = [...candidates, ...refillPhotos];
   }
 
-  if (candidates.length < groupSize) {
-    throw new Error(
-      `Not enough photos: need ${groupSize}, have ${candidates.length}`,
-    );
+  // Return all available photos if still less than groupSize
+  if (candidates.length === 0) {
+    throw new Error('No photos available');
   }
 
-  return fisherYatesShuffle(candidates).slice(0, groupSize);
+  const size = Math.min(candidates.length, groupSize);
+  return fisherYatesShuffle(candidates).slice(0, size);
 }
 
 export function shouldRefillViewedPool(

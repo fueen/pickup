@@ -59,7 +59,7 @@ export function usePhotoEngine() {
     try {
       const { assets } = await MediaLibrary.getAssetsAsync({
         mediaType: ['photo'],
-        first: 0,
+        first: 99999,
       });
       const photos: PhotoAsset[] = assets.map((a) => ({
         id: a.id,
@@ -72,6 +72,11 @@ export function usePhotoEngine() {
         albumIds: a.albumId ? [a.albumId] : [],
       }));
       setAllPhotos(photos);
+
+      if (photos.length === 0) {
+        setIsLoading(false);
+        return;
+      }
 
       const savedIds = await AsyncStorage.getItem(VIEWED_IDS_KEY);
       const savedOrder = await AsyncStorage.getItem(VIEWED_ORDER_KEY);

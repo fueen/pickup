@@ -77,7 +77,7 @@ export default function BrowseScreen() {
   }, [currentPhoto]);
 
   const advanceToNext = useCallback(() => {
-    if (groupIndex + 1 >= Tokens.photo.groupSize) {
+    if (groupIndex + 1 >= currentGroup.length) {
       router.push('/review');
     } else {
       setGroupIndex(groupIndex + 1);
@@ -146,7 +146,7 @@ export default function BrowseScreen() {
       </SwipeableCard>
       <GroupProgressBar
         current={groupIndex}
-        total={Tokens.photo.groupSize}
+        total={currentGroup.length}
         markedDelete={markedForDelete.size}
         markedKeep={markedForKeep.size}
       />
