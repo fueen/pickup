@@ -80,7 +80,7 @@ export default function ReviewScreen() {
       />
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.cancelButton} onPress={() => router.replace('/')}>
           <Text style={styles.cancelText}>取消</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteButton} onPress={() => setShowConfirm(true)}>

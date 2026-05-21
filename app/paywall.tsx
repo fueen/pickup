@@ -75,11 +75,11 @@ export default function PaywallScreen() {
 
   const handleRestore = async () => {
     const ok = await restore();
-    if (ok) router.back();
+    if (ok) router.replace('/');
   };
 
   const handleClose = () => {
-    router.back();
+    router.replace('/');
   };
 
   return (
