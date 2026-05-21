@@ -78,11 +78,16 @@ export default function BrowseScreen() {
 
   const advanceToNext = useCallback(() => {
     if (groupIndex + 1 >= currentGroup.length) {
-      router.push('/review');
+      if (markedForDelete.size === 0) {
+        incrementGroupCount();
+        loadNextGroup();
+      } else {
+        router.push('/review');
+      }
     } else {
       setGroupIndex(groupIndex + 1);
     }
-  }, [groupIndex, currentGroup.length, setGroupIndex, router]);
+  }, [groupIndex, currentGroup.length, markedForDelete.size, setGroupIndex, incrementGroupCount, loadNextGroup, router]);
 
   const handleMarkDelete = useCallback(() => {
     const photo = currentGroup[groupIndex];

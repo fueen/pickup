@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
@@ -70,6 +70,15 @@ export default function ReviewScreen() {
       if (ok) router.replace('/');
     }
   }, [photosToDelete.length, deleting, loadNextWithLimit, router]);
+
+  // If nothing to delete, skip rendering to avoid flashing empty UI
+  if (photosToDelete.length === 0 && !deleting) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator color={Tokens.color.textPrimary} size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
