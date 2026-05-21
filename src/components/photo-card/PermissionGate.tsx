@@ -24,7 +24,13 @@ export function PermissionGate({ status, onRequest }: Props) {
         style={styles.button}
         onPress={
           isDenied
-            ? () => { Linking.openSettings().catch(() => Alert.alert('提示', '请手动在系统设置中开启相册权限')); }
+            ? () => {
+                if (typeof Linking.openSettings === 'function') {
+                  Linking.openSettings().catch(() => Alert.alert('提示', '请手动在系统设置中开启相册权限'));
+                } else {
+                  Alert.alert('提示', '请手动在系统设置中开启相册权限');
+                }
+              }
             : onRequest
         }
       >

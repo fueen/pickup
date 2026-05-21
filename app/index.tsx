@@ -107,17 +107,18 @@ export default function BrowseScreen() {
     advanceToNext();
   }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   if (permissionStatus === 'denied' || permissionStatus === 'undetermined') {
     return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
   }
   if (isLoading) return <LoadingGate />;
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>加载失败：{error}</Text>
-      </View>
-    );
-  }
   if (allPhotos.length === 0) return <EmptyGate />;
 
   if (!currentPhoto) {

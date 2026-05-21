@@ -16,7 +16,11 @@
       "Bash(npx kill-port *)",
       "Bash(npx expo *)",
       "Bash(curl -sI http://localhost:8081)",
-      "Bash(ipconfig)"
+      "Bash(ipconfig)",
+      "Bash(curl -s http://localhost:8081/index.exp?platform=android)",
+      "Bash(curl -sI http://192.168.5.68:8081)",
+      "Bash(REACT_NATIVE_PACKAGER_HOSTNAME=192.168.5.68 npx expo start)",
+      "Bash(curl -s \"http://localhost:8081/index.exp?platform=android\")"
     ]
   }
 }

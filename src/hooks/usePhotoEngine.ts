@@ -22,24 +22,35 @@ export function usePhotoEngine() {
   const viewedOrderRef = useRef<string[]>([]);
 
   const requestPermissions = useCallback(async () => {
-    const { status, canAskAgain } = await MediaLibrary.getPermissionsAsync();
-    const statusStr: string = status;
-    if (statusStr === 'granted' || statusStr === 'limited') {
-      setPermissionStatus(statusStr as PermissionStatus);
-      return statusStr as PermissionStatus;
+    try {
+      const { status, canAskAgain } = await MediaLibrary.getPermissionsAsync();
+      const statusStr: string = status;
+      if (statusStr === 'granted' || statusStr === 'limited') {
+        setPermissionStatus(statusStr as PermissionStatus);
+        return statusStr as PermissionStatus;
+      }
+      if (canAskAgain) {
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+        const newStatusStr: string = newStatus;
+        const mapped: PermissionStatus =
+          newStatusStr === 'granted' || newStatusStr === 'limited'
+            ? (newStatusStr as PermissionStatus)
+            : 'denied';
+        setPermissionStatus(mapped);
+        return mapped;
+      }
+      setPermissionStatus('denied');
+      return 'denied' as PermissionStatus;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'unknown error';
+      if (message.includes('rejected') || message.includes('not available')) {
+        setError('原生模块未加载。请使用 development build 运行：npx expo run:ios 或 npx expo run:android');
+      } else {
+        setError(`权限请求失败：${message}`);
+      }
+      setPermissionStatus('denied');
+      return 'denied' as PermissionStatus;
     }
-    if (canAskAgain) {
-      const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
-      const newStatusStr: string = newStatus;
-      const mapped: PermissionStatus =
-        newStatusStr === 'granted' || newStatusStr === 'limited'
-          ? (newStatusStr as PermissionStatus)
-          : 'denied';
-      setPermissionStatus(mapped);
-      return mapped;
-    }
-    setPermissionStatus('denied');
-    return 'denied' as PermissionStatus;
   }, []);
 
   const loadPhotos = useCallback(async () => {
