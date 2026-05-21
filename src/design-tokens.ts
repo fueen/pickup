@@ -17,7 +17,7 @@ export const Tokens = {
     timing: { duration: 300 },
   },
   photo: {
-    groupSize: 15,
+    groupSize: 10,
     freeDailyLimit: 20,
     markThreshold: 0.4,
   },

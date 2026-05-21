@@ -8,6 +8,7 @@ import {
   Alert,
   Platform,
   Switch,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
@@ -185,18 +186,15 @@ function DevToolsSection({
 
   if (!visible) {
     return (
-      <View style={{ marginTop: 20, alignItems: 'center' }}>
-        <Text
-          style={{ color: Tokens.color.textMuted, fontSize: 12 }}
-          onPress={() => {
-            const next = tapCount + 1;
-            setTapCount(next);
-            if (next >= 5) setVisible(true);
-          }}
-        >
-          连续点击5次开启开发者工具
-        </Text>
-      </View>
+      <TouchableOpacity
+        style={{ height: 12, marginTop: 20, alignItems: 'center', justifyContent: 'center' }}
+        activeOpacity={1}
+        onPress={() => {
+          const next = tapCount + 1;
+          setTapCount(next);
+          if (next >= 5) setVisible(true);
+        }}
+      />
     );
   }
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -22,6 +22,7 @@ export default function ReviewScreen() {
   const [deleting, setDeleting] = useState(false);
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+  const autoNavRef = useRef(false);
 
   const photosToDelete = currentGroup.filter(
     (p) => markedForDelete.has(p.id) && !deselectedIds.has(p.id)
@@ -60,9 +61,11 @@ export default function ReviewScreen() {
     router.replace('/');
   }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
 
-  // Handle zero-delete case
+  // Handle zero-delete case — autoNavRef prevents infinite loop from dep changes
   useEffect(() => {
+    if (autoNavRef.current) return;
     if (photosToDelete.length === 0 && !deleting) {
+      autoNavRef.current = true;
       const ok = loadNextWithLimit();
       if (ok) router.replace('/');
     }
