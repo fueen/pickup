@@ -13,14 +13,26 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "拾遗需要访问你的照片库，以便浏览和整理照片。所有处理均在本地完成，不会上传任何照片。"
+      }
     },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "拾遗需要访问你的照片库，以便浏览和整理照片。所有处理均在本地完成，不会上传任何照片。",
+          "savePhotosPermission": "拾遗需要保存照片到你的照片库。"
+        }
+      ]
+    ],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false
     },
     "web": {

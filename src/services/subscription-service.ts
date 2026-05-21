@@ -8,13 +8,24 @@ import { SubscriptionType } from '../types/subscription';
 const REVENUECAT_API_KEY_IOS = '__REVENUECAT_IOS_KEY__';
 const REVENUECAT_API_KEY_ANDROID = '__REVENUECAT_ANDROID_KEY__';
 
+let configured = false;
+
 export function configurePurchases(): void {
-  Purchases.configure({
-    apiKey:
+  if (configured) return;
+  try {
+    const apiKey =
       Platform.OS === 'ios'
         ? REVENUECAT_API_KEY_IOS
-        : REVENUECAT_API_KEY_ANDROID,
-  });
+        : REVENUECAT_API_KEY_ANDROID;
+    if (apiKey.startsWith('__')) {
+      console.warn('RevenueCat API key not configured, skipping initialization');
+      return;
+    }
+    Purchases.configure({ apiKey });
+    configured = true;
+  } catch (e) {
+    console.warn('RevenueCat initialization failed:', e);
+  }
 }
 
 export async function getOfferings() {

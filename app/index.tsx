@@ -29,15 +29,22 @@ export default function BrowseScreen() {
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const lastViewedGroupRef = useRef<string>('');
+  const triedLoadRef = useRef(false);
+  const hasLoadedRef = useRef(false);
+
+  const currentPhoto = currentGroup[groupIndex];
 
   useEffect(() => {
+    if (hasLoadedRef.current) return;
     if (permissionStatus === 'undetermined') {
       requestPermissions().then((status) => {
-        if (status === 'granted' || status === 'limited') {
+        if ((status === 'granted' || status === 'limited') && !hasLoadedRef.current) {
+          hasLoadedRef.current = true;
           loadPhotos();
         }
       });
     } else if (permissionStatus === 'granted' || permissionStatus === 'limited') {
+      hasLoadedRef.current = true;
       loadPhotos();
     }
   }, [permissionStatus]);
@@ -53,6 +60,22 @@ export default function BrowseScreen() {
     }
   }, [groupIndex, currentGroup, recordViewed]);
 
+  // Load next group when current group is exhausted
+  useEffect(() => {
+    if (!currentPhoto && allPhotos.length > 0 && !isLoading && canBrowseNextGroup && !triedLoadRef.current) {
+      triedLoadRef.current = true;
+      incrementGroupCount();
+      loadNextGroup();
+    }
+  }, [currentPhoto, allPhotos.length, isLoading, canBrowseNextGroup, incrementGroupCount, loadNextGroup]);
+
+  // Reset load flag when we have photos again
+  useEffect(() => {
+    if (currentPhoto) {
+      triedLoadRef.current = false;
+    }
+  }, [currentPhoto]);
+
   const advanceToNext = useCallback(() => {
     if (groupIndex + 1 >= Tokens.photo.groupSize) {
       router.push('/review');
@@ -65,24 +88,24 @@ export default function BrowseScreen() {
     const photo = currentGroup[groupIndex];
     if (!photo) return;
     setMarkedForDelete((prev) => new Set(prev).add(photo.id));
-    dispatch({ type: 'MARK_DELETE', payload: photo.id });
+    dispatch({ type: 'MARK_DELETE', payload: { photoId: photo.id, timestamp: Date.now() } });
     advanceToNext();
-  }, [currentGroup, groupIndex, advanceToNext]);
+  }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
   const handleMarkKeep = useCallback(() => {
     const photo = currentGroup[groupIndex];
     if (!photo) return;
     setMarkedForKeep((prev) => new Set(prev).add(photo.id));
-    dispatch({ type: 'MARK_KEEP', payload: photo.id });
+    dispatch({ type: 'MARK_KEEP', payload: { photoId: photo.id, timestamp: Date.now() } });
     advanceToNext();
-  }, [currentGroup, groupIndex, advanceToNext]);
+  }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
   const handleSkip = useCallback(() => {
     const photo = currentGroup[groupIndex];
     if (!photo) return;
-    dispatch({ type: 'SKIP', payload: photo.id });
+    dispatch({ type: 'SKIP', payload: { photoId: photo.id, timestamp: Date.now() } });
     advanceToNext();
-  }, [currentGroup, groupIndex, advanceToNext]);
+  }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
   if (permissionStatus === 'denied' || permissionStatus === 'undetermined') {
     return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
@@ -97,20 +120,17 @@ export default function BrowseScreen() {
   }
   if (allPhotos.length === 0) return <EmptyGate />;
 
-  const currentPhoto = currentGroup[groupIndex];
   if (!currentPhoto) {
     if (!canBrowseNextGroup) {
       return (
         <View style={styles.centered}>
           <LimitReachedModal
             visible={true}
-            onClose={() => setLimitModalVisible(false)}
+            onClose={() => router.push('/paywall')}
           />
         </View>
       );
     }
-    incrementGroupCount();
-    loadNextGroup();
     return <LoadingGate />;
   }
 

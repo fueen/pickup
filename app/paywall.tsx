@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ export default function PaywallScreen() {
   } = useSubscriptionContext();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const hasInitializedRef = useRef(false);
 
   const packages: PurchasesPackage[] = useMemo(() => {
     const current = offerings?.current;
@@ -46,6 +47,7 @@ export default function PaywallScreen() {
 
   // Find recommended (yearly) index
   const recommendedIndex = useMemo(() => {
+    if (packages.length === 0) return 0;
     const idx = packages.findIndex(
       (p) =>
         p.identifier.includes('annual') || p.identifier.includes('yearly'),
@@ -54,24 +56,25 @@ export default function PaywallScreen() {
   }, [packages]);
 
   // Default select recommended on first render
-  const [initialized, setInitialized] = useState(false);
-  if (!initialized && packages.length > 0) {
-    setInitialized(true);
-    setSelectedIndex(recommendedIndex);
-  }
+  useEffect(() => {
+    if (!hasInitializedRef.current && packages.length > 0) {
+      hasInitializedRef.current = true;
+      setSelectedIndex(recommendedIndex);
+    }
+  }, [packages.length, recommendedIndex]);
 
   const effectiveSelected =
     packages.length > 0 ? selectedIndex : recommendedIndex;
 
   const handlePurchase = async () => {
     if (packages.length === 0) return;
-    await purchase(packages[effectiveSelected]);
-    router.back();
+    const ok = await purchase(packages[effectiveSelected]);
+    if (ok) router.back();
   };
 
   const handleRestore = async () => {
-    await restore();
-    router.back();
+    const ok = await restore();
+    if (ok) router.back();
   };
 
   const handleClose = () => {

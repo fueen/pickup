@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Tokens } from '../../design-tokens';
 import { PermissionStatus } from '../../types/photo';
 
@@ -22,7 +22,11 @@ export function PermissionGate({ status, onRequest }: Props) {
       </Text>
       <TouchableOpacity
         style={styles.button}
-        onPress={isDenied ? () => Linking.openSettings() : onRequest}
+        onPress={
+          isDenied
+            ? () => { Linking.openSettings().catch(() => Alert.alert('提示', '请手动在系统设置中开启相册权限')); }
+            : onRequest
+        }
       >
         <Text style={styles.buttonText}>{isDenied ? '打开系统设置' : '允许访问相册'}</Text>
       </TouchableOpacity>

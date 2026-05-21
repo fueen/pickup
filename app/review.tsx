@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -48,8 +48,7 @@ export default function ReviewScreen() {
   const handleConfirmDelete = useCallback(async () => {
     if (photosToDelete.length === 0) return;
     setDeleting(true);
-    const ids = photosToDelete.map((p) => p.id);
-    const result = await deletePhotos(ids);
+    const result = await deletePhotos(photosToDelete);
     if (result.successCount > 0) {
       recordDeleted(result.successCount, result.freedBytes);
       clearMarkedPhotos();
@@ -62,11 +61,12 @@ export default function ReviewScreen() {
   }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
 
   // Handle zero-delete case
-  if (photosToDelete.length === 0 && !deleting) {
-    loadNextWithLimit();
-    router.back();
-    return null;
-  }
+  useEffect(() => {
+    if (photosToDelete.length === 0 && !deleting) {
+      const ok = loadNextWithLimit();
+      if (ok) router.back();
+    }
+  }, [photosToDelete.length, deleting, loadNextWithLimit, router]);
 
   return (
     <View style={styles.container}>

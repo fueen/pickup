@@ -53,6 +53,8 @@ export function StatsProvider({ children }: { children: React.ReactNode }) {
       const s = await saveDeleted(count, bytes);
       setTotalDeleted(s.totalDeleted);
       setTotalFreedBytes(s.totalFreedBytes);
+      setStreakDays(s.streakDays);
+      setWeeklyHistory(s.weeklyHistory);
     },
     [],
   );

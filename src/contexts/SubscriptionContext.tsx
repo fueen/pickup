@@ -37,8 +37,8 @@ export interface SubscriptionContextValue {
   todayGroupCount: number;
   isLimitReached: boolean;
   canBrowseNextGroup: boolean;
-  purchase: (pkg: PurchasesPackage) => Promise<void>;
-  restore: () => Promise<void>;
+  purchase: (pkg: PurchasesPackage) => Promise<boolean>;
+  restore: () => Promise<boolean>;
   incrementGroupCount: () => void;
 }
 
@@ -103,7 +103,7 @@ export function SubscriptionProvider({
         AsyncStorage.setItem(
           DAILY_USAGE_KEY,
           JSON.stringify({ date: getTodayKey(), count: 0 }),
-        );
+        ).catch((e) => console.warn('Failed to reset daily usage:', e));
       } else {
         setTodayGroupCount(usage.count);
       }
@@ -118,7 +118,7 @@ export function SubscriptionProvider({
       AsyncStorage.setItem(
         DAILY_USAGE_KEY,
         JSON.stringify({ date: getTodayKey(), count: next }),
-      );
+      ).catch((e) => console.warn('Failed to save daily usage:', e));
       return next;
     });
   }, []);
@@ -127,29 +127,33 @@ export function SubscriptionProvider({
     !isPro && todayGroupCount >= Tokens.photo.freeDailyLimit;
   const canBrowseNextGroup = isPro || !isLimitReached;
 
-  const purchase = useCallback(async (pkg: PurchasesPackage) => {
+  const purchase = useCallback(async (pkg: PurchasesPackage): Promise<boolean> => {
     setPurchaseInProgress(true);
     setPurchaseError(null);
     try {
       const info = await purchasePackage(pkg);
       setIsPro(isProActive(info));
       setSubType(getSubscriptionType(info));
+      return true;
     } catch (e) {
       setPurchaseError(e instanceof Error ? e.message : 'Purchase failed');
+      return false;
     } finally {
       setPurchaseInProgress(false);
     }
   }, []);
 
-  const restore = useCallback(async () => {
+  const restore = useCallback(async (): Promise<boolean> => {
     setRestoreInProgress(true);
     setPurchaseError(null);
     try {
       const info = await restorePurchases();
       setIsPro(isProActive(info));
       setSubType(getSubscriptionType(info));
+      return true;
     } catch (e) {
       setPurchaseError(e instanceof Error ? e.message : 'Restore failed');
+      return false;
     } finally {
       setRestoreInProgress(false);
     }

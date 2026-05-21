@@ -8,16 +8,18 @@ import { StatsProvider } from '../src/contexts/StatsContext';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
 import { SessionProvider } from '../src/contexts/SessionContext';
 import { Tokens } from '../src/design-tokens';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <SubscriptionProvider>
-        <StatsProvider>
-          <PhotoProvider>
-            <SessionProvider>
-              <StatusBar style="light" />
-              <Tabs
+      <ErrorBoundary>
+        <SubscriptionProvider>
+          <StatsProvider>
+            <PhotoProvider>
+              <SessionProvider>
+                <StatusBar style="light" />
+                <Tabs
                 screenOptions={{
                   headerShown: false,
                   tabBarStyle: {
@@ -63,6 +65,7 @@ export default function RootLayout() {
           </PhotoProvider>
         </StatsProvider>
       </SubscriptionProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

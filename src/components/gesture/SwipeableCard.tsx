@@ -21,6 +21,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
   const translateX = useSharedValue(0);
   const markProgress = useSharedValue(0);
   const isAnimating = useSharedValue(false);
+  const hapticFired = useSharedValue(false);
   const { impactMedium, notifySuccess, notifyWarning } = useHaptics();
 
   const handleEnd = useCallback((ty: number, tx: number) => {
@@ -52,7 +53,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
   }, [onMarkDelete, onMarkKeep, onSkip]);
 
   const panGesture = Gesture.Pan()
-    .onBegin(() => { isAnimating.value = false; })
+    .onBegin(() => { isAnimating.value = false; hapticFired.value = false; })
     .onUpdate((e) => {
       if (isAnimating.value) return;
       translateY.value = e.translationY * 0.8;
@@ -61,8 +62,13 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip }: Pr
       const maxDist = 200;
       const progressY = Math.max(-1, Math.min(1, dy / maxDist));
       markProgress.value = Math.abs(dy) > Math.abs(e.translationX) ? progressY : 0;
-      if (Math.abs(progressY) >= Tokens.photo.markThreshold) {
+      const overThreshold = Math.abs(progressY) >= Tokens.photo.markThreshold;
+      if (overThreshold && !hapticFired.value) {
+        hapticFired.value = true;
         runOnJS(impactMedium)();
+      }
+      if (!overThreshold) {
+        hapticFired.value = false;
       }
     })
     .onEnd((e) => { runOnJS(handleEnd)(e.translationY, e.translationX); });

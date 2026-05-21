@@ -39,9 +39,10 @@ export async function saveStats(stats: StatsData): Promise<void> {
 export async function recordViewed(viewedCount: number): Promise<StatsData> {
   const stats = await loadStats();
   stats.totalViewed += viewedCount;
+  const prevDate = stats.lastActiveDate;
   stats.lastActiveDate = getTodayKey();
-  updateStreak(stats);
-  updateWeeklyHistory(stats, 'viewed');
+  updateStreak(stats, prevDate);
+  updateWeeklyHistory(stats, 'viewed', viewedCount);
   await saveStats(stats);
   return stats;
 }
@@ -53,40 +54,41 @@ export async function recordDeleted(
   const stats = await loadStats();
   stats.totalDeleted += deletedCount;
   stats.totalFreedBytes += freedBytes;
-  updateWeeklyHistory(stats, 'deleted');
+  const prevDate = stats.lastActiveDate;
+  stats.lastActiveDate = getTodayKey();
+  updateStreak(stats, prevDate);
+  updateWeeklyHistory(stats, 'deleted', deletedCount);
   await saveStats(stats);
   return stats;
 }
 
-function updateStreak(stats: StatsData): void {
+function updateStreak(stats: StatsData, prevDate: string | null): void {
   const today = getTodayKey();
-  if (!stats.lastActiveDate || stats.lastActiveDate === today) {
+  if (!prevDate || prevDate === today) {
     if (stats.streakDays === 0) stats.streakDays = 1;
     return;
   }
-  const last = new Date(stats.lastActiveDate);
+  const last = new Date(prevDate);
   const todayDate = new Date(today);
-  const diffDays =
-    (todayDate.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
-  stats.streakDays =
-    diffDays === 1 ? stats.streakDays + 1 : 1;
+  const diffDays = Math.round(
+    (todayDate.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  stats.streakDays = diffDays === 1 ? stats.streakDays + 1 : 1;
 }
 
 function updateWeeklyHistory(
   stats: StatsData,
-  _field: 'viewed' | 'deleted',
+  field: 'viewed' | 'deleted',
+  count: number,
 ): void {
   const today = getTodayKey();
   const existing = stats.weeklyHistory.find((d) => d.date === today);
   if (existing) {
-    existing.viewed = stats.totalViewed;
-    existing.deleted = stats.totalDeleted;
+    existing[field] += count;
   } else {
-    stats.weeklyHistory.push({
-      date: today,
-      viewed: stats.totalViewed,
-      deleted: stats.totalDeleted,
-    });
+    const entry: DailyStats = { date: today, viewed: 0, deleted: 0 };
+    entry[field] = count;
+    stats.weeklyHistory.push(entry);
   }
   if (stats.weeklyHistory.length > 7) {
     stats.weeklyHistory = stats.weeklyHistory.slice(-7);

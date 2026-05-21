@@ -10,7 +10,7 @@ export function generateRandomGroup(
   let candidates = allPhotos.filter((p) => !viewedPhotoIds.has(p.id));
 
   if (candidates.length < groupSize) {
-    // Derive FIFO order from pool when not explicitly provided.
+    // Refill from viewed photos in viewedOrder (FIFO by view time).
     const order =
       viewedOrder.length > 0
         ? viewedOrder

@@ -3,6 +3,7 @@ import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoAsset, PermissionStatus } from '../types/photo';
 import { generateRandomGroup } from '../services/photo-service';
+import { Tokens } from '../design-tokens';
 
 const VIEWED_IDS_KEY = 'viewedPhotoIds';
 const VIEWED_ORDER_KEY = 'viewedPhotoOrder';
@@ -68,7 +69,7 @@ export function usePhotoEngine() {
       setViewedPhotoIds(idSet);
       viewedOrderRef.current = orderArr;
 
-      const group = generateRandomGroup(photos, idSet, 15, orderArr);
+      const group = generateRandomGroup(photos, idSet, Tokens.photo.groupSize, orderArr);
       setCurrentGroup(group);
 
       const newIds = new Set(idSet);
@@ -79,8 +80,10 @@ export function usePhotoEngine() {
         ...orderArr.filter((id) => !group.find((p) => p.id === id)),
       ];
       viewedOrderRef.current = newOrder;
-      AsyncStorage.setItem(VIEWED_IDS_KEY, JSON.stringify([...newIds]));
-      AsyncStorage.setItem(VIEWED_ORDER_KEY, JSON.stringify(newOrder));
+      await AsyncStorage.multiSet([
+        [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
+        [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
+      ]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load photos');
     } finally {
@@ -89,22 +92,28 @@ export function usePhotoEngine() {
   }, []);
 
   const loadNextGroup = useCallback(() => {
-    const group = generateRandomGroup(allPhotos, viewedPhotoIds, 15, viewedOrderRef.current);
-    setCurrentGroup(group);
-    setGroupIndex(0);
-    setMarkedForDelete(new Set());
-    setMarkedForKeep(new Set());
+    try {
+      const group = generateRandomGroup(allPhotos, viewedPhotoIds, Tokens.photo.groupSize, viewedOrderRef.current);
+      setCurrentGroup(group);
+      setGroupIndex(0);
+      setMarkedForDelete(new Set());
+      setMarkedForKeep(new Set());
 
-    const newIds = new Set(viewedPhotoIds);
-    group.forEach((p) => newIds.add(p.id));
-    setViewedPhotoIds(newIds);
-    const newOrder = [
-      ...group.map((p) => p.id),
-      ...viewedOrderRef.current.filter((id) => !group.find((p) => p.id === id)),
-    ];
-    viewedOrderRef.current = newOrder;
-    AsyncStorage.setItem(VIEWED_IDS_KEY, JSON.stringify([...newIds]));
-    AsyncStorage.setItem(VIEWED_ORDER_KEY, JSON.stringify(newOrder));
+      const newIds = new Set(viewedPhotoIds);
+      group.forEach((p) => newIds.add(p.id));
+      setViewedPhotoIds(newIds);
+      const newOrder = [
+        ...group.map((p) => p.id),
+        ...viewedOrderRef.current.filter((id) => !group.find((p) => p.id === id)),
+      ];
+      viewedOrderRef.current = newOrder;
+      AsyncStorage.multiSet([
+        [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
+        [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
+      ]).catch((e) => console.warn('Failed to persist viewed state:', e));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load next group');
+    }
   }, [allPhotos, viewedPhotoIds]);
 
   const clearMarkedPhotos = useCallback(() => {
