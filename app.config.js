@@ -28,6 +28,7 @@ export default {
       },
     },
     plugins: [
+      'expo-font',
       [
         'expo-media-library',
         {
