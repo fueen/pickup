@@ -17,11 +17,6 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
     const opacity = interpolate(progress.value, [0, 0.5], [0, 1]);
     return { opacity };
   });
-  const skipLeftStyle = useAnimatedStyle(() => {
-    const v = skipProgress.value;
-    const opacity = v < 0 ? interpolate(-v, [Tokens.photo.markThreshold, 0.5], [0, 1]) : 0;
-    return { opacity };
-  });
   const skipRightStyle = useAnimatedStyle(() => {
     const v = skipProgress.value;
     const opacity = v > 0 ? interpolate(v, [Tokens.photo.markThreshold, 0.5], [0, 1]) : 0;
@@ -30,16 +25,13 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
   return (
     <>
       <Animated.View style={[styles.indicator, styles.delete, deleteStyle]}>
-        <Animated.Text style={styles.text}>删除</Animated.Text>
+        <Animated.Text style={styles.deleteText}>删除</Animated.Text>
       </Animated.View>
       <Animated.View style={[styles.indicator, styles.keep, keepStyle]}>
-        <Animated.Text style={styles.text}>保留</Animated.Text>
-      </Animated.View>
-      <Animated.View style={[styles.indicator, styles.skipLeft, skipLeftStyle]}>
-        <Animated.Text style={styles.text}>跳过</Animated.Text>
+        <Animated.Text style={styles.keepText}>保留</Animated.Text>
       </Animated.View>
       <Animated.View style={[styles.indicator, styles.skipRight, skipRightStyle]}>
-        <Animated.Text style={styles.text}>上一张</Animated.Text>
+        <Animated.Text style={styles.navText}>上一张 →</Animated.Text>
       </Animated.View>
     </>
   );
@@ -47,9 +39,23 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
 
 const styles = StyleSheet.create({
   indicator: { position: 'absolute', alignItems: 'center', zIndex: 20 },
-  delete: { top: 120, left: 0, right: 0 },
-  keep: { bottom: 120, left: 0, right: 0 },
-  skipLeft: { left: 40, top: 0, bottom: 0, justifyContent: 'center' },
-  skipRight: { right: 40, top: 0, bottom: 0, justifyContent: 'center' },
-  text: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 8 },
+  delete: { top: 108, left: 0, right: 0 },
+  keep: { bottom: 205, left: 0, right: 0 },
+  skipRight: { right: 4, top: 0, bottom: 0, justifyContent: 'center' },
+  deleteText: {
+    fontSize: 16, fontWeight: '800', color: '#000', letterSpacing: 2,
+    backgroundColor: '#FFCC00', paddingHorizontal: 22, paddingVertical: 8,
+    borderRadius: 24, overflow: 'hidden',
+  },
+  keepText: {
+    fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 22, paddingVertical: 8,
+    borderRadius: 24, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+  },
+  navText: {
+    fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.6)', letterSpacing: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 24, overflow: 'hidden',
+  },
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
@@ -8,10 +9,13 @@ import { useStatsContext } from '../src/contexts/StatsContext';
 import { PhotoCard } from '../src/components/photo-card/PhotoCard';
 import { GroupProgressBar } from '../src/components/photo-card/GroupProgressBar';
 import { SwipeableCard } from '../src/components/gesture/SwipeableCard';
+import { GestureGuideOverlay } from '../src/components/gesture/GestureGuideOverlay';
 import { PermissionGate } from '../src/components/photo-card/PermissionGate';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { EmptyGate } from '../src/components/photo-card/EmptyGate';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
+import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
+import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
 
 export default function BrowseScreen() {
@@ -22,15 +26,39 @@ export default function BrowseScreen() {
     markedForKeep, setMarkedForKeep,
     isLoading, permissionStatus, error, allPhotos,
     requestPermissions, loadPhotos, loadNextGroup,
+    clearMarkedPhotos, refillGroup,
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
   const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
-  const { recordViewed } = useStatsContext();
+  const { recordViewed, recordDeleted } = useStatsContext();
+
+  const [quickDeleting, setQuickDeleting] = useState(false);
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+  const [guideVisible, setGuideVisible] = useState(false);
   const lastViewedGroupRef = useRef<string>('');
   const triedLoadRef = useRef(false);
   const hasLoadedRef = useRef(false);
+
+  // First-launch gesture guide (REQ-05)
+  useEffect(() => {
+    const checkGuide = async () => {
+      try {
+        const shown = await AsyncStorage.getItem('gestureGuideShown');
+        if (!shown) setGuideVisible(true);
+      } catch { /* ignore */ }
+    };
+    // Delay slightly to let the UI settle after splash
+    const timer = setTimeout(checkGuide, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleDismissGuide = useCallback(async () => {
+    setGuideVisible(false);
+    try {
+      await AsyncStorage.setItem('gestureGuideShown', 'true');
+    } catch { /* ignore */ }
+  }, []);
 
   const currentPhoto = currentGroup[groupIndex];
 
@@ -76,9 +104,9 @@ export default function BrowseScreen() {
     }
   }, [currentPhoto]);
 
-  const advanceToNext = useCallback(() => {
+  const advanceToNext = useCallback((justMarkedDelete = false) => {
     if (groupIndex + 1 >= currentGroup.length) {
-      if (markedForDelete.size === 0) {
+      if (markedForDelete.size === 0 && !justMarkedDelete) {
         incrementGroupCount();
         loadNextGroup();
       } else {
@@ -94,7 +122,7 @@ export default function BrowseScreen() {
     if (!photo) return;
     setMarkedForDelete((prev) => new Set(prev).add(photo.id));
     dispatch({ type: 'MARK_DELETE', payload: { photoId: photo.id, timestamp: Date.now() } });
-    advanceToNext();
+    advanceToNext(true);
   }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
   const handleMarkKeep = useCallback(() => {
@@ -117,6 +145,26 @@ export default function BrowseScreen() {
       setGroupIndex(groupIndex - 1);
     }
   }, [groupIndex, setGroupIndex]);
+
+  // REQ-09: Quick delete marked photos
+  const handleQuickDelete = useCallback(async () => {
+    if (markedForDelete.size === 0 || quickDeleting) return;
+    setQuickDeleting(true);
+    try {
+      const photosToDelete = currentGroup.filter((p) => markedForDelete.has(p.id));
+      const deleteCount = photosToDelete.length;
+      const result = await deletePhotos(photosToDelete);
+      if (result.successCount > 0) {
+        recordDeleted(result.successCount, result.freedBytes);
+        setMarkedForDelete(new Set());
+        clearMarkedPhotos();
+        refillGroup(deleteCount);
+        setGroupIndex((prev) => Math.max(0, Math.min(prev, currentGroup.length - deleteCount - 1)));
+      }
+    } finally {
+      setQuickDeleting(false);
+    }
+  }, [markedForDelete, currentGroup, quickDeleting, clearMarkedPhotos, setMarkedForDelete, refillGroup, setGroupIndex, recordDeleted]);
 
   if (error) {
     return (
@@ -157,6 +205,16 @@ export default function BrowseScreen() {
       >
         <PhotoCard photo={currentPhoto} />
       </SwipeableCard>
+
+      {/* Quick delete button — top right */}
+      <View style={styles.quickDeleteWrap}>
+        <QuickDeleteButton
+          count={markedForDelete.size}
+          onPress={handleQuickDelete}
+          loading={quickDeleting}
+        />
+      </View>
+
       <GroupProgressBar
         current={groupIndex}
         total={currentGroup.length}
@@ -168,12 +226,22 @@ export default function BrowseScreen() {
         visible={limitModalVisible}
         onClose={() => setLimitModalVisible(false)}
       />
+      <GestureGuideOverlay
+        visible={guideVisible}
+        onDismiss={handleDismissGuide}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
+  quickDeleteWrap: {
+    position: 'absolute',
+    top: 54,
+    right: 20,
+    zIndex: 30,
+  },
   centered: { flex: 1, backgroundColor: Tokens.color.background, justifyContent: 'center', alignItems: 'center', padding: Tokens.spacing.xxl },
   errorText: { ...Tokens.typography.body, color: Tokens.color.danger, textAlign: 'center' },
 });

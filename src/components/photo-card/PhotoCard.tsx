@@ -8,34 +8,85 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Props { photo: PhotoAsset; }
 
-function getResizeMode(w: number, h: number): 'cover' | 'contain' {
-  if (w <= 0 || h <= 0) return 'cover';
-  if (w / h > 1.2) return 'contain';
-  return 'cover';
-}
-
 export function PhotoCard({ photo }: Props) {
-  const resizeMode = getResizeMode(photo.width, photo.height);
   return (
     <View style={styles.container}>
-      <Image source={{ uri: photo.uri }} style={styles.image} resizeMode={resizeMode} />
+      {/* Date and LIVE badge outside the photo card */}
       <View style={styles.header}>
         <Text style={styles.date}>{formatPhotoDate(photo.creationTime)}</Text>
+        {photo.mediaType === 'livePhoto' && (
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        )}
       </View>
-      {photo.mediaType === 'livePhoto' && (
-        <View style={styles.liveBadge}>
-          <Text style={styles.liveText}>LIVE</Text>
-        </View>
-      )}
+
+      {/* Rounded photo card */}
+      <View style={styles.card}>
+        <Image
+          source={{ uri: photo.uri }}
+          style={styles.image}
+          resizeMode="contain"
+        />
+      </View>
     </View>
   );
 }
 
+const CARD_H_PADDING = 24;
+const CARD_TOP = 148;
+const CARD_BOTTOM = 240;
+
 const styles = StyleSheet.create({
-  container: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: Tokens.color.background, justifyContent: 'center', alignItems: 'center' },
-  image: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT * 0.75 },
-  header: { position: 'absolute', top: 60, left: Tokens.spacing.l, right: Tokens.spacing.l },
-  date: { fontSize: 17, fontWeight: '600', color: Tokens.color.textPrimary, letterSpacing: -0.3, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
-  liveBadge: { position: 'absolute', top: 60, right: Tokens.spacing.l, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: Tokens.spacing.s, paddingVertical: 2, borderRadius: Tokens.radius.button },
-  liveText: { ...Tokens.typography.caption, color: Tokens.color.textPrimary, fontWeight: '700' },
+  container: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    backgroundColor: Tokens.color.background,
+    alignItems: 'center',
+  },
+  header: {
+    position: 'absolute',
+    top: 54,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+  date: {
+    fontSize: 21,
+    fontWeight: '600',
+    color: Tokens.color.textPrimary,
+    letterSpacing: -0.3,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowRadius: 4,
+  },
+  liveBadge: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: Tokens.spacing.s,
+    paddingVertical: 2,
+    borderRadius: Tokens.radius.button,
+  },
+  liveText: {
+    ...Tokens.typography.caption,
+    color: Tokens.color.textPrimary,
+    fontWeight: '700',
+  },
+  card: {
+    position: 'absolute',
+    top: CARD_TOP,
+    left: CARD_H_PADDING,
+    right: CARD_H_PADDING,
+    bottom: CARD_BOTTOM,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#0a0a0a',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
 });

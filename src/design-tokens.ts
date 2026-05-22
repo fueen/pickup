@@ -3,6 +3,7 @@ export const Tokens = {
     background: '#000000',
     surface: '#1C1C1E',
     surfaceElevated: '#2C2C2E',
+    accent: '#FFCC00',
     danger: '#FF3B30',
     safe: '#34C759',
     textPrimary: '#FFFFFF',
@@ -18,7 +19,7 @@ export const Tokens = {
   },
   photo: {
     groupSize: 10,
-    freeDailyLimit: 20,
+    freeDailyLimit: 3,
     markThreshold: 0.4,
   },
   typography: {

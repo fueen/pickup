@@ -1,16 +1,33 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatsProvider } from '../src/contexts/StatsContext';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
 import { SessionProvider } from '../src/contexts/SessionContext';
 import { Tokens } from '../src/design-tokens';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { SplashScreen } from '../src/components/SplashScreen';
 
 export default function RootLayout() {
+  const [splashDone, setSplashDone] = useState(false);
+
+  const handleSplashFinish = useCallback(() => {
+    setSplashDone(true);
+  }, []);
+
+  if (!splashDone) {
+    return (
+      <GestureHandlerRootView style={styles.root}>
+        <StatusBar style="light" />
+        <SplashScreen onFinish={handleSplashFinish} />
+      </GestureHandlerRootView>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <ErrorBoundary>
@@ -23,10 +40,10 @@ export default function RootLayout() {
                 screenOptions={{
                   headerShown: false,
                   tabBarStyle: {
-                    backgroundColor: Tokens.color.surface,
-                    borderTopColor: Tokens.color.textMuted,
+                    backgroundColor: '#0D0D0D',
+                    borderTopColor: '#1C1C1E',
                   },
-                  tabBarActiveTintColor: Tokens.color.textPrimary,
+                  tabBarActiveTintColor: '#FFCC00',
                   tabBarInactiveTintColor: Tokens.color.textMuted,
                   tabBarLabelStyle: { fontSize: 12 },
                 }}
@@ -36,7 +53,7 @@ export default function RootLayout() {
                   options={{
                     tabBarLabel: '浏览',
                     tabBarIcon: ({ color }) => (
-                      <Text style={{ color, fontSize: 20 }}>{'📸'}</Text>
+                      <MaterialCommunityIcons name="image-multiple-outline" size={24} color={color} />
                     ),
                   }}
                 />
@@ -45,7 +62,7 @@ export default function RootLayout() {
                   options={{
                     tabBarLabel: '设置',
                     tabBarIcon: ({ color }) => (
-                      <Text style={{ color, fontSize: 20 }}>{'⚙️'}</Text>
+                      <MaterialCommunityIcons name="cog-outline" size={24} color={color} />
                     ),
                   }}
                 />

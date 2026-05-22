@@ -6,7 +6,6 @@ import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
-import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
@@ -18,7 +17,6 @@ export default function ReviewScreen() {
   const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
   const { recordDeleted } = useStatsContext();
 
-  const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const [limitModalVisible, setLimitModalVisible] = useState(false);
@@ -56,7 +54,6 @@ export default function ReviewScreen() {
       dispatch({ type: 'RESET_SESSION' });
     }
     setDeleting(false);
-    setShowConfirm(false);
     loadNextWithLimit();
     router.replace('/');
   }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
@@ -95,18 +92,16 @@ export default function ReviewScreen() {
         <TouchableOpacity style={styles.cancelButton} onPress={() => router.replace('/')}>
           <Text style={styles.cancelText}>取消</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => setShowConfirm(true)}>
-          <Text style={styles.deleteText}>删除 {photosToDelete.length} 张</Text>
+        <TouchableOpacity
+          style={[styles.deleteButton, deleting && { opacity: 0.6 }]}
+          onPress={handleConfirmDelete}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteText}>
+            {deleting ? '删除中...' : `删除 ${photosToDelete.length} 张`}
+          </Text>
         </TouchableOpacity>
       </View>
-
-      <DeleteConfirmSheet
-        visible={showConfirm}
-        count={photosToDelete.length}
-        loading={deleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowConfirm(false)}
-      />
 
       <LimitReachedModal
         visible={limitModalVisible}
@@ -121,8 +116,8 @@ const styles = StyleSheet.create({
   heading: { ...Tokens.typography.title, color: Tokens.color.textPrimary, textAlign: 'center', marginBottom: Tokens.spacing.s },
   hint: { ...Tokens.typography.caption, color: Tokens.color.textMuted, textAlign: 'center', marginBottom: Tokens.spacing.xl },
   footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 40, left: 0, right: 0 },
-  cancelButton: { flex: 1, paddingVertical: Tokens.spacing.l, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: Tokens.radius.button },
-  cancelText: { ...Tokens.typography.body, color: Tokens.color.textSecondary },
-  deleteButton: { flex: 1, paddingVertical: Tokens.spacing.l, alignItems: 'center', backgroundColor: Tokens.color.danger, borderRadius: Tokens.radius.button },
-  deleteText: { ...Tokens.typography.body, color: '#FFFFFF', fontWeight: '600' },
+  cancelButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: 30 },
+  cancelText: { fontSize: 16, fontWeight: '700', color: Tokens.color.textSecondary, letterSpacing: 1 },
+  deleteButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: '#FFCC00', borderRadius: 30 },
+  deleteText: { fontSize: 16, fontWeight: '700', color: '#000000', letterSpacing: 1 },
 });

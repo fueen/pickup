@@ -152,11 +152,46 @@ export function usePhotoEngine() {
     setAllPhotos(remainingPhotos);
   }, [allPhotos, markedForDelete]);
 
+  // REQ-09: refill group after quick-delete to maintain group size
+  const refillGroup = useCallback((deleteCount: number) => {
+    try {
+      const newIds = new Set(viewedPhotoIds);
+      const currentOrder = [...viewedOrderRef.current];
+
+      const fillCount = Math.min(deleteCount, Tokens.photo.groupSize);
+      const newPhotos = generateRandomGroup(
+        allPhotos.filter((p) => !markedForDelete.has(p.id)),
+        newIds,
+        fillCount,
+        currentOrder,
+      );
+
+      setCurrentGroup((prev) => {
+        const remaining = prev.filter((p) => !markedForDelete.has(p.id));
+        return [...remaining, ...newPhotos];
+      });
+
+      newPhotos.forEach((p) => newIds.add(p.id));
+      setViewedPhotoIds(newIds);
+      const newOrder = [
+        ...newPhotos.map((p) => p.id),
+        ...currentOrder.filter((id) => !newPhotos.find((p) => p.id === id)),
+      ];
+      viewedOrderRef.current = newOrder;
+      AsyncStorage.multiSet([
+        [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
+        [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
+      ]).catch(() => {});
+    } catch {
+      // No refill candidates available — skip silently
+    }
+  }, [allPhotos, viewedPhotoIds, markedForDelete]);
+
   return {
     allPhotos, currentGroup, groupIndex, setGroupIndex,
     viewedPhotoIds, markedForDelete, setMarkedForDelete,
     markedForKeep, setMarkedForKeep, isLoading,
     permissionStatus, error, requestPermissions,
-    loadPhotos, loadNextGroup, clearMarkedPhotos,
+    loadPhotos, loadNextGroup, clearMarkedPhotos, refillGroup,
   };
 }
