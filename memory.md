@@ -43,23 +43,42 @@
 
 ---
 
-## 2026-05-22 22:30 | 项目进展-pickup
+## 2026-05-23 00:53 | 项目进展-pickup
 
 ### 一句话概述
-定位并修复了困扰已久的 Android 原生崩溃 `getDirectConverter`，根因是 expo-font SDK 版本不匹配。
+完成多项 UI/UX 需求改动，修复多个 JS 层 Bug，并定位修复了困扰已久的 Android 原生崩溃 `getDirectConverter`。
 
-### 当前进度 / 关键结论
-- **getDirectConverter 崩溃根因**：`expo-font@56.0.5`（未来 SDK 版本）被安装到 SDK 54 项目中，其原生代码调用 `ReturnTypeKt.getDirectConverter()`，该方法在 SDK 54 的 `expo-modules-core@3.0.30` 中不存在
-- **触发方式**：EAS 构建日志报 "duplicate expo-font" 和 "missing peer dependency expo-font" 两个警告，顺藤摸瓜发现版本错配
-- **修复**：用 `npx expo install expo-font` 安装正确版本 `14.0.11`，消除重复，添加 expo-font 插件到 app.config.js
-- **app.config.js 动态配置**：通过 `EAS_BUILD_PROFILE` 环境变量区分三套包名/应用名（dev/preview/prod），实现同一设备并存安装
-- **已提交修复** `f1aa0e6`，已推送 GitHub
-- **Dev build** `b0849955` 和 **Preview build** `af36e61f` 已触发排队
+### 需求改动
+- **动态包名配置**：`app.config.js` 替代 `app.json`，通过 `EAS_BUILD_PROFILE` 区分三套包名/应用名（dev/preview/prod），实现同一设备并存安装不覆盖
+- **首次启动手势引导**：新增 `GestureGuideOverlay` 组件，首次进入时展示上下左右滑动操作说明（上删除/下保留/左跳过/右上一张），4 秒自动消失或点击关闭
+- **批量删除按钮**：新增 `QuickDeleteButton` 组件，浮动在浏览页右下角，显示已标记删除数量，一键批量删除
+- **SplashScreen 启动页**：新增带动画的启动页，标题+标语渐入效果，替代默认白屏
+- **PhotoCard 卡片重设计**：圆角卡片布局（borderRadius: 24），日期头部、LIVE 标识，整体视觉升级
+- **ActionIndicator 重设计**：胶囊样式指示器，"删除"/"保留"/"跳过" 文字标签，清晰的颜色区分
+- **水平滑动优化**：左滑跳过、右滑上一张，用比率判断（absTX > absTY * 1.2）替代严格 isVertical 判断，斜向滑动不误触发
+- **底部进度条增强**：圆点可点击跳转到对应位置
+- **review 页优化**：零删除时直接跳过确认页进入下一组
+
+### Bug 修复
+- **`getDirectConverter` 原生崩溃**：`expo-font@56.0.5`（SDK 56+ 版本）不兼容 SDK 54，其原生代码调用 `ReturnTypeKt.getDirectConverter()` 方法在 `expo-modules-core@3.0.30` 中不存在。修复：`npx expo install expo-font` → 正确版本 `14.0.11`，消除重复依赖
+- **`@expo/vector-icons` 异常**：旧 APK 未包含该原生模块，因 package.json 在构建后修改。替换为 emoji 临时方案，重建后恢复矢量图标（MaterialCommunityIcons）
+- **`refillGroup` 崩溃风险**：`generateRandomGroup()` 无候选照片时抛异常，外层未捕获。修复：包裹 try/catch 静默跳过
+- **`handleQuickDelete` UI 锁定**：异步操作失败时 `setQuickDeleting(false)` 不执行。修复：try/finally 确保状态重置
+- **`advanceToNext` 闭包过期**：使用旧 `currentGroup.length` 导致 groupIndex 越界、卡片黑屏。修复：接受 `justMarkedDelete` 参数刷新引用
+- **无限重渲染循环**：review.tsx `useEffect` 依赖 `loadNextWithLimit` 变化反复触发。修复：加 `autoNavRef` 守卫
+- **`GestureGuideOverlay` useEffect 缺依赖**：修复：补全 `onDismiss, overlayOpacity` 依赖数组
+
+### 设计/配置调整
+- `freeDailyLimit` 20 → 3，降低免费用户每日使用上限
+- `accent` 颜色 `#FFCC00`（黑+黄设计系统）
+- 每组照片 15 → 10 张
+- `newArchEnabled: true`（reanimated v4 强制要求）
+- Android `edgeToEdgeEnabled: false`，`predictiveBackGestureEnabled: false`
 
 ### 重要教训
-- 添加 Expo 包务必用 `npx expo install <pkg>`，不能用 `npm install`，否则版本不匹配会引发难以调试的原生崩溃
-- EAS 构建日志里的 warning 要认真看，duplicate/missing peer dependency 往往是崩溃的直接原因
+- 添加 Expo 包务必用 `npx expo install <pkg>`，不能用 `npm install`，否则版本不匹配引发难以调试的原生崩溃
+- EAS 构建日志里的 duplicate/missing peer dependency 警告是崩溃的直接线索，不能忽略
 
 ### 下一步
-- 两个新构建完成后下载测试，验证 getDirectConverter 崩溃是否已修复
+- Dev build `b0849955` 和 Preview build `af36e61f` 完成后下载测试，验证 getDirectConverter 崩溃是否已修复
 - Dev build 成功后，用 `npx expo start --dev-client` + Metro 热加载实现快速迭代
