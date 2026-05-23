@@ -107,6 +107,10 @@ export default function BrowseScreen() {
   const advanceToNext = useCallback((justMarkedDelete = false) => {
     if (groupIndex + 1 >= currentGroup.length) {
       if (markedForDelete.size === 0 && !justMarkedDelete) {
+        if (!canBrowseNextGroup) {
+          setLimitModalVisible(true);
+          return;
+        }
         incrementGroupCount();
         loadNextGroup();
       } else {
@@ -115,7 +119,7 @@ export default function BrowseScreen() {
     } else {
       setGroupIndex(groupIndex + 1);
     }
-  }, [groupIndex, currentGroup.length, markedForDelete.size, setGroupIndex, incrementGroupCount, loadNextGroup, router]);
+  }, [groupIndex, currentGroup.length, markedForDelete.size, setGroupIndex, incrementGroupCount, loadNextGroup, router, canBrowseNextGroup]);
 
   const handleMarkDelete = useCallback(() => {
     const photo = currentGroup[groupIndex];

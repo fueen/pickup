@@ -59,6 +59,7 @@ export function SubscriptionProvider({
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [todayGroupCount, setTodayGroupCount] = useState(0);
+  const [dailyUsageLoaded, setDailyUsageLoaded] = useState(false);
   const [devProEnabled, setDevProEnabled] = useState(false);
   const listenerRef = useRef<CustomerInfoUpdateListener | null>(null);
 
@@ -100,6 +101,7 @@ export function SubscriptionProvider({
       const raw = await AsyncStorage.getItem(DAILY_USAGE_KEY);
       if (!raw) {
         setTodayGroupCount(0);
+        setDailyUsageLoaded(true);
         return;
       }
       const usage: DailyUsage = JSON.parse(raw);
@@ -112,8 +114,10 @@ export function SubscriptionProvider({
       } else {
         setTodayGroupCount(usage.count);
       }
+      setDailyUsageLoaded(true);
     } catch {
       setTodayGroupCount(0);
+      setDailyUsageLoaded(true);
     }
   };
 
@@ -130,7 +134,7 @@ export function SubscriptionProvider({
 
   const isLimitReached =
     !isPro && !devProEnabled && todayGroupCount >= Tokens.photo.freeDailyLimit;
-  const canBrowseNextGroup = isPro || devProEnabled || !isLimitReached;
+  const canBrowseNextGroup = dailyUsageLoaded && (isPro || devProEnabled || !isLimitReached);
 
   const loadDevPro = async () => {
     try {
