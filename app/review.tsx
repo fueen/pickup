@@ -1,11 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
+import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
@@ -20,6 +21,8 @@ export default function ReviewScreen() {
   const [deleting, setDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+  const deletingRef = useRef(false);
 
   // Sync from markedForDelete; guard against cleared set during delete to avoid flicker
   useEffect(() => {
@@ -54,16 +57,22 @@ export default function ReviewScreen() {
   }, [canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router]);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (selectedPhotos.length === 0) return;
+    if (selectedPhotos.length === 0 || deletingRef.current) return;
+    deletingRef.current = true;
     setDeleting(true);
-    const result = await deletePhotos(selectedPhotos);
-    if (result.successCount > 0) {
-      recordDeleted(result.successCount, result.freedBytes);
-      clearMarkedPhotos();
-      setMarkedForDelete(new Set());
-      dispatch({ type: 'RESET_SESSION' });
+    try {
+      const result = await deletePhotos(selectedPhotos);
+      if (result.successCount > 0) {
+        recordDeleted(result.successCount, result.freedBytes).catch(() => {});
+        clearMarkedPhotos();
+        setMarkedForDelete(new Set());
+        dispatch({ type: 'RESET_SESSION' });
+      }
+    } finally {
+      setDeleting(false);
+      setShowDeleteSheet(false);
+      deletingRef.current = false;
     }
-    setDeleting(false);
     if (!canBrowseNextGroup) {
       setLimitModalVisible(true);
       return;
@@ -94,8 +103,8 @@ export default function ReviewScreen() {
             !hasSelection && styles.deleteButtonDisabled,
             deleting && { opacity: 0.6 },
           ]}
-          onPress={handleConfirmDelete}
-          disabled={deleting || !hasSelection}
+          onPress={Platform.OS === 'android' ? handleConfirmDelete : () => setShowDeleteSheet(true)}
+          disabled={!hasSelection || deleting}
         >
           <Text style={[styles.deleteText, !hasSelection && styles.deleteTextDisabled]}>
             {deleting ? '删除中...' : `删除 ${selectedPhotos.length} 张`}
@@ -107,6 +116,19 @@ export default function ReviewScreen() {
         visible={limitModalVisible}
         onClose={() => setLimitModalVisible(false)}
       />
+
+      {Platform.OS !== 'android' && (
+        <DeleteConfirmSheet
+          visible={showDeleteSheet}
+          count={selectedPhotos.length}
+          loading={deleting}
+          onConfirm={() => {
+            setShowDeleteSheet(false);
+            handleConfirmDelete();
+          }}
+          onCancel={() => setShowDeleteSheet(false)}
+        />
+      )}
     </View>
   );
 }

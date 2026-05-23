@@ -8,9 +8,9 @@ import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatsProvider } from '../src/contexts/StatsContext';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
 import { SessionProvider } from '../src/contexts/SessionContext';
-import { Tokens } from '../src/design-tokens';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { SplashScreen } from '../src/components/SplashScreen';
+import { TabBar } from '../src/components/ui/TabBar';
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
@@ -37,14 +37,9 @@ export default function RootLayout() {
               <SessionProvider>
                 <StatusBar style="light" />
                 <Tabs
+                tabBar={(props) => <TabBar {...props} />}
                 screenOptions={{
                   headerShown: false,
-                  tabBarStyle: {
-                    backgroundColor: '#0D0D0D',
-                    borderTopColor: '#1C1C1E',
-                  },
-                  tabBarActiveTintColor: '#FFCC00',
-                  tabBarInactiveTintColor: Tokens.color.textMuted,
                   tabBarShowLabel: false,
                 }}
               >
@@ -58,9 +53,18 @@ export default function RootLayout() {
                   }}
                 />
                 <Tabs.Screen
+                  name="hub"
+                  options={{
+                    tabBarLabel: 'Hub',
+                    tabBarIcon: ({ color }) => (
+                      <MaterialCommunityIcons name="apps" size={24} color={color} />
+                    ),
+                  }}
+                />
+                <Tabs.Screen
                   name="settings"
                   options={{
-                    tabBarLabel: '设置',
+                    tabBarLabel: '个人中心',
                     tabBarIcon: ({ color }) => (
                       <MaterialCommunityIcons name="account-outline" size={26} color={color} />
                     ),

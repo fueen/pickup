@@ -164,37 +164,37 @@ export function usePhotoEngine() {
 
   // REQ-09: refill group after quick-delete to maintain group size
   const refillGroup = useCallback((deleteCount: number) => {
-    try {
-      const newIds = new Set(viewedPhotoIds);
-      const currentOrder = [...viewedOrderRef.current];
+    setCurrentGroup((prev) => {
+      const remaining = prev.filter((p) => !markedForDelete.has(p.id));
 
-      const fillCount = Math.min(deleteCount, Tokens.photo.groupSize);
-      const newPhotos = generateRandomGroup(
-        allPhotos.filter((p) => !markedForDelete.has(p.id)),
-        newIds,
-        fillCount,
-        currentOrder,
-      );
+      try {
+        const newIds = new Set(viewedPhotoIds);
+        const currentOrder = [...viewedOrderRef.current];
+        const fillCount = Math.min(deleteCount, Tokens.photo.groupSize);
+        const newPhotos = generateRandomGroup(
+          allPhotos.filter((p) => !markedForDelete.has(p.id)),
+          newIds,
+          fillCount,
+          currentOrder,
+        );
 
-      setCurrentGroup((prev) => {
-        const remaining = prev.filter((p) => !markedForDelete.has(p.id));
+        newPhotos.forEach((p) => newIds.add(p.id));
+        setViewedPhotoIds(newIds);
+        const newOrder = [
+          ...newPhotos.map((p) => p.id),
+          ...currentOrder.filter((id) => !newPhotos.find((p) => p.id === id)),
+        ];
+        viewedOrderRef.current = newOrder;
+        AsyncStorage.multiSet([
+          [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
+          [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
+        ]).catch(() => {});
+
         return [...remaining, ...newPhotos];
-      });
-
-      newPhotos.forEach((p) => newIds.add(p.id));
-      setViewedPhotoIds(newIds);
-      const newOrder = [
-        ...newPhotos.map((p) => p.id),
-        ...currentOrder.filter((id) => !newPhotos.find((p) => p.id === id)),
-      ];
-      viewedOrderRef.current = newOrder;
-      AsyncStorage.multiSet([
-        [VIEWED_IDS_KEY, JSON.stringify([...newIds])],
-        [VIEWED_ORDER_KEY, JSON.stringify(newOrder)],
-      ]).catch(() => {});
-    } catch {
-      // No refill candidates available — skip silently
-    }
+      } catch {
+        return remaining;
+      }
+    });
   }, [allPhotos, viewedPhotoIds, markedForDelete]);
 
   return {

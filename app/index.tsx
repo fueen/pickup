@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -14,6 +14,7 @@ import { PermissionGate } from '../src/components/photo-card/PermissionGate';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { EmptyGate } from '../src/components/photo-card/EmptyGate';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
+import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReached';
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
 import { deletePhotos } from '../src/services/delete-service';
@@ -34,12 +35,15 @@ export default function BrowseScreen() {
   const { recordViewed, recordDeleted } = useStatsContext();
 
   const [quickDeleting, setQuickDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
   const lastViewedGroupRef = useRef<string>('');
   const triedLoadRef = useRef(false);
   const hasLoadedRef = useRef(false);
+  const groupLenRef = useRef(currentGroup.length);
+  const deletingRef = useRef(false);
 
   // First-launch gesture guide (REQ-05)
   useEffect(() => {
@@ -74,6 +78,7 @@ export default function BrowseScreen() {
   }, [currentGroup, markedForKeep]);
 
   const currentPhoto = currentGroup[groupIndex];
+  groupLenRef.current = currentGroup.length;
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
@@ -103,14 +108,14 @@ export default function BrowseScreen() {
     }
   }, [groupIndex, currentGroup, recordViewed]);
 
-  // Load next group when current group is exhausted
+  // Load next group when current group is exhausted (only when no pending marks)
   useEffect(() => {
-    if (!currentPhoto && allPhotos.length > 0 && !isLoading && canBrowseNextGroup && !triedLoadRef.current) {
+    if (!currentPhoto && allPhotos.length > 0 && !isLoading && canBrowseNextGroup && !triedLoadRef.current && markedForDelete.size === 0) {
       triedLoadRef.current = true;
       incrementGroupCount();
       loadNextGroup();
     }
-  }, [currentPhoto, allPhotos.length, isLoading, canBrowseNextGroup, incrementGroupCount, loadNextGroup]);
+  }, [currentPhoto, allPhotos.length, isLoading, canBrowseNextGroup, incrementGroupCount, loadNextGroup, markedForDelete.size]);
 
   // Reset load flag when we have photos again
   useEffect(() => {
@@ -177,21 +182,28 @@ export default function BrowseScreen() {
 
   // REQ-09: Quick delete marked photos
   const handleQuickDelete = useCallback(async () => {
-    if (markedForDelete.size === 0 || quickDeleting) return;
+    if (markedForDelete.size === 0 || quickDeleting || deletingRef.current) return;
+    deletingRef.current = true;
     setQuickDeleting(true);
     try {
       const photosToDelete = currentGroup.filter((p) => markedForDelete.has(p.id));
       const deleteCount = photosToDelete.length;
+      if (deleteCount === 0) return;
       const result = await deletePhotos(photosToDelete);
       if (result.successCount > 0) {
-        recordDeleted(result.successCount, result.freedBytes);
+        recordDeleted(result.successCount, result.freedBytes).catch(() => {});
         setMarkedForDelete(new Set());
         clearMarkedPhotos();
         refillGroup(deleteCount);
-        setGroupIndex((prev) => Math.max(0, Math.min(prev, currentGroup.length - deleteCount - 1)));
+        setGroupIndex((prev) => {
+          const maxIdx = Math.max(0, currentGroup.length - deleteCount - 1);
+          return Math.max(0, Math.min(prev, maxIdx));
+        });
       }
     } finally {
       setQuickDeleting(false);
+      setShowDeleteConfirm(false);
+      deletingRef.current = false;
     }
   }, [markedForDelete, currentGroup, quickDeleting, clearMarkedPhotos, setMarkedForDelete, refillGroup, setGroupIndex, recordDeleted]);
 
@@ -242,10 +254,23 @@ export default function BrowseScreen() {
       <View style={styles.quickDeleteWrap}>
         <QuickDeleteButton
           count={markedForDelete.size}
-          onPress={handleQuickDelete}
+          onPress={Platform.OS === 'android' ? handleQuickDelete : () => setShowDeleteConfirm(true)}
           loading={quickDeleting}
         />
       </View>
+
+      {Platform.OS !== 'android' && (
+        <DeleteConfirmSheet
+          visible={showDeleteConfirm}
+          count={markedForDelete.size}
+          loading={quickDeleting}
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            handleQuickDelete();
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
 
       <GroupProgressBar
         current={groupIndex}

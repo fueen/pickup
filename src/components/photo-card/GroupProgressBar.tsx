@@ -43,7 +43,7 @@ export function GroupProgressBar({ current, total, deleteIndices, keepIndices, o
 }
 
 const styles = StyleSheet.create({
-  container: { position: 'absolute', bottom: 34, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
+  container: { position: 'absolute', bottom: 110, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
   dots: { flexDirection: 'row', justifyContent: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, marginHorizontal: 3 },
   dotCurrent: { transform: [{ scale: 1.35 }] },

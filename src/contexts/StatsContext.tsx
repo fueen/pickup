@@ -18,8 +18,8 @@ interface StatsContextValue {
   totalFreedBytes: number;
   streakDays: number;
   weeklyHistory: DailyStats[];
-  recordViewed: (count: number) => void;
-  recordDeleted: (count: number, bytes: number) => void;
+  recordViewed: (count: number) => Promise<void>;
+  recordDeleted: (count: number, bytes: number) => Promise<void>;
 }
 
 const StatsCtx = createContext<StatsContextValue | null>(null);
