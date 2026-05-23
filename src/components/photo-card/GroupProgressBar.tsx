@@ -17,7 +17,7 @@ export function GroupProgressBar({ current, total, markedDelete, markedKeep, onS
         {Array.from({ length: total }, (_, i) => {
           let bgColor = Tokens.color.textMuted;
           if (i < markedDelete + markedKeep) {
-            bgColor = i < markedDelete ? Tokens.color.danger : Tokens.color.safe;
+            bgColor = i < markedDelete ? '#F5C542' : Tokens.color.safe;
           } else if (i === current) {
             bgColor = Tokens.color.textPrimary;
           }

@@ -125,6 +125,16 @@ export default function BrowseScreen() {
     advanceToNext(true);
   }, [currentGroup, groupIndex, advanceToNext, dispatch]);
 
+  const handleUnmarkDelete = useCallback(() => {
+    const photo = currentGroup[groupIndex];
+    if (!photo) return;
+    setMarkedForDelete((prev) => {
+      const next = new Set(prev);
+      next.delete(photo.id);
+      return next;
+    });
+  }, [currentGroup, groupIndex]);
+
   const handleMarkKeep = useCallback(() => {
     const photo = currentGroup[groupIndex];
     if (!photo) return;
@@ -202,6 +212,8 @@ export default function BrowseScreen() {
         onMarkKeep={handleMarkKeep}
         onSkip={handleSkip}
         onPrevious={handlePrevious}
+        isMarkedForDelete={markedForDelete.has(currentPhoto.id)}
+        onUnmarkDelete={handleUnmarkDelete}
       >
         <PhotoCard photo={currentPhoto} />
       </SwipeableCard>

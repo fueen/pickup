@@ -15,9 +15,14 @@ interface Props {
   onMarkKeep: () => void;
   onSkip: () => void;
   onPrevious: () => void;
+  isMarkedForDelete: boolean;
+  onUnmarkDelete: () => void;
 }
 
-export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip, onPrevious }: Props) {
+export function SwipeableCard({
+  children, onMarkDelete, onMarkKeep, onSkip, onPrevious,
+  isMarkedForDelete, onUnmarkDelete,
+}: Props) {
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const markProgress = useSharedValue(0);
@@ -50,14 +55,27 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip, onPr
         runOnJS(goingLeft ? onSkip : onPrevious)();
       });
     } else if (absTY >= threshold) {
-      // Up = delete, Down = keep
-      isAnimating.value = true;
-      const direction = ty < 0 ? -1 : 1;
-      translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
-        skipProgress.value = 0;
-        isAnimating.value = false;
-        runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
-      });
+      // Down swipe on a marked photo = unmark (undo delete)
+      if (ty > 0 && isMarkedForDelete) {
+        isAnimating.value = true;
+        translateY.value = withTiming(SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+          translateY.value = 0;
+          translateX.value = 0;
+          markProgress.value = 0;
+          skipProgress.value = 0;
+          isAnimating.value = false;
+          runOnJS(onUnmarkDelete)();
+        });
+      } else {
+        // Up = delete, Down = keep
+        isAnimating.value = true;
+        const direction = ty < 0 ? -1 : 1;
+        translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+          skipProgress.value = 0;
+          isAnimating.value = false;
+          runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
+        });
+      }
     } else {
       // Snap back
       translateY.value = withTiming(0, { duration: 300 });
@@ -65,7 +83,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip, onPr
       markProgress.value = 0;
       skipProgress.value = 0;
     }
-  }, [onMarkDelete, onMarkKeep, onSkip, onPrevious]);
+  }, [onMarkDelete, onMarkKeep, onSkip, onPrevious, isMarkedForDelete, onUnmarkDelete]);
 
   const panGesture = Gesture.Pan()
     .onBegin(() => {
@@ -112,7 +130,7 @@ export function SwipeableCard({ children, onMarkDelete, onMarkKeep, onSkip, onPr
       <Animated.View style={[styles.container, cardStyle]}>
         {children}
         <DeleteOverlay progress={markProgress} />
-        <ActionIndicator progress={markProgress} skipProgress={skipProgress} />
+        <ActionIndicator progress={markProgress} skipProgress={skipProgress} isMarkedForDelete={isMarkedForDelete} />
       </Animated.View>
     </GestureDetector>
   );

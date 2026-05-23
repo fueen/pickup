@@ -6,14 +6,15 @@ import { Tokens } from '../../design-tokens';
 interface Props {
   progress: SharedValue<number>;
   skipProgress: SharedValue<number>;
+  isMarkedForDelete: boolean;
 }
 
-export function ActionIndicator({ progress, skipProgress }: Props) {
+export function ActionIndicator({ progress, skipProgress, isMarkedForDelete }: Props) {
   const deleteStyle = useAnimatedStyle(() => {
     const opacity = interpolate(progress.value, [-0.5, 0], [1, 0]);
     return { opacity };
   });
-  const keepStyle = useAnimatedStyle(() => {
+  const undoStyle = useAnimatedStyle(() => {
     const opacity = interpolate(progress.value, [0, 0.5], [0, 1]);
     return { opacity };
   });
@@ -27,8 +28,10 @@ export function ActionIndicator({ progress, skipProgress }: Props) {
       <Animated.View style={[styles.indicator, styles.delete, deleteStyle]}>
         <Animated.Text style={styles.deleteText}>删除</Animated.Text>
       </Animated.View>
-      <Animated.View style={[styles.indicator, styles.keep, keepStyle]}>
-        <Animated.Text style={styles.keepText}>保留</Animated.Text>
+      <Animated.View style={[styles.indicator, styles.undo, undoStyle]}>
+        <Animated.Text style={isMarkedForDelete ? styles.undoText : styles.keepText}>
+          {isMarkedForDelete ? '已撤回' : '保留'}
+        </Animated.Text>
       </Animated.View>
       <Animated.View style={[styles.indicator, styles.skipRight, skipRightStyle]}>
         <Animated.Text style={styles.navText}>上一张 →</Animated.Text>
@@ -45,6 +48,12 @@ const styles = StyleSheet.create({
   deleteText: {
     fontSize: 16, fontWeight: '800', color: '#000', letterSpacing: 2,
     backgroundColor: '#FFCC00', paddingHorizontal: 22, paddingVertical: 8,
+    borderRadius: 24, overflow: 'hidden',
+  },
+  undo: { bottom: 205, left: 0, right: 0 },
+  undoText: {
+    fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 2,
+    backgroundColor: '#34C759', paddingHorizontal: 22, paddingVertical: 8,
     borderRadius: 24, overflow: 'hidden',
   },
   keepText: {
