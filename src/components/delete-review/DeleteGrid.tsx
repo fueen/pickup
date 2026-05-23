@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
   },
   cell: {
     width: IMAGE_SIZE, height: IMAGE_SIZE, margin: 4,
-    borderRadius: Tokens.radius.card, overflow: 'hidden',
+    borderRadius: Tokens.radius.card,
   },
-  image: { width: '100%', height: '100%' },
+  image: { width: '100%', height: '100%', borderRadius: Tokens.radius.card },
   checkOverlay: {
     position: 'absolute',
     top: -6,

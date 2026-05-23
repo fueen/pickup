@@ -78,7 +78,7 @@ export default function ReviewScreen() {
       />
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext}>
+        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext} disabled={deleting}>
           <Text style={styles.discardText}>放弃，再来一组</Text>
         </TouchableOpacity>
         <TouchableOpacity
