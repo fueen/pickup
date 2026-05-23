@@ -43,7 +43,6 @@ export function ActionIndicator({ progress, skipProgress, isMarkedForDelete }: P
 const styles = StyleSheet.create({
   indicator: { position: 'absolute', alignItems: 'center', zIndex: 20 },
   delete: { top: 108, left: 0, right: 0 },
-  keep: { bottom: 205, left: 0, right: 0 },
   skipRight: { right: 4, top: 0, bottom: 0, justifyContent: 'center' },
   deleteText: {
     fontSize: 16, fontWeight: '800', color: '#000', letterSpacing: 2,
