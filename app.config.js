@@ -1,7 +1,7 @@
 const IS_DEV = process.env.EAS_BUILD_PROFILE === 'development';
 const IS_PREVIEW = process.env.EAS_BUILD_PROFILE === 'preview';
 
-const APP_NAME = IS_DEV ? '拾遗 Dev' : IS_PREVIEW ? '拾遗 Preview' : '拾遗';
+const APP_NAME = IS_DEV ? '拾遗 Dev' : IS_PREVIEW ? 'PickUp' : '拾遗';
 const PACKAGE_SUFFIX = IS_DEV ? '.dev' : IS_PREVIEW ? '.preview' : '';
 const BASE_PACKAGE = 'com.zackf.pickup';
 
@@ -9,7 +9,7 @@ export default {
   expo: {
     name: APP_NAME,
     slug: 'pickup',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
