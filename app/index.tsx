@@ -14,6 +14,7 @@ import { PermissionGate } from '../src/components/photo-card/PermissionGate';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { EmptyGate } from '../src/components/photo-card/EmptyGate';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
+import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReached';
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
@@ -196,14 +197,7 @@ export default function BrowseScreen() {
 
   if (!currentPhoto) {
     if (!canBrowseNextGroup) {
-      return (
-        <View style={styles.centered}>
-          <LimitReachedModal
-            visible={true}
-            onClose={() => router.push('/paywall')}
-          />
-        </View>
-      );
+      return <DailyLimitReached />;
     }
     return <LoadingGate />;
   }
