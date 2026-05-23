@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
@@ -18,87 +18,80 @@ export default function ReviewScreen() {
   const { recordDeleted } = useStatsContext();
 
   const [deleting, setDeleting] = useState(false);
-  const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(markedForDelete));
   const [limitModalVisible, setLimitModalVisible] = useState(false);
-  const autoNavRef = useRef(false);
 
-  const photosToDelete = currentGroup.filter(
-    (p) => markedForDelete.has(p.id) && !deselectedIds.has(p.id)
-  );
+  const photosInGroup = currentGroup.filter((p) => markedForDelete.has(p.id));
+  const selectedPhotos = photosInGroup.filter((p) => selectedIds.has(p.id));
+  const hasSelection = selectedIds.size > 0;
 
   const handleTogglePhoto = useCallback((id: string) => {
-    setDeselectedIds((prev) => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   }, []);
 
-  const loadNextWithLimit = useCallback(() => {
+  const handleDiscardAndNext = useCallback(() => {
     if (!canBrowseNextGroup) {
       setLimitModalVisible(true);
-      return false;
+      return;
     }
     incrementGroupCount();
+    clearMarkedPhotos();
+    setMarkedForDelete(new Set());
     loadNextGroup();
-    return true;
-  }, [canBrowseNextGroup, incrementGroupCount, loadNextGroup]);
+    dispatch({ type: 'RESET_SESSION' });
+    router.replace('/');
+  }, [canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router]);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (photosToDelete.length === 0) return;
+    if (selectedPhotos.length === 0) return;
     setDeleting(true);
-    const result = await deletePhotos(photosToDelete);
+    const result = await deletePhotos(selectedPhotos);
     if (result.successCount > 0) {
       recordDeleted(result.successCount, result.freedBytes);
       clearMarkedPhotos();
+      setMarkedForDelete(new Set());
       dispatch({ type: 'RESET_SESSION' });
     }
     setDeleting(false);
-    loadNextWithLimit();
-    router.replace('/');
-  }, [photosToDelete, clearMarkedPhotos, loadNextWithLimit, router, dispatch, recordDeleted]);
-
-  // Handle zero-delete case — autoNavRef prevents infinite loop from dep changes
-  useEffect(() => {
-    if (autoNavRef.current) return;
-    if (photosToDelete.length === 0 && !deleting) {
-      autoNavRef.current = true;
-      const ok = loadNextWithLimit();
-      if (ok) router.replace('/');
+    if (!canBrowseNextGroup) {
+      setLimitModalVisible(true);
+      return;
     }
-  }, [photosToDelete.length, deleting, loadNextWithLimit, router]);
-
-  // If nothing to delete, skip rendering to avoid flashing empty UI
-  if (photosToDelete.length === 0 && !deleting) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator color={Tokens.color.textPrimary} size="large" />
-      </View>
-    );
-  }
+    incrementGroupCount();
+    loadNextGroup();
+    router.replace('/');
+  }, [selectedPhotos, canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, recordDeleted]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>确认删除 · {photosToDelete.length} 张</Text>
-      <Text style={styles.hint}>点击照片可取消删除标记</Text>
+      <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
+      <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
 
       <DeleteGrid
-        photos={photosToDelete}
+        photos={photosInGroup}
         onTap={handleTogglePhoto}
-        markedIds={new Set(photosToDelete.map((p) => p.id))}
+        selectedIds={selectedIds}
       />
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => router.replace('/')}>
-          <Text style={styles.cancelText}>取消</Text>
+        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext}>
+          <Text style={styles.discardText}>放弃，再来一组</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.deleteButton, deleting && { opacity: 0.6 }]}
+          style={[
+            styles.deleteButton,
+            !hasSelection && styles.deleteButtonDisabled,
+            deleting && { opacity: 0.6 },
+          ]}
           onPress={handleConfirmDelete}
-          disabled={deleting}
+          disabled={deleting || !hasSelection}
         >
-          <Text style={styles.deleteText}>
-            {deleting ? '删除中...' : `删除 ${photosToDelete.length} 张`}
+          <Text style={[styles.deleteText, !hasSelection && styles.deleteTextDisabled]}>
+            {deleting ? '删除中...' : `删除 ${selectedPhotos.length} 张`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -116,8 +109,10 @@ const styles = StyleSheet.create({
   heading: { ...Tokens.typography.title, color: Tokens.color.textPrimary, textAlign: 'center', marginBottom: Tokens.spacing.s },
   hint: { ...Tokens.typography.caption, color: Tokens.color.textMuted, textAlign: 'center', marginBottom: Tokens.spacing.xl },
   footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 40, left: 0, right: 0 },
-  cancelButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: 30 },
-  cancelText: { fontSize: 16, fontWeight: '700', color: Tokens.color.textSecondary, letterSpacing: 1 },
+  discardButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  discardText: { fontSize: 16, fontWeight: '700', color: Tokens.color.textSecondary, letterSpacing: 1 },
   deleteButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: '#FFCC00', borderRadius: 30 },
+  deleteButtonDisabled: { backgroundColor: '#3A3A3C' },
   deleteText: { fontSize: 16, fontWeight: '700', color: '#000000', letterSpacing: 1 },
+  deleteTextDisabled: { color: '#8E8E93' },
 });
