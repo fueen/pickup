@@ -25,6 +25,7 @@ export default {
       infoPlist: {
         NSPhotoLibraryUsageDescription:
           '拾遗需要访问你的照片库，以便浏览和整理照片。所有处理均在本地完成，不会上传任何照片。',
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     plugins: [
