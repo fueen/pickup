@@ -44,7 +44,7 @@ export function GroupProgressBar({ current, total, markedDelete, markedKeep, onS
 const styles = StyleSheet.create({
   container: { position: 'absolute', bottom: 50, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: Tokens.spacing.s },
-  dot: { width: 12, height: 12, borderRadius: 6, marginHorizontal: 4 },
-  dotCurrent: { transform: [{ scale: 1.5 }] },
+  dot: { width: 6, height: 6, borderRadius: 3, marginHorizontal: 3 },
+  dotCurrent: { transform: [{ scale: 1.35 }] },
   counter: { ...Tokens.typography.caption, color: Tokens.color.textSecondary },
 });
