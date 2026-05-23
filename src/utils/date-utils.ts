@@ -12,11 +12,18 @@ export function isNewDay(storedDate: string): boolean {
 
 export function formatPhotoDate(timestampMs: number): string {
   if (isNaN(timestampMs) || timestampMs <= 0) return '';
-  const d = new Date(timestampMs);
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${year}年${month}月${day}日 ${hours}:${minutes}`;
+  const now = new Date();
+  const photoDate = new Date(timestampMs);
+  const year = photoDate.getFullYear();
+  const month = photoDate.getMonth() + 1;
+  const day = photoDate.getDate();
+  const datePart = `${year}年${month}月${day}日`;
+
+  const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const photoStart = new Date(photoDate.getFullYear(), photoDate.getMonth(), photoDate.getDate());
+  const diffDays = Math.floor((nowStart.getTime() - photoStart.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return `${datePart} · 今天`;
+  if (diffDays === 1) return `${datePart} · 昨天`;
+  return `${datePart} · ${diffDays}天前`;
 }

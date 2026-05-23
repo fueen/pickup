@@ -1,23 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Tokens } from '../../design-tokens';
 
 interface Props {
   current: number;
   total: number;
-  markedDelete: number;
-  markedKeep: number;
+  deleteIndices: Set<number>;
+  keepIndices: Set<number>;
   onSelectIndex?: (index: number) => void;
 }
 
-export function GroupProgressBar({ current, total, markedDelete, markedKeep, onSelectIndex }: Props) {
+export function GroupProgressBar({ current, total, deleteIndices, keepIndices, onSelectIndex }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.dots}>
         {Array.from({ length: total }, (_, i) => {
           let bgColor = Tokens.color.textMuted;
-          if (i < markedDelete + markedKeep) {
-            bgColor = i < markedDelete ? '#F5C542' : Tokens.color.safe;
+          if (deleteIndices.has(i)) {
+            bgColor = '#F5C542';
+          } else if (keepIndices.has(i)) {
+            bgColor = Tokens.color.safe;
           } else if (i === current) {
             bgColor = Tokens.color.textPrimary;
           }
@@ -36,15 +38,13 @@ export function GroupProgressBar({ current, total, markedDelete, markedKeep, onS
           );
         })}
       </View>
-      <Text style={styles.counter}>{current + 1} / {total}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { position: 'absolute', bottom: 50, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
-  dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: Tokens.spacing.s },
+  container: { position: 'absolute', bottom: 34, left: 0, right: 0, alignItems: 'center', paddingHorizontal: Tokens.spacing.l },
+  dots: { flexDirection: 'row', justifyContent: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, marginHorizontal: 3 },
   dotCurrent: { transform: [{ scale: 1.35 }] },
-  counter: { ...Tokens.typography.caption, color: Tokens.color.textSecondary },
 });

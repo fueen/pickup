@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -18,8 +18,15 @@ export default function ReviewScreen() {
   const { recordDeleted } = useStatsContext();
 
   const [deleting, setDeleting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(markedForDelete));
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+
+  // Sync from markedForDelete; guard against cleared set during delete to avoid flicker
+  useEffect(() => {
+    if (markedForDelete.size > 0) {
+      setSelectedIds(new Set(markedForDelete));
+    }
+  }, [markedForDelete]);
 
   const photosInGroup = currentGroup.filter((p) => markedForDelete.has(p.id));
   const selectedPhotos = photosInGroup.filter((p) => selectedIds.has(p.id));

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoAsset, PermissionStatus } from '../types/photo';
@@ -20,6 +20,16 @@ export function usePhotoEngine() {
   const [error, setError] = useState<string | null>(null);
 
   const viewedOrderRef = useRef<string[]>([]);
+
+  // Check real permission status on mount without prompting
+  useEffect(() => {
+    MediaLibrary.getPermissionsAsync().then(({ status }) => {
+      const s: string = status;
+      if (s === 'granted' || s === 'limited' || s === 'denied') {
+        setPermissionStatus(s as PermissionStatus);
+      }
+    }).catch(() => { /* ignore, stay undetermined */ });
+  }, []);
 
   const requestPermissions = useCallback(async () => {
     try {

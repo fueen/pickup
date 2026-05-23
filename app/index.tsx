@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,7 +30,7 @@ export default function BrowseScreen() {
     clearMarkedPhotos, refillGroup,
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
-  const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
+  const { dailyUsageLoaded, canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
   const { recordViewed, recordDeleted } = useStatsContext();
 
   const [quickDeleting, setQuickDeleting] = useState(false);
@@ -61,10 +61,24 @@ export default function BrowseScreen() {
     } catch { /* ignore */ }
   }, []);
 
+  const deleteIndices = useMemo(() => {
+    const s = new Set<number>();
+    currentGroup.forEach((p, i) => { if (markedForDelete.has(p.id)) s.add(i); });
+    return s;
+  }, [currentGroup, markedForDelete]);
+
+  const keepIndices = useMemo(() => {
+    const s = new Set<number>();
+    currentGroup.forEach((p, i) => { if (markedForKeep.has(p.id)) s.add(i); });
+    return s;
+  }, [currentGroup, markedForKeep]);
+
   const currentPhoto = currentGroup[groupIndex];
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
+    if (!dailyUsageLoaded) return;
+    if (!canBrowseNextGroup) return;
     if (permissionStatus === 'undetermined') {
       requestPermissions().then((status) => {
         if ((status === 'granted' || status === 'limited') && !hasLoadedRef.current) {
@@ -76,7 +90,7 @@ export default function BrowseScreen() {
       hasLoadedRef.current = true;
       loadPhotos();
     }
-  }, [permissionStatus]);
+  }, [permissionStatus, dailyUsageLoaded, canBrowseNextGroup]);
 
   // Record viewed when a new group starts (groupIndex === 0)
   useEffect(() => {
@@ -189,18 +203,26 @@ export default function BrowseScreen() {
     );
   }
 
-  if (permissionStatus === 'denied' || permissionStatus === 'undetermined') {
+  // Always show settings redirect if permission was explicitly denied
+  if (permissionStatus === 'denied') {
     return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
   }
+
+  // Wait for daily usage to load before deciding what to show
+  if (!dailyUsageLoaded) return <LoadingGate />;
+
+  // Only prompt for permission after we know daily state
+  if (permissionStatus === 'undetermined') {
+    return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
+  }
+
+  // Limit reached — show placeholder immediately, regardless of isLoading
+  if (!canBrowseNextGroup) return <DailyLimitReached />;
+
+  // Normal browsing flow
   if (isLoading) return <LoadingGate />;
   if (allPhotos.length === 0) return <EmptyGate />;
-
-  if (!currentPhoto) {
-    if (!canBrowseNextGroup) {
-      return <DailyLimitReached />;
-    }
-    return <LoadingGate />;
-  }
+  if (!currentPhoto) return <LoadingGate />;
 
   return (
     <View style={styles.container}>
@@ -228,8 +250,8 @@ export default function BrowseScreen() {
       <GroupProgressBar
         current={groupIndex}
         total={currentGroup.length}
-        markedDelete={markedForDelete.size}
-        markedKeep={markedForKeep.size}
+        deleteIndices={deleteIndices}
+        keepIndices={keepIndices}
         onSelectIndex={setGroupIndex}
       />
       <LimitReachedModal

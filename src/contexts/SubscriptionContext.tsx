@@ -36,6 +36,7 @@ export interface SubscriptionContextValue {
   restoreInProgress: boolean;
   purchaseError: string | null;
   todayGroupCount: number;
+  dailyUsageLoaded: boolean;
   isLimitReached: boolean;
   canBrowseNextGroup: boolean;
   devProEnabled: boolean;
@@ -190,6 +191,7 @@ export function SubscriptionProvider({
         restoreInProgress,
         purchaseError,
         todayGroupCount,
+        dailyUsageLoaded,
         isLimitReached,
         canBrowseNextGroup,
         devProEnabled,

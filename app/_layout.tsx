@@ -62,7 +62,7 @@ export default function RootLayout() {
                   options={{
                     tabBarLabel: '设置',
                     tabBarIcon: ({ color }) => (
-                      <MaterialCommunityIcons name="account-circle-outline" size={26} color={color} />
+                      <MaterialCommunityIcons name="account-outline" size={26} color={color} />
                     ),
                   }}
                 />

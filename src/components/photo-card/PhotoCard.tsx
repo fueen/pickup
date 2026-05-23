@@ -6,12 +6,33 @@ import { formatPhotoDate } from '../../utils/date-utils';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+const CARD_H_PADDING = 24;
+const CARD_TOP = 80;
+const CARD_BOTTOM = 76;
+const MAX_IMG_W = SCREEN_WIDTH - CARD_H_PADDING * 2;
+const MAX_IMG_H = SCREEN_HEIGHT - CARD_TOP - CARD_BOTTOM;
+
+function getDisplaySize(photo: PhotoAsset) {
+  if (!photo.width || !photo.height) {
+    return { width: MAX_IMG_W, height: MAX_IMG_W };
+  }
+  const ratio = photo.width / photo.height;
+  let w = MAX_IMG_W;
+  let h = w / ratio;
+  if (h > MAX_IMG_H) {
+    h = MAX_IMG_H;
+    w = h * ratio;
+  }
+  return { width: w, height: h };
+}
+
 interface Props { photo: PhotoAsset; }
 
 export function PhotoCard({ photo }: Props) {
+  const displaySize = getDisplaySize(photo);
+
   return (
     <View style={styles.container}>
-      {/* Date and LIVE badge outside the photo card */}
       <View style={styles.header}>
         <Text style={styles.date}>{formatPhotoDate(photo.creationTime)}</Text>
         {photo.mediaType === 'livePhoto' && (
@@ -21,21 +42,16 @@ export function PhotoCard({ photo }: Props) {
         )}
       </View>
 
-      {/* Rounded photo card */}
       <View style={styles.card}>
         <Image
           source={{ uri: photo.uri }}
-          style={styles.image}
-          resizeMode="contain"
+          style={[styles.image, { width: displaySize.width, height: displaySize.height }]}
+          resizeMode="cover"
         />
       </View>
     </View>
   );
 }
-
-const CARD_H_PADDING = 24;
-const CARD_TOP = 148;
-const CARD_BOTTOM = 240;
 
 const styles = StyleSheet.create({
   container: {
@@ -79,14 +95,11 @@ const styles = StyleSheet.create({
     left: CARD_H_PADDING,
     right: CARD_H_PADDING,
     bottom: CARD_BOTTOM,
-    borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: '#0a0a0a',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
-    width: '100%',
-    height: '100%',
+    borderRadius: 24,
+    backgroundColor: '#0a0a0a',
   },
 });
