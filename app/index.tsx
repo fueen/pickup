@@ -249,14 +249,10 @@ export default function BrowseScreen() {
   return (
     <View style={styles.container}>
       {/* Album button — top left */}
-      <View style={styles.albumBtnWrap}>
-        <TouchableOpacity style={styles.albumBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="folder-image" size={24} color="#fff" />
-        </TouchableOpacity>
-        {selectedAlbum && (
-          <Text style={styles.albumLabel} numberOfLines={1}>{selectedAlbum.title}</Text>
-        )}
-      </View>
+      <TouchableOpacity style={styles.albumBtnWrap} onPress={() => router.push('/albums')} activeOpacity={0.7}>
+        <MaterialCommunityIcons name="layers" size={28} color="#fff" />
+        <Text style={styles.albumLabel}>相册</Text>
+      </TouchableOpacity>
 
       <SwipeableCard
         key={currentPhoto.id}
@@ -313,9 +309,8 @@ export default function BrowseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
-  albumBtnWrap: { position: 'absolute', top: 54, left: 20, flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 30 },
-  albumBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  albumLabel: { fontSize: 16, fontWeight: '600', color: '#fff', maxWidth: 160 },
+  albumBtnWrap: { position: 'absolute', top: 54, left: 20, alignItems: 'center', gap: 4, zIndex: 30 },
+  albumLabel: { fontSize: 11, fontWeight: '600', color: '#fff', letterSpacing: 1 },
   quickDeleteWrap: {
     position: 'absolute',
     top: 54,
