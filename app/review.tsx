@@ -99,13 +99,12 @@ export default function ReviewScreen() {
           <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
-      <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
-      <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
-
       {photosInGroup.length === 0 ? (
         <EmptyReviewPlaceholder />
       ) : (
         <>
+          <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
+          <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
           <DeleteGrid
             photos={photosInGroup}
             onTap={handleTogglePhoto}
