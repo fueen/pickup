@@ -34,7 +34,7 @@ export function PhotoCard({ photo }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.date}>{formatPhotoDate(photo.creationTime)}</Text>
+        <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatPhotoDate(photo.creationTime)}</Text>
         {photo.mediaType === 'livePhoto' && (
           <View style={styles.liveBadge}>
             <Text style={styles.liveText}>LIVE</Text>
@@ -67,16 +67,18 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     zIndex: 10,
   },
   date: {
-    fontSize: 21,
+    fontSize: 14,
     fontWeight: '600',
     color: Tokens.color.textPrimary,
     letterSpacing: -0.3,
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 4,
+    textAlign: 'center',
+    maxWidth: '80%',
   },
   liveBadge: {
     backgroundColor: 'rgba(0,0,0,0.5)',
