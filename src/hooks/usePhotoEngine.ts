@@ -102,6 +102,7 @@ export function usePhotoEngine() {
       setAllPhotos(photos);
 
       if (photos.length === 0) {
+        setCurrentGroup([]);
         setIsLoading(false);
         return;
       }

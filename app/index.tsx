@@ -225,37 +225,38 @@ export default function BrowseScreen() {
     );
   }
 
-  // Always show settings redirect if permission was explicitly denied
-  if (permissionStatus === 'denied') {
-    return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
-  }
-
-  // Wait for daily usage to load before deciding what to show
-  if (!dailyUsageLoaded) return <LoadingGate />;
-
-  // Only prompt for permission after we know daily state
-  if (permissionStatus === 'undetermined') {
-    return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
-  }
-
-  // Limit reached — show placeholder immediately, regardless of isLoading
-  if (!canBrowseNextGroup) return <DailyLimitReached />;
-
-  // Normal browsing flow
-  if (isLoading) return <LoadingGate />;
-  if (allPhotos.length === 0) return <EmptyGate />;
-  if (!currentPhoto) return <LoadingGate />;
+  const isGate = permissionStatus === 'denied'
+    || permissionStatus === 'undetermined'
+    || !dailyUsageLoaded
+    || !canBrowseNextGroup
+    || isLoading
+    || allPhotos.length === 0
+    || !currentPhoto;
 
   return (
     <View style={styles.container}>
-      {/* Album button — top left */}
+      {/* Album button — always visible */}
       <TouchableOpacity style={styles.albumBtnWrap} onPress={() => router.push('/albums')} activeOpacity={0.7}>
         <MaterialCommunityIcons name="layers" size={28} color="#fff" />
       </TouchableOpacity>
 
-      <PhotoHeader photo={currentPhoto} />
-      <SwipeableCard
-        key={currentPhoto.id}
+      {/* Gates */}
+      {(() => {
+        if (permissionStatus === 'denied') return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
+        if (!dailyUsageLoaded) return <LoadingGate />;
+        if (permissionStatus === 'undetermined') return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
+        if (!canBrowseNextGroup) return <DailyLimitReached />;
+        if (isLoading) return <LoadingGate />;
+        if (allPhotos.length === 0) return <EmptyGate />;
+        if (!currentPhoto) return <LoadingGate />;
+        return null;
+      })()}
+
+      {!isGate && (
+        <>
+          <PhotoHeader photo={currentPhoto} />
+          <SwipeableCard
+            key={currentPhoto.id}
         onMarkDelete={handleMarkDelete}
         onMarkKeep={handleMarkKeep}
         onSkip={handleSkip}
@@ -288,13 +289,16 @@ export default function BrowseScreen() {
         />
       )}
 
-      <GroupProgressBar
-        current={groupIndex}
-        total={currentGroup.length}
-        deleteIndices={deleteIndices}
-        keepIndices={keepIndices}
-        onSelectIndex={setGroupIndex}
-      />
+          <GroupProgressBar
+            current={groupIndex}
+            total={currentGroup.length}
+            deleteIndices={deleteIndices}
+            keepIndices={keepIndices}
+            onSelectIndex={setGroupIndex}
+          />
+        </>
+      )}
+
       <LimitReachedModal
         visible={limitModalVisible}
         onClose={() => setLimitModalVisible(false)}

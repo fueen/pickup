@@ -5,8 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigationState } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { Tokens } from '../src/design-tokens';
 import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatsProvider } from '../src/contexts/StatsContext';
@@ -24,12 +23,8 @@ const TABS = [
 function SimpleTabBar() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const currentRoute = useNavigationState((state: any) => {
-    if (!state?.routes) return 'index';
-    const tabState = state.routes.find((r: any) => r.name === '(tabs)')?.state ?? state;
-    const idx = tabState.index ?? 0;
-    return tabState.routes?.[idx]?.name ?? 'index';
-  });
+  const pathname = usePathname();
+  const currentRoute = pathname === '/' ? 'index' : pathname.replace(/^\//, '');
 
   return (
     <View style={[tabStyles.bar, { paddingBottom: insets.bottom + 6 }]}>
