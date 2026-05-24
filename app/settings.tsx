@@ -115,7 +115,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>拾遗</Text>
+      <Text style={styles.heading}>PickUp</Text>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -210,7 +210,7 @@ export default function SettingsScreen() {
           activeOpacity={1}
           onPress={handleFooterTap}
         >
-          <Text style={styles.footerText}>拾遗 · 断舍之间，皆是风景</Text>
+          <Text style={styles.footerText}>PickUp · 记忆由你选择</Text>
         </TouchableOpacity>
 
         <View style={{ height: 60 }} />

@@ -98,7 +98,7 @@ export default function PaywallScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Text style={styles.title}>拾遗 Pro</Text>
+        <Text style={styles.title}>PickUp Pro</Text>
         <Text style={styles.subtitle}>解锁无限整理，告别照片焦虑</Text>
 
         {/* Feature list */}

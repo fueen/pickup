@@ -14,11 +14,11 @@ export function PermissionGate({ status, onRequest }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.icon}>📸</Text>
-      <Text style={styles.headline}>{isDenied ? '需要相册访问权限' : '拾遗需要访问你的相册'}</Text>
+      <Text style={styles.headline}>{isDenied ? '需要相册访问权限' : 'PickUp需要访问你的相册'}</Text>
       <Text style={styles.body}>
         {isDenied
-          ? '请在系统设置中允许拾遗访问相册。照片完全在本机处理，不会上传。'
-          : '拾遗会随机回顾你的照片，帮你顺手清理废片。照片完全在本机处理，不会上传。'}
+          ? '请在系统设置中允许PickUp访问相册。照片完全在本机处理，不会上传。'
+          : 'PickUp会随机回顾你的照片，帮你顺手清理废片。照片完全在本机处理，不会上传。'}
       </Text>
       <TouchableOpacity
         style={styles.button}
