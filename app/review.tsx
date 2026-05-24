@@ -10,6 +10,7 @@ import { useStatsContext } from '../src/contexts/StatsContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
+import { EmptyReviewPlaceholder } from '../src/components/delete-review/EmptyReviewPlaceholder';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { File } from 'expo-file-system';
 import { deletePhotos } from '../src/services/delete-service';
@@ -101,55 +102,61 @@ export default function ReviewScreen() {
       <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
       <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
 
-      <DeleteGrid
-        photos={photosInGroup}
-        onTap={handleTogglePhoto}
-        selectedIds={selectedIds}
-      />
+      {photosInGroup.length === 0 ? (
+        <EmptyReviewPlaceholder />
+      ) : (
+        <>
+          <DeleteGrid
+            photos={photosInGroup}
+            onTap={handleTogglePhoto}
+            selectedIds={selectedIds}
+          />
 
-      {selectedPhotos.length > 0 && (
-        <View style={styles.infoBtnWrap}>
-          <TouchableOpacity
-            style={styles.infoBtn}
-            onPress={async () => {
-              const p = selectedPhotos[0];
-              let fileSize: number | undefined;
-              try {
-                fileSize = new File(p.uri).size;
-              } catch { /* ignore */ }
-              setDetailPhoto({
-                creationTime: p.creationTime,
-                width: p.width,
-                height: p.height,
-                fileSize: fileSize && fileSize > 0 ? fileSize : undefined,
-                filename: (p as any).filename,
-              });
-            }}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons name="information-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+          {selectedPhotos.length > 0 && (
+            <View style={styles.infoBtnWrap}>
+              <TouchableOpacity
+                style={styles.infoBtn}
+                onPress={async () => {
+                  const p = selectedPhotos[0];
+                  let fileSize: number | undefined;
+                  try {
+                    fileSize = new File(p.uri).size;
+                  } catch { /* ignore */ }
+                  setDetailPhoto({
+                    creationTime: p.creationTime,
+                    width: p.width,
+                    height: p.height,
+                    fileSize: fileSize && fileSize > 0 ? fileSize : undefined,
+                    filename: (p as any).filename,
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="information-outline" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext} disabled={deleting}>
+              <Text style={styles.discardText}>放弃，再来一组</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.deleteButton,
+                !hasSelection && styles.deleteButtonDisabled,
+                deleting && { opacity: 0.6 },
+              ]}
+              onPress={Platform.OS === 'android' ? handleConfirmDelete : () => setShowDeleteSheet(true)}
+              disabled={!hasSelection || deleting}
+            >
+              <Text style={[styles.deleteText, !hasSelection && styles.deleteTextDisabled]}>
+                {deleting ? '删除中...' : `删除 ${selectedPhotos.length} 张`}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
-
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext} disabled={deleting}>
-          <Text style={styles.discardText}>放弃，再来一组</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.deleteButton,
-            !hasSelection && styles.deleteButtonDisabled,
-            deleting && { opacity: 0.6 },
-          ]}
-          onPress={Platform.OS === 'android' ? handleConfirmDelete : () => setShowDeleteSheet(true)}
-          disabled={!hasSelection || deleting}
-        >
-          <Text style={[styles.deleteText, !hasSelection && styles.deleteTextDisabled]}>
-            {deleting ? '删除中...' : `删除 ${selectedPhotos.length} 张`}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
       <LimitReachedModal
         visible={limitModalVisible}

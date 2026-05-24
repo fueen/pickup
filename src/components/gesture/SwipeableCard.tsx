@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Tokens } from '../../design-tokens';
 import { DeleteOverlay } from './DeleteOverlay';
 import { ActionIndicator } from './ActionIndicator';
 import { useHaptics } from '../../hooks/useHaptics';
+import { SwipeEffect, getSwipeEffect } from '../../services/preferences-service';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -29,11 +30,26 @@ export function SwipeableCard({
   const skipProgress = useSharedValue(0);
   const isAnimating = useSharedValue(false);
   const hapticFired = useSharedValue(false);
+  const swipeEffectSV = useSharedValue<SwipeEffect>('default');
   const { impactMedium } = useHaptics();
+
+  const [, setSwipeEffectState] = useState<SwipeEffect>('default');
+
+  useEffect(() => {
+    getSwipeEffect().then((effect) => {
+      setSwipeEffectState(effect);
+      swipeEffectSV.value = effect;
+    });
+  }, [swipeEffectSV]);
 
   const handleEnd = useCallback((ty: number, tx: number) => {
     'worklet';
     if (isAnimating.value) return;
+
+    const isSmooth = swipeEffectSV.value === 'smooth';
+    const hDuration = isSmooth ? 200 : 250;
+    const vDuration = isSmooth ? 250 : 300;
+    const snapDuration = isSmooth ? 250 : 300;
 
     const absTY = Math.abs(ty);
     const absTX = Math.abs(tx);
@@ -46,7 +62,7 @@ export function SwipeableCard({
       isAnimating.value = true;
       const goingLeft = tx < 0;
       const direction = goingLeft ? -1 : 1;
-      translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: 250 }, () => {
+      translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: hDuration }, () => {
         translateX.value = 0;
         translateY.value = 0;
         markProgress.value = 0;
@@ -58,7 +74,7 @@ export function SwipeableCard({
       // Down swipe on a marked photo = unmark (undo delete)
       if (ty > 0 && isMarkedForDelete) {
         isAnimating.value = true;
-        translateY.value = withTiming(SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+        translateY.value = withTiming(SCREEN_HEIGHT * 1.5, { duration: vDuration }, () => {
           translateY.value = 0;
           translateX.value = 0;
           markProgress.value = 0;
@@ -70,7 +86,7 @@ export function SwipeableCard({
         // Up = delete, Down = keep
         isAnimating.value = true;
         const direction = ty < 0 ? -1 : 1;
-        translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: 300 }, () => {
+        translateY.value = withTiming(direction * SCREEN_HEIGHT * 1.5, { duration: vDuration }, () => {
           skipProgress.value = 0;
           isAnimating.value = false;
           runOnJS(direction < 0 ? onMarkDelete : onMarkKeep)();
@@ -78,8 +94,8 @@ export function SwipeableCard({
       }
     } else {
       // Snap back
-      translateY.value = withTiming(0, { duration: 300 });
-      translateX.value = withTiming(0, { duration: 300 });
+      translateY.value = withTiming(0, { duration: snapDuration });
+      translateX.value = withTiming(0, { duration: snapDuration });
       markProgress.value = 0;
       skipProgress.value = 0;
     }
@@ -127,13 +143,18 @@ export function SwipeableCard({
 
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View style={[styles.container, cardStyle]}>
-        {children}
+      <View style={styles.container}>
+        <Animated.View style={[styles.cardInner, cardStyle]}>
+          {children}
+        </Animated.View>
         <DeleteOverlay progress={markProgress} />
         <ActionIndicator progress={markProgress} skipProgress={skipProgress} isMarkedForDelete={isMarkedForDelete} />
-      </Animated.View>
+      </View>
     </GestureDetector>
   );
 }
 
-const styles = StyleSheet.create({ container: { flex: 1, width: SCREEN_WIDTH, height: SCREEN_HEIGHT } });
+const styles = StyleSheet.create({
+  container: { flex: 1, width: SCREEN_WIDTH, height: SCREEN_HEIGHT, backgroundColor: '#000000' },
+  cardInner: { flex: 1, width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
+});
