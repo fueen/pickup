@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigationState } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { Tokens } from '../src/design-tokens';
 import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatsProvider } from '../src/contexts/StatsContext';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
@@ -47,7 +48,7 @@ function SimpleTabBar() {
             <MaterialCommunityIcons
               name={tab.icon as any}
               size={tab.size}
-              color={isFocused ? '#FFCC00' : '#8E8E93'}
+              color={isFocused ? Tokens.color.accent : Tokens.color.textMuted}
             />
           </TouchableOpacity>
         );
