@@ -64,6 +64,12 @@ export default function AlbumPickerScreen() {
           });
         }
 
+        // Sort: "所有照片" first, rest by count descending
+        items.sort((a, b) => {
+          if (a.id === '__all__') return -1;
+          if (b.id === '__all__') return 1;
+          return b.assetCount - a.assetCount;
+        });
         setAlbums(items);
       } catch { /* ignore */ }
       finally { setLoading(false); }
