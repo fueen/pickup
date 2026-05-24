@@ -102,8 +102,6 @@ export default function HubScreen() {
         <ActivityIndicator color={Tokens.color.accent} style={{ marginTop: 40 }} />
       ) : (
         <>
-          <MonthlyChart data={chartData} />
-
           <TouchableOpacity style={styles.yearBtn} onPress={() => setShowYearPicker(true)} activeOpacity={0.7}>
             <Text style={styles.yearText}>{selectedYear} 年</Text>
             <MaterialCommunityIcons name="chevron-down" size={20} color={Tokens.color.accent} />
@@ -127,6 +125,8 @@ export default function HubScreen() {
               </View>
             </TouchableOpacity>
           </Modal>
+
+          <MonthlyChart data={chartData} />
         </>
       )}
     </View>

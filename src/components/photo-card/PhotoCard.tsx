@@ -26,21 +26,27 @@ function getDisplaySize(photo: PhotoAsset) {
   return { width: w, height: h };
 }
 
-interface Props { photo: PhotoAsset; }
+interface Props { photo: PhotoAsset; hideHeader?: boolean; }
 
-export function PhotoCard({ photo }: Props) {
+export function PhotoHeader({ photo }: { photo: PhotoAsset }) {
+  return (
+    <View style={styles.header}>
+      <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatPhotoDate(photo.creationTime)}</Text>
+      {photo.mediaType === 'livePhoto' && (
+        <View style={styles.liveBadge}>
+          <Text style={styles.liveText}>LIVE</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+export function PhotoCard({ photo, hideHeader }: Props) {
   const displaySize = getDisplaySize(photo);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatPhotoDate(photo.creationTime)}</Text>
-        {photo.mediaType === 'livePhoto' && (
-          <View style={styles.liveBadge}>
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
-        )}
-      </View>
+      {!hideHeader && <PhotoHeader photo={photo} />}
 
       <View style={styles.card}>
         <Image

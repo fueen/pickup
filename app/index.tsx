@@ -7,7 +7,7 @@ import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
-import { PhotoCard } from '../src/components/photo-card/PhotoCard';
+import { PhotoCard, PhotoHeader } from '../src/components/photo-card/PhotoCard';
 import { GroupProgressBar } from '../src/components/photo-card/GroupProgressBar';
 import { SwipeableCard } from '../src/components/gesture/SwipeableCard';
 import { GestureGuideOverlay } from '../src/components/gesture/GestureGuideOverlay';
@@ -253,6 +253,7 @@ export default function BrowseScreen() {
         <MaterialCommunityIcons name="layers" size={28} color="#fff" />
       </TouchableOpacity>
 
+      <PhotoHeader photo={currentPhoto} />
       <SwipeableCard
         key={currentPhoto.id}
         onMarkDelete={handleMarkDelete}
@@ -262,7 +263,7 @@ export default function BrowseScreen() {
         isMarkedForDelete={markedForDelete.has(currentPhoto.id)}
         onUnmarkDelete={handleUnmarkDelete}
       >
-        <PhotoCard photo={currentPhoto} />
+        <PhotoCard photo={currentPhoto} hideHeader />
       </SwipeableCard>
 
       {/* Quick delete button — top right */}
