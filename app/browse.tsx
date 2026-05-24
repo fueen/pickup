@@ -85,6 +85,12 @@ export default function BrowseScreen() {
   const currentPhoto = currentGroup[groupIndex];
   groupLenRef.current = currentGroup.length;
 
+  // Reset load state when album changes
+  useEffect(() => {
+    hasLoadedRef.current = false;
+    triedLoadRef.current = false;
+  }, [albumIdStr]);
+
   useEffect(() => {
     if (hasLoadedRef.current) return;
     if (!dailyUsageLoaded) return;
@@ -100,7 +106,7 @@ export default function BrowseScreen() {
       hasLoadedRef.current = true;
       loadPhotos(albumIdStr);
     }
-  }, [permissionStatus, dailyUsageLoaded, canBrowseNextGroup]);
+  }, [permissionStatus, dailyUsageLoaded, canBrowseNextGroup, albumIdStr, loadPhotos, requestPermissions]);
 
   // Record viewed when a new group starts (groupIndex === 0)
   useEffect(() => {
@@ -139,7 +145,7 @@ export default function BrowseScreen() {
         incrementGroupCount();
         loadNextGroup();
       } else {
-        router.push('/review');
+        router.push({ pathname: '/review', params: { albumId: albumIdStr, albumTitle: albumTitleStr } });
       }
     } else {
       setGroupIndex(groupIndex + 1);
