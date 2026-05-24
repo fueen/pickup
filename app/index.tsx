@@ -23,7 +23,7 @@ import { Tokens } from '../src/design-tokens';
 
 export default function BrowseScreen() {
   const router = useRouter();
-  const { selectedAlbum, setSelectedAlbum } = usePhotoContext();
+  const { selectedAlbum } = usePhotoContext();
   const albumIdStr = selectedAlbum?.id ?? '__all__';
 
   const {

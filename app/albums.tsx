@@ -30,20 +30,9 @@ export default function AlbumPickerScreen() {
   const { setSelectedAlbum } = usePhotoContext();
   const [albums, setAlbums] = useState<AlbumItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [permissionStatus, setPermissionStatus] = useState<'undetermined' | 'granted' | 'limited' | 'denied'>('undetermined');
   const { dailyUsageLoaded } = useSubscriptionContext();
 
   useEffect(() => {
-    MediaLibrary.getPermissionsAsync().then(({ status }) => {
-      const s: string = status;
-      if (s === 'granted' || s === 'limited' || s === 'denied') {
-        setPermissionStatus(s as any);
-      }
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (permissionStatus !== 'granted' && permissionStatus !== 'limited') return;
     (async () => {
       try {
         const albumList = await MediaLibrary.getAlbumsAsync();
@@ -79,7 +68,7 @@ export default function AlbumPickerScreen() {
       } catch { /* ignore */ }
       finally { setLoading(false); }
     })();
-  }, [permissionStatus]);
+  }, []);
 
   const handlePickAlbum = (album: AlbumItem) => {
     setSelectedAlbum({ id: album.id, title: album.title });
