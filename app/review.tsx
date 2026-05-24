@@ -9,6 +9,7 @@ import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
 import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
+import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
@@ -26,6 +27,10 @@ export default function ReviewScreen() {
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const deletingRef = useRef(false);
   const insets = useSafeAreaInsets();
+
+  const [detailPhoto, setDetailPhoto] = useState<{
+    creationTime: number; width: number; height: number; fileSize?: number; filename?: string;
+  } | null>(null);
 
   // Sync from markedForDelete; guard against cleared set during delete to avoid flicker
   useEffect(() => {
@@ -101,6 +106,27 @@ export default function ReviewScreen() {
         selectedIds={selectedIds}
       />
 
+      {selectedPhotos.length > 0 && (
+        <View style={styles.infoBtnWrap}>
+          <TouchableOpacity
+            style={styles.infoBtn}
+            onPress={() => {
+              const p = selectedPhotos[0];
+              setDetailPhoto({
+                creationTime: p.creationTime,
+                width: p.width,
+                height: p.height,
+                fileSize: p.fileSize,
+                filename: (p as any).filename,
+              });
+            }}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="information-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.footer}>
         <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext} disabled={deleting}>
           <Text style={styles.discardText}>放弃，再来一组</Text>
@@ -137,6 +163,12 @@ export default function ReviewScreen() {
           onCancel={() => setShowDeleteSheet(false)}
         />
       )}
+
+      <PhotoDetailSheet
+        visible={detailPhoto !== null}
+        photo={detailPhoto}
+        onClose={() => setDetailPhoto(null)}
+      />
     </View>
   );
 }
@@ -153,4 +185,6 @@ const styles = StyleSheet.create({
   deleteButtonDisabled: { backgroundColor: '#3A3A3C' },
   deleteText: { fontSize: 16, fontWeight: '700', color: '#000000', letterSpacing: 1 },
   deleteTextDisabled: { color: '#8E8E93' },
+  infoBtnWrap: { position: 'absolute', bottom: 120, right: 16, zIndex: 20 },
+  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
 });
