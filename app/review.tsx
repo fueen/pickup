@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
@@ -23,6 +25,7 @@ export default function ReviewScreen() {
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const deletingRef = useRef(false);
+  const insets = useSafeAreaInsets();
 
   // Sync from markedForDelete; guard against cleared set during delete to avoid flicker
   useEffect(() => {
@@ -84,6 +87,11 @@ export default function ReviewScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={[styles.backBtn, { top: insets.top + 8 }]}>
+        <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
       <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
 
@@ -135,6 +143,7 @@ export default function ReviewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background, paddingTop: 60 },
+  backBtn: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
   heading: { ...Tokens.typography.title, color: Tokens.color.textPrimary, textAlign: 'center', marginBottom: Tokens.spacing.s },
   hint: { ...Tokens.typography.caption, color: Tokens.color.textMuted, textAlign: 'center', marginBottom: Tokens.spacing.xl },
   footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 40, left: 0, right: 0 },
