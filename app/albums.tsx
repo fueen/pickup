@@ -12,11 +12,11 @@ import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GAP = 8;
-const PADDING = 12;
+const GAP = 4;
+const PADDING = 8;
 const COLUMN_COUNT = 3;
 const CARD_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
-const COVER_HEIGHT = CARD_WIDTH * 1.25;
+const COVER_HEIGHT = CARD_WIDTH * 2;
 
 interface AlbumItem {
   id: string;
@@ -92,14 +92,14 @@ export default function AlbumPickerScreen() {
         numColumns={COLUMN_COUNT}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: PADDING, paddingBottom: 100 }}
-        columnWrapperStyle={{ gap: GAP, marginBottom: 14 }}
+        columnWrapperStyle={{ gap: GAP, marginBottom: 12 }}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} onPress={() => handlePickAlbum(item)} activeOpacity={0.7}>
             <View style={styles.coverWrap}>
               {item.coverUri ? (
                 <Image source={{ uri: item.coverUri }} style={styles.cover} />
               ) : (
-                <MaterialCommunityIcons name="image-outline" size={32} color={Tokens.color.textMuted} />
+                <MaterialCommunityIcons name="image-outline" size={48} color={Tokens.color.textMuted} />
               )}
             </View>
             <Text style={styles.albumName} numberOfLines={1}>{item.title}</Text>
