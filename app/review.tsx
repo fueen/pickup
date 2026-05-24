@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -17,9 +17,6 @@ import { Tokens } from '../src/design-tokens';
 
 export default function ReviewScreen() {
   const router = useRouter();
-  const { albumId, albumTitle } = useLocalSearchParams<{ albumId: string; albumTitle: string }>();
-  const albumIdStr = (albumId as string) ?? '__all__';
-  const albumTitleStr = (albumTitle as string) ?? '所有照片';
   const { currentGroup, markedForDelete, setMarkedForDelete, clearMarkedPhotos, loadNextGroup } = usePhotoContext();
   const { dispatch } = useSessionContext();
   const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
@@ -65,8 +62,8 @@ export default function ReviewScreen() {
     setMarkedForDelete(new Set());
     loadNextGroup();
     dispatch({ type: 'RESET_SESSION' });
-    router.replace({ pathname: '/browse', params: { albumId: albumIdStr, albumTitle: albumTitleStr } });
-  }, [canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, albumIdStr, albumTitleStr]);
+    router.replace('/');
+  }, [canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router]);
 
   const handleConfirmDelete = useCallback(async () => {
     if (selectedPhotos.length === 0 || deletingRef.current) return;
@@ -91,13 +88,13 @@ export default function ReviewScreen() {
     }
     incrementGroupCount();
     loadNextGroup();
-    router.replace({ pathname: '/browse', params: { albumId: albumIdStr, albumTitle: albumTitleStr } });
-  }, [selectedPhotos, canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, recordDeleted, albumIdStr, albumTitleStr]);
+    router.replace('/');
+  }, [selectedPhotos, canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, recordDeleted]);
 
   return (
     <View style={styles.container}>
       <View style={[styles.backBtn, { top: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.replace({ pathname: '/browse', params: { albumId: albumIdStr, albumTitle: albumTitleStr } })} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
           <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
         </TouchableOpacity>
       </View>

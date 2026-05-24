@@ -1,13 +1,21 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { usePhotoEngine } from '../hooks/usePhotoEngine';
 
-type PhotoContextValue = ReturnType<typeof usePhotoEngine>;
+type PhotoContextValue = ReturnType<typeof usePhotoEngine> & {
+  selectedAlbum: { id: string; title: string } | null;
+  setSelectedAlbum: (album: { id: string; title: string } | null) => void;
+};
 
 const PhotoCtx = createContext<PhotoContextValue | null>(null);
 
 export function PhotoProvider({ children }: { children: React.ReactNode }) {
   const engine = usePhotoEngine();
-  return <PhotoCtx.Provider value={engine}>{children}</PhotoCtx.Provider>;
+  const [selectedAlbum, setSelectedAlbum] = useState<{ id: string; title: string } | null>(null);
+  return (
+    <PhotoCtx.Provider value={{ ...engine, selectedAlbum, setSelectedAlbum }}>
+      {children}
+    </PhotoCtx.Provider>
+  );
 }
 
 export function usePhotoContext(): PhotoContextValue {

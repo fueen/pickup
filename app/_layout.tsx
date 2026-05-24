@@ -114,7 +114,7 @@ export default function RootLayout() {
                   <Tabs.Screen name="settings" />
                   <Tabs.Screen name="review" options={{ href: null }} />
                   <Tabs.Screen name="paywall" options={{ href: null }} />
-                  <Tabs.Screen name="browse" options={{ href: null }} />
+                  <Tabs.Screen name="albums" options={{ href: null }} />
                 </Tabs>
                 <SimpleTabBar />
               </SessionProvider>
