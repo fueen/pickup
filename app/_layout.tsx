@@ -61,7 +61,7 @@ const tabStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     paddingTop: 8,
     gap: 4,
   },

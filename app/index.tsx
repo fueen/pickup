@@ -18,7 +18,9 @@ import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModa
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReached';
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
+import { File } from 'expo-file-system';
 import { deletePhotos } from '../src/services/delete-service';
+import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
 import { Tokens } from '../src/design-tokens';
 
 export default function BrowseScreen() {
@@ -40,6 +42,9 @@ export default function BrowseScreen() {
 
   const [quickDeleting, setQuickDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [detailPhoto, setDetailPhoto] = useState<{
+    creationTime: number; width: number; height: number; fileSize?: number; filename?: string;
+  } | null>(null);
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
@@ -289,6 +294,28 @@ export default function BrowseScreen() {
         />
       )}
 
+          {/* Info button — bottom right */}
+          <View style={styles.infoBtnWrap}>
+            <TouchableOpacity
+              style={styles.infoBtn}
+              onPress={async () => {
+                const p = currentPhoto;
+                let fileSize: number | undefined;
+                try { fileSize = new File(p.uri).size; } catch { /* ignore */ }
+                setDetailPhoto({
+                  creationTime: p.creationTime,
+                  width: p.width,
+                  height: p.height,
+                  fileSize: fileSize && fileSize > 0 ? fileSize : undefined,
+                  filename: (p as any).filename,
+                });
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="information-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
           <GroupProgressBar
             current={groupIndex}
             total={currentGroup.length}
@@ -307,6 +334,11 @@ export default function BrowseScreen() {
         visible={guideVisible}
         onDismiss={handleDismissGuide}
       />
+      <PhotoDetailSheet
+        visible={detailPhoto !== null}
+        photo={detailPhoto}
+        onClose={() => setDetailPhoto(null)}
+      />
     </View>
   );
 }
@@ -314,6 +346,8 @@ export default function BrowseScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
   albumBtnWrap: { position: 'absolute', top: 54, left: 20, alignItems: 'center', zIndex: 30 },
+  infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },
+  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
   quickDeleteWrap: {
     position: 'absolute',
     top: 54,
