@@ -63,7 +63,7 @@ export function usePhotoEngine() {
     }
   }, []);
 
-  const loadPhotos = useCallback(async () => {
+  const loadPhotos = useCallback(async (albumId?: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -73,11 +73,15 @@ export function usePhotoEngine() {
       let hasMore = true;
 
       while (hasMore) {
-        const page = await MediaLibrary.getAssetsAsync({
+        const options: MediaLibrary.AssetsOptions = {
           mediaType: ['photo'],
           first: 500,
           after: cursor,
-        });
+        };
+        if (albumId && albumId !== '__all__') {
+          options.album = albumId;
+        }
+        const page = await MediaLibrary.getAssetsAsync(options);
         allAssets = allAssets.concat(page.assets);
         hasMore = page.hasNextPage;
         cursor = page.endCursor;
