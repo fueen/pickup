@@ -12,10 +12,11 @@ import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GAP = 10;
-const PADDING = 16;
+const GAP = 8;
+const PADDING = 12;
 const COLUMN_COUNT = 3;
 const CARD_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
+const COVER_HEIGHT = CARD_WIDTH * 1.25;
 
 interface AlbumItem {
   id: string;
@@ -91,7 +92,7 @@ export default function AlbumPickerScreen() {
         numColumns={COLUMN_COUNT}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: PADDING, paddingBottom: 100 }}
-        columnWrapperStyle={{ gap: GAP, marginBottom: GAP }}
+        columnWrapperStyle={{ gap: GAP, marginBottom: 14 }}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} onPress={() => handlePickAlbum(item)} activeOpacity={0.7}>
             <View style={styles.coverWrap}>
@@ -122,14 +123,14 @@ const styles = StyleSheet.create({
   },
   card: { width: CARD_WIDTH, alignItems: 'center' },
   coverWrap: {
-    width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 12,
+    width: CARD_WIDTH, height: COVER_HEIGHT, borderRadius: 14,
     backgroundColor: Tokens.color.surface, overflow: 'hidden',
     alignItems: 'center', justifyContent: 'center',
   },
   cover: { width: '100%', height: '100%', resizeMode: 'cover' },
   albumName: {
     ...Tokens.typography.caption, color: Tokens.color.textPrimary,
-    marginTop: 6, maxWidth: CARD_WIDTH,
+    marginTop: 8, maxWidth: CARD_WIDTH,
   },
   albumCount: { fontSize: 11, color: Tokens.color.textMuted, marginTop: 2 },
 });
