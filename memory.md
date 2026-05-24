@@ -215,3 +215,61 @@ v1.0.1 Bug 修复 + UI 打磨完成，README 架构文档更新，Android previe
 - 后续如需恢复 TabBar 动画效果（缩放、毛玻璃），在 SimpleTabBar 基础上迭代
 
 ---
+
+## 2026-05-24 17:30 | 项目进展-pickup
+
+### 一句话概述
+
+完成 v1.4-v1.6 多轮迭代——首页架构重构、Hub 柱状图年份筛选、滑动交互优化、Review 页打磨、品牌改名 PickUp、新 LOGO 设计、本地构建环境搭建。
+
+### v1.4 完成项
+
+- **首页相册选择**：index.tsx 浏览页默认，albums.tsx 二级相册页（2列大方形缩略图，按数量降序）
+- **PhotoContext 新增 selectedAlbum**：跨 Tab 共享当前相册状态
+- **浏览页左上角 layers 图标**：点击进入相册选择
+- **Hub 月度柱状图**：纯 RN 实现，12 个月份 yellow 柱体
+- **Review 按钮**：左上返回 + 右下信息（后移到浏览页）
+- **释放空间 0B 修复**：`expo-file-system` File 类获取大小
+- **日期字体**：14px 居中防溢出
+
+### v1.5 改动
+
+- 浏览页回归默认首页（index.tsx），相册选择变二级（albums.tsx）
+- 删除 browse.tsx，流程简化为 index ↔ albums ↔ review
+
+### v1.6 改动
+
+- **滑动优化**：卡片独立移动，去红背景，日期固定顶部不跟随滑动
+- **Hub 年份筛选**：缓存 yearlyData，Modal 选择年份，柱状图联动
+- **Review 空状态**：EmptyReviewPlaceholder 卡通幽灵占位图
+- **滑动特效设置**：default/smooth 等 5 种，AsyncStorage 持久化
+- **Review 缩略图**：180px，maxHeight 580 限 6 张滚动
+- **Tab 栏**：usePathname 替代 useNavigationState 修复深层链接冲突
+
+### 品牌改动
+
+- App 内文案：拾遗 → PickUp，标语：记忆由你选择
+- 新 LOGO：堆叠滑出设计（3张卡片错位+金色边框），已生成 1024px PNG
+- 图标文件：assets/icon.png 已替换
+
+### 本地构建环境
+
+- EAS 免费配额已用完（6月1日重置）
+- **放弃 EAS，改用本地 Gradle**：`cd android && gradlew assembleDebug`
+- **网络问题**：国内墙 Google，已配置阿里云/腾讯云/华为云镜像
+  - `settings.gradle` pluginManagement + dependencyResolutionManagement
+  - `build.gradle` buildscript + allprojects
+  - `init.gradle` 全局注入
+- **已安装**：Android SDK 36、NDK 27、Build-Tools 37
+- **SDK 路径**：`C:/Users/Fueen/AppData/Local/Android/Sdk`
+- **当前状态**：构建仍报错（exit 137 或依赖解析问题），待排查
+- **备选方案**：GitHub Actions workflow 已配好（`.github/workflows/build-apk.yml`）
+
+### 下一步
+
+- 解决本地 Gradle 构建最后一步报错（可能是 Expo 模块本地 autolinking 问题）
+- 或直接用 GitHub Actions 触发远程构建（绕过本地网络问题）
+- 测试新图标在 APP 中的实际显示效果
+- EAS 配额重置后可恢复到 EAS 构建流程
+
+---
