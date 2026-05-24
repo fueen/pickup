@@ -12,11 +12,10 @@ import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GAP = 4;
-const PADDING = 8;
-const COLUMN_COUNT = 3;
+const GAP = 12;
+const PADDING = 16;
+const COLUMN_COUNT = 2;
 const CARD_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
-const COVER_HEIGHT = CARD_WIDTH * 2;
 
 interface AlbumItem {
   id: string;
@@ -123,7 +122,7 @@ const styles = StyleSheet.create({
   },
   card: { width: CARD_WIDTH, alignItems: 'center' },
   coverWrap: {
-    width: CARD_WIDTH, height: COVER_HEIGHT, borderRadius: 14,
+    width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 16,
     backgroundColor: Tokens.color.surface, overflow: 'hidden',
     alignItems: 'center', justifyContent: 'center',
   },
