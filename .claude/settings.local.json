@@ -20,7 +20,24 @@
       "Bash(curl -s http://localhost:8081/index.exp?platform=android)",
       "Bash(curl -sI http://192.168.5.68:8081)",
       "Bash(REACT_NATIVE_PACKAGER_HOSTNAME=192.168.5.68 npx expo start)",
-      "Bash(curl -s \"http://localhost:8081/index.exp?platform=android\")"
+      "Bash(curl -s \"http://localhost:8081/index.exp?platform=android\")",
+      "Bash(npm ls *)",
+      "WebFetch(domain:docs.expo.dev)",
+      "Bash(node -e \"const efs = require\\('expo-file-system'\\); console.log\\('exports:', Object.keys\\(efs\\)\\); console.log\\('File:', efs.File\\); console.log\\('File proto:', efs.File?.prototype\\); console.log\\('File descriptor:', Object.getOwnPropertyDescriptors\\(efs.File?.prototype || {}\\)\\);\")",
+      "Bash(node -e \"const p = require.resolve\\('expo-file-system'\\); console.log\\(p\\);\")",
+      "WebSearch",
+      "Bash(start \"\" \"d:/workspace/vibe coding/pickup/icon-picker.html\")",
+      "Bash(start \"\" \"d:/workspace/vibe coding/pickup/logo-picker.html\")",
+      "Bash(start \"\" \"d:/workspace/vibe coding/pickup/logo-picker-v2.html\")",
+      "Bash(start \"\" \"d:/workspace/vibe coding/pickup/logo-final.html\")",
+      "Bash(npx eas *)",
+      "Bash(./gradlew assembleRelease)",
+      "Bash(./gradlew tasks *)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew -I init.gradle assembleDebug)",
+      "Read(//c/Users/Fueen/AppData/Local/Android/Sdk/**)",
+      "Bash(dir \"C:/Users/Fueen/AppData/Local/Android\")",
+      "Bash(dir \"C:/Program Files/Android/Android Studio\")"
     ]
   }
 }
