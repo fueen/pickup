@@ -25,6 +25,6 @@ export async function deletePhotos(photos: PhotoAsset[]): Promise<DeleteResult> 
     return { successCount: photos.length, failedCount: 0, freedBytes: totalFreed, errors: [] };
   } catch (e) {
     const message = e instanceof Error ? e.message : 'delete failed';
-    return { successCount: 0, failedCount: photos.length, freedBytes: totalFreed, errors: [message] };
+    return { successCount: 0, failedCount: photos.length, freedBytes: 0, errors: [message] };
   }
 }
