@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   backBtn: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
   heading: { ...Tokens.typography.title, color: Tokens.color.textPrimary, textAlign: 'center', marginBottom: Tokens.spacing.s },
   hint: { ...Tokens.typography.caption, color: Tokens.color.textMuted, textAlign: 'center', marginBottom: Tokens.spacing.xl },
-  footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 40, left: 0, right: 0 },
+  footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 100, left: 0, right: 0 },
   discardButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   discardText: { fontSize: 16, fontWeight: '700', color: Tokens.color.textSecondary, letterSpacing: 1 },
   deleteButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: '#FFCC00', borderRadius: 30 },

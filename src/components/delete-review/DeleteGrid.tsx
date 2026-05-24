@@ -3,7 +3,7 @@ import { View, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Tokens } from '../../design-tokens';
 import { PhotoAsset } from '../../types/photo';
 
-const IMAGE_SIZE = 100;
+const IMAGE_SIZE = 180;
 
 interface Props {
   photos: PhotoAsset[];
@@ -48,21 +48,21 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%', borderRadius: Tokens.radius.card },
   checkOverlay: {
     position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    top: -8,
+    right: -8,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#FF3B30',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: '#000000',
   },
   checkIcon: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '800',
-    lineHeight: 16,
+    lineHeight: 20,
   },
 });
