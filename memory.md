@@ -191,3 +191,27 @@ v1.0.1 Bug 修复 + UI 打磨完成，README 架构文档更新，Android previe
 - 后续如需优化：可考虑 Android 14+ 用 RecoverableSecurityException 改善流程
 
 ---
+
+## 2026-05-24 16:30 | 项目进展-pickup
+
+### 一句话概述
+
+修复 Tab bar 图标左偏 + 幽灵点击区域 Bug，最终方案：隐藏默认 tab bar + 独立 SimpleTabBar 组件。
+
+### 当前进度 / 关键结论
+
+- **Bug 根因**：使用 `tabBar` prop 自定义 TabBar 时，默认 tab bar 仍会在底层渲染，导致两套 tab bar 叠加——自定义的图标左偏，默认的触摸区域仍可点击
+- **尝试过的失败方案**：调整 iconsRow 的 flex/justifyContent、去掉胶囊矩形框、去掉自定义 TabBar 用默认 tab bar、绝对定位 —— 均未解决
+- **最终方案**：
+  - `tabBarStyle: { display: 'none' }` 彻底隐藏默认 tab bar
+  - `SimpleTabBar` 作为 `<Tabs>` 的兄弟组件独立渲染，用 `expo-router` 的 `useRouter().navigate()` 导航
+  - 用 `useNavigationState` 追踪当前路由实现选中高亮
+  - 纯黑背景 (`#000`)，图标居中 (`justifyContent: 'center'`)，间距 4px (`gap: 4`)，选中金色/未选中灰色
+- **不再使用** `src/components/ui/TabBar.tsx`（已被内联 `SimpleTabBar` 替代）
+- 已提交推送 `b50fa72`
+
+### 下一步
+
+- 后续如需恢复 TabBar 动画效果（缩放、毛玻璃），在 SimpleTabBar 基础上迭代
+
+---

@@ -702,3 +702,212 @@
 - `more`、`category`、`all`（更多/分类）
 
 筛选条件：单色、线框风格、stroke 较粗（2px 以上）、圆角端点。
+
+---
+
+# v1.4 — 首页重构与细节打磨
+
+> 版本：v1.4 | 日期：2026-05-24 | 状态：待开发
+
+## 概述
+
+基于 v1.3 完成后的新一轮反馈，本次迭代涉及首页架构重构（照片浏览降为二级页面、新增相册选择首页）、Hub 页柱状图、多处 UI 细节修复。共包含 7 项改进需求。
+
+---
+
+## 需求清单
+
+### REQ-01 首页重构：相册选择 + 照片浏览降为二级页面
+
+**现状**：启动后直接进入照片浏览页（`index.tsx`），所有照片混在一起滑动整理。
+
+**目标**：重构首页为相册选择页——用户进来先看到相册列表，选择某个相册后进入该相册的照片浏览/整理流程。照片浏览页降为二级页面。
+
+**实现要点**：
+
+- **相册选择首页**（新 `index.tsx` 或 `albums.tsx`）：
+  - 一行展示 3 组相册，grid 布局（3 列）
+  - 每张相册卡片包含：相册封面缩略图（取相册第一张照片）+ 相册名称 + 照片数量
+  - 封面缩略图使用 `MediaLibrary.getAlbumsAsync()` 获取相册列表，配合 `getAssetsAsync({ album: albumId, first: 1 })` 取封面
+  - 卡片样式：圆角（约 12-16px），封面撑满卡片，名称和数量在封面下方或叠加在底部半透明区域
+  - 至少包含"所有照片"、"相机胶卷"等系统相册
+- **照片浏览页**（原 `index.tsx` → 新路由如 `browse.tsx` 或 `album/[id].tsx`）：
+  - 接收相册 ID 参数，仅加载该相册内的照片
+  - 其他交互逻辑（滑动、标记、删除等）保持不变
+- **返回按钮**：照片浏览页左上角加返回箭头，点击回到相册选择首页
+
+**涉及文件**：
+- `app/index.tsx` → 重写为相册选择首页
+- `app/album/[id].tsx` 或 `app/browse.tsx` → 原照片浏览逻辑迁移
+- `src/hooks/usePhotoEngine.ts` → 新增按相册加载的方法
+
+---
+
+### REQ-02 照片日期字体缩小 + 居中 + 防溢出
+
+**现状**：PhotoCard 组件中日期显示在顶部，字体较大，布局可能溢出或与周边元素冲突。
+
+**目标**：缩小日期字体，居中放置，合理布局确保不会超长溢出。
+
+**实现要点**：
+
+- **字体缩小**：日期字号从当前值缩小 2-4px（建议 13-14px）
+- **居中对齐**：日期文字水平居中显示
+- **防溢出**：添加 `numberOfLines={1}` + `ellipsizeMode="tail"` 防止超长文本溢出
+- **容器约束**：日期容器设置 `maxWidth` 或 `paddingHorizontal`，确保不会撑破卡片边界
+
+**涉及文件**：`src/components/photo-card/PhotoCard.tsx`
+
+---
+
+### REQ-03 Hub 页面：月度照片数量柱状图
+
+**现状**：Hub 页（`app/hub.tsx`）为占位页面，显示"更多功能 · 敬请期待"。
+
+**目标**：用柱状图展示各月份的照片数量分布，丰富 Hub 页功能性。
+
+**实现要点**：
+
+- **数据来源**：遍历 `MediaLibrary.getAssetsAsync()` 获取所有照片的 `creationTime`，按月份聚合统计
+- **图表实现**：
+  - 使用纯 React Native 绘制（View 组合的柱状图），不引入第三方图表库（避免增加包体积）
+  - 每个柱子代表一个月份，高度按当月照片数比例缩放
+  - 柱子顶部或内部显示具体数字
+  - X 轴标注月份（如"1月"、"2月"...），Y 轴标注数量
+- **视觉效果**：
+  - 柱子使用主题黄色 `#FFCC00` 渐变或纯色，配合深色背景
+  - 圆角顶部（`borderRadius`），柱间距均匀
+  - 支持横向滚动（当月份较多时）
+- **当前月份高亮**：当前所在月份的柱子使用更亮的颜色或增加边框高亮
+
+**涉及文件**：
+- `app/hub.tsx` — 重写为月度柱状图页面
+- 新建 `src/components/hub/MonthlyChart.tsx` — 柱状图组件
+
+---
+
+### REQ-04 Review 页左上角返回按钮
+
+**现状**：Review 页（`app/review.tsx`）无返回按钮，用户只能通过底部按钮操作。
+
+**目标**：左上角增加一个返回箭头按钮，点击后返回到相册选择首页（配合 REQ-01）。
+
+**实现要点**：
+
+- **位置**：页面左上角，绝对定位，避开安全区顶部
+- **样式**：圆形半透明黑底 + 白色箭头图标（`MaterialCommunityIcons` 的 `arrow-left` 或 `chevron-left`）
+- **行为**：`router.back()` 或 `router.replace('/')` 返回首页
+- **层级**：`zIndex` 确保按钮浮在照片网格上方
+
+**涉及文件**：`app/review.tsx`
+
+---
+
+### REQ-05 修复"释放空间"显示 0B Bug
+
+**现状**：设置页（`app/settings.tsx`）中"释放空间"统计始终显示为 0B，即使已删除了照片。
+
+**目标**：修复统计逻辑，正确显示已删除照片累计释放的空间大小。
+
+**根因排查方向**：
+- `stats-service.ts` 中 `recordDeleted` 是否正确累加文件大小？
+- `MediaLibrary.getAssetInfoAsync()` 获取单张照片文件大小的方式在 SDK 54 中是否可用？（之前发现 `FileSystem.getInfoAsync` 已被弃用）
+- 统计持久化是否正确（AsyncStorage 读写是否正常）？
+- `StatsContext` 是否正确暴露和使用？
+
+**修复思路**：
+- 删除前用 `expo-file-system` 新版 `File` 类获取文件大小：`new File(uri).size`
+- 或使用 `MediaLibrary.getAssetsAsync` 配合 `MediaLibrary.getAssetInfoAsync` 获取文件大小
+- 确保累加值正确写入 AsyncStorage 并正确读取展示
+
+**涉及文件**：
+- `src/services/stats-service.ts`
+- `src/services/delete-service.ts`
+- `src/contexts/StatsContext.tsx`
+- `app/settings.tsx`
+
+---
+
+### REQ-06 Review 页右下角详情按钮
+
+**现状**：Review 页面仅展示照片网格，用户无法查看某张照片的详细信息（拍摄时间、尺寸、文件大小、位置等）。
+
+**目标**：右下角添加一个详情按钮，点击后弹出照片详情信息面板。
+
+**实现要点**：
+
+- **按钮位置**：页面右下角，浮动按钮，与左上角返回按钮对称
+- **按钮样式**：圆形半透明黑底 + 信息图标（`MaterialCommunityIcons` 的 `information-outline` 或 `dots-horizontal`）
+- **详情面板**：
+  - 从底部滑出（Bottom Sheet 风格），半屏高度
+  - 显示信息：拍摄时间、照片尺寸（宽×高）、文件大小、文件路径、ISO/光圈/快门（如果 EXIF 可用）
+  - 使用 `MediaLibrary.getAssetInfoAsync()` 获取详细信息
+  - 面板背景使用毛玻璃或深色半透明
+- **交互**：点击按钮弹出面板，下滑或点击遮罩关闭
+
+**涉及文件**：
+- `app/review.tsx` — 添加详情按钮和面板
+- 新建 `src/components/delete-review/PhotoDetailSheet.tsx` — 照片详情底部面板
+
+---
+
+### REQ-07 Tab 图标选中变黄
+
+**现状**：底部 Tab 栏图标在选中时已设置为金色 `#FFCC00`，但用户反馈实际运行中未正确显示（可能因 `useNavigationState` 状态追踪有延迟或偏差）。
+
+**目标**：确保点击 Tab 图标后，被选中图标立即变为主题黄色 `#FFCC00`，未选中保持灰色 `#8E8E93`，与设计令牌 `Tokens.color.accent` 保持一致。
+
+**实现要点**：
+
+- **状态同步**：检查 `SimpleTabBar` 中 `currentRoute` 的 `useNavigationState` selector 是否正确响应路由变化
+- **容错处理**：若 `useNavigationState` 返回 undefined 或异常值，回退到 `state.index` 判断
+- **颜色引用**：硬编码颜色值改为引用 `Tokens.color.accent` / `Tokens.color.textMuted`，确保全局统一
+- **验证**：切换 Tab 时确认图标颜色瞬时变化（无延迟或闪烁）
+
+**涉及文件**：`app/_layout.tsx` — `SimpleTabBar` 组件
+
+---
+
+## v1.4 需求优先级
+
+| 优先级 | 需求编号 | 说明 |
+| ------ | -------- | ---- |
+| P0     | REQ-05   | Bug 修复，释放空间 0B 问题影响用户信任 |
+| P0     | REQ-01   | 首页重构，架构级变更，影响所有后续功能 |
+| P0     | REQ-07   | Tab 图标选中色，基础交互体验 |
+| P1     | REQ-02   | 日期字体缩小居中，UI 细节打磨 |
+| P1     | REQ-04   | Review 返回按钮，配合新首页架构 |
+| P1     | REQ-06   | 照片详情信息，增强功能完整性 |
+| P2     | REQ-03   | Hub 柱状图，独立功能模块 |
+
+---
+
+## v1.4 影响范围
+
+| 文件 | REQ-01 | REQ-02 | REQ-03 | REQ-04 | REQ-05 | REQ-06 | REQ-07 |
+| ---- | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| `app/index.tsx` | ✓ (重写) | | | | | | |
+| `app/_layout.tsx` | ✓ (路由) | | | | | | ✓ |
+| `app/browse.tsx` 或 `app/album/[id].tsx` | ✓ (新建/迁移) | | | | | | |
+| `app/review.tsx` | | | | ✓ | | ✓ | |
+| `app/hub.tsx` | | | ✓ (重写) | | | | |
+| `app/settings.tsx` | | | | | ✓ | | |
+| `MonthlyChart.tsx` | | | ✓ (新建) | | | | |
+| `PhotoDetailSheet.tsx` | | | | | | ✓ (新建) | |
+| `PhotoCard.tsx` | | ✓ | | | | | |
+| `usePhotoEngine.ts` | ✓ | | | | | | |
+| `stats-service.ts` | | | | | ✓ | | |
+| `delete-service.ts` | | | | | ✓ | | |
+| `StatsContext.tsx` | | | | | ✓ | | |
+
+---
+
+## v1.4 验收标准
+
+1. 启动后进入相册选择首页，一行 3 列展示相册卡片（封面缩略图 + 名称 + 数量），点击进入该相册照片浏览页
+2. 照片日期字体缩小至 13-14px，居中显示，超长文本截断不出界
+3. Hub 页展示月度照片数量柱状图，柱高按比例，显示数字，当前月份高亮
+4. Review 页左上角有返回箭头按钮，点击返回相册首页
+5. 设置页"释放空间"正确显示已删除照片累计文件大小，不再固定为 0B
+6. Review 页右下角有详情按钮，点击弹出照片详细信息面板（时间、尺寸、大小等）
+7. 底部 Tab 图标选中时立即变为金色 `#FFCC00`，未选中为灰色，与主题一致
