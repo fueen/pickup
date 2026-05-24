@@ -251,7 +251,6 @@ export default function BrowseScreen() {
       {/* Album button — top left */}
       <TouchableOpacity style={styles.albumBtnWrap} onPress={() => router.push('/albums')} activeOpacity={0.7}>
         <MaterialCommunityIcons name="layers" size={28} color="#fff" />
-        <Text style={styles.albumLabel}>相册</Text>
       </TouchableOpacity>
 
       <SwipeableCard
@@ -309,8 +308,7 @@ export default function BrowseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
-  albumBtnWrap: { position: 'absolute', top: 54, left: 20, alignItems: 'center', gap: 4, zIndex: 30 },
-  albumLabel: { fontSize: 11, fontWeight: '600', color: '#fff', letterSpacing: 1 },
+  albumBtnWrap: { position: 'absolute', top: 54, left: 20, alignItems: 'center', zIndex: 30 },
   quickDeleteWrap: {
     position: 'absolute',
     top: 54,
