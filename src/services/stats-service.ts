@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DailyStats } from '../types/subscription';
+import { DeletedPhotoRecord } from '../types/photo';
 import { getTodayKey } from '../utils/date-utils';
 
 const STATS_KEY = 'stats';
+const RECENT_DELETES_KEY = 'recentDeletes';
 
 interface StatsData {
   totalViewed: number;
@@ -92,5 +94,25 @@ function updateWeeklyHistory(
   }
   if (stats.weeklyHistory.length > 7) {
     stats.weeklyHistory = stats.weeklyHistory.slice(-7);
+  }
+}
+
+export async function getRecentDeletes(): Promise<DeletedPhotoRecord[]> {
+  try {
+    const raw = await AsyncStorage.getItem(RECENT_DELETES_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as DeletedPhotoRecord[];
+  } catch {
+    return [];
+  }
+}
+
+export async function addRecentDeletes(records: DeletedPhotoRecord[]): Promise<void> {
+  try {
+    const existing = await getRecentDeletes();
+    const merged = [...records, ...existing].slice(0, 200);
+    await AsyncStorage.setItem(RECENT_DELETES_KEY, JSON.stringify(merged));
+  } catch {
+    // silently ignore storage failures
   }
 }

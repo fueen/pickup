@@ -163,7 +163,7 @@ export default function SettingsScreen() {
         <SettingsSection title="统计">
           <View style={styles.statsGrid}>
             <StatCard label="已浏览" value={totalViewed} />
-            <StatCard label="已删除" value={totalDeleted} />
+            <StatCard label="最近删除" value={totalDeleted} onPress={() => router.push('/recent-deletes')} />
           </View>
           <View style={styles.statsGrid}>
             <StatCard label="连续天数" value={streakDays} unit="天" />

@@ -22,3 +22,16 @@ export interface InteractionLogEntry {
   action: 'delete' | 'keep' | 'skip';
   timestamp: number;
 }
+
+export interface DeletedPhotoRecord {
+  id: string;
+  uri: string;
+  width: number;
+  height: number;
+  creationTime: number;
+  fileSize: number;
+  deletedAt: number;
+  mediaType: 'photo' | 'video' | 'livePhoto';
+}
+
+export type SortMode = 'random' | 'sizeDesc' | 'timeNewest' | 'timeOldest';

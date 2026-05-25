@@ -45,10 +45,11 @@ describe('generateRandomGroup', () => {
     expect(result.length).toBe(15);
   });
 
-  it('throws when total pool plus refill is less than groupSize', () => {
+  it('returns all available photos when pool is smaller than groupSize', () => {
     const pool = makePhotos(5);
     const viewed = new Set<string>();
-    expect(() => generateRandomGroup(pool, viewed, 15)).toThrow();
+    const result = generateRandomGroup(pool, viewed, 15);
+    expect(result.length).toBe(5);
   });
 });
 

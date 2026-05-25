@@ -2,11 +2,13 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoAsset, PermissionStatus } from '../types/photo';
-import { generateRandomGroup } from '../services/photo-service';
+import { generateGroup } from '../services/photo-service';
+import { SortMode } from '../types/photo';
 import { Tokens } from '../design-tokens';
 
 const VIEWED_IDS_KEY = 'viewedPhotoIds';
 const VIEWED_ORDER_KEY = 'viewedPhotoOrder';
+const SORT_MODE_KEY = 'sortMode';
 
 export function usePhotoEngine() {
   const [allPhotos, setAllPhotos] = useState<PhotoAsset[]>([]);
@@ -18,6 +20,7 @@ export function usePhotoEngine() {
   const [isLoading, setIsLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>('undetermined');
   const [error, setError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('random');
 
   const viewedOrderRef = useRef<string[]>([]);
 
@@ -109,12 +112,15 @@ export function usePhotoEngine() {
 
       const savedIds = await AsyncStorage.getItem(VIEWED_IDS_KEY);
       const savedOrder = await AsyncStorage.getItem(VIEWED_ORDER_KEY);
+      const savedSortMode = await AsyncStorage.getItem(SORT_MODE_KEY);
       const idSet: Set<string> = savedIds ? new Set(JSON.parse(savedIds)) : new Set();
       const orderArr: string[] = savedOrder ? JSON.parse(savedOrder) : [];
+      const currentSortMode: SortMode = (savedSortMode as SortMode) || 'random';
       setViewedPhotoIds(idSet);
       viewedOrderRef.current = orderArr;
+      setSortMode(currentSortMode);
 
-      const group = generateRandomGroup(photos, idSet, Tokens.photo.groupSize, orderArr);
+      const group = generateGroup(photos, idSet, Tokens.photo.groupSize, orderArr, currentSortMode);
       setCurrentGroup(group);
 
       const newIds = new Set(idSet);
@@ -138,7 +144,7 @@ export function usePhotoEngine() {
 
   const loadNextGroup = useCallback(() => {
     try {
-      const group = generateRandomGroup(allPhotos, viewedPhotoIds, Tokens.photo.groupSize, viewedOrderRef.current);
+      const group = generateGroup(allPhotos, viewedPhotoIds, Tokens.photo.groupSize, viewedOrderRef.current, sortMode);
       setCurrentGroup(group);
       setGroupIndex(0);
       setMarkedForDelete(new Set());
@@ -159,7 +165,7 @@ export function usePhotoEngine() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载下一组失败');
     }
-  }, [allPhotos, viewedPhotoIds]);
+  }, [allPhotos, viewedPhotoIds, sortMode]);
 
   const clearMarkedPhotos = useCallback(() => {
     if (markedForDelete.size === 0) return;
@@ -176,11 +182,12 @@ export function usePhotoEngine() {
         const newIds = new Set(viewedPhotoIds);
         const currentOrder = [...viewedOrderRef.current];
         const fillCount = Math.min(deleteCount, Tokens.photo.groupSize);
-        const newPhotos = generateRandomGroup(
+        const newPhotos = generateGroup(
           allPhotos.filter((p) => !markedForDelete.has(p.id)),
           newIds,
           fillCount,
           currentOrder,
+          sortMode,
         );
 
         newPhotos.forEach((p) => newIds.add(p.id));
@@ -200,7 +207,24 @@ export function usePhotoEngine() {
         return remaining;
       }
     });
-  }, [allPhotos, viewedPhotoIds, markedForDelete]);
+  }, [allPhotos, viewedPhotoIds, markedForDelete, sortMode]);
+
+  const changeSortMode = useCallback(async (newMode: SortMode) => {
+    setSortMode(newMode);
+    await AsyncStorage.setItem(SORT_MODE_KEY, newMode);
+    try {
+      const group = generateGroup(
+        allPhotos, viewedPhotoIds, Tokens.photo.groupSize,
+        viewedOrderRef.current, newMode,
+      );
+      setCurrentGroup(group);
+      setGroupIndex(0);
+      setMarkedForDelete(new Set());
+      setMarkedForKeep(new Set());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '排序切换失败');
+    }
+  }, [allPhotos, viewedPhotoIds]);
 
   return {
     allPhotos, currentGroup, groupIndex, setGroupIndex,
@@ -208,5 +232,6 @@ export function usePhotoEngine() {
     markedForKeep, setMarkedForKeep, isLoading,
     permissionStatus, error, requestPermissions,
     loadPhotos, loadNextGroup, clearMarkedPhotos, refillGroup,
+    sortMode, changeSortMode,
   };
 }

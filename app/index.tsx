@@ -18,6 +18,7 @@ import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModa
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReached';
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
+import { SortPickerSheet } from '../src/components/photo-card/SortPickerSheet';
 import { File } from 'expo-file-system';
 import { deletePhotos } from '../src/services/delete-service';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
@@ -35,6 +36,7 @@ export default function BrowseScreen() {
     isLoading, permissionStatus, error, allPhotos,
     requestPermissions, loadPhotos, loadNextGroup,
     clearMarkedPhotos, refillGroup,
+    sortMode, changeSortMode,
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
   const { dailyUsageLoaded, canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
@@ -47,6 +49,7 @@ export default function BrowseScreen() {
   } | null>(null);
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
+  const [sortSheetVisible, setSortSheetVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
   const lastViewedGroupRef = useRef<string>('');
   const triedLoadRef = useRef(false);
@@ -73,6 +76,15 @@ export default function BrowseScreen() {
       await AsyncStorage.setItem('gestureGuideShown', 'true');
     } catch { /* ignore */ }
   }, []);
+
+  const showSortPicker = useCallback(() => {
+    setSortSheetVisible(true);
+  }, []);
+
+  const handleSortSelect = useCallback((mode: typeof sortMode) => {
+    setSortSheetVisible(false);
+    changeSortMode(mode);
+  }, [changeSortMode]);
 
   const deleteIndices = useMemo(() => {
     const s = new Set<number>();
@@ -240,10 +252,19 @@ export default function BrowseScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Album button — always visible */}
-      <TouchableOpacity style={styles.albumBtnWrap} onPress={() => router.push('/albums')} activeOpacity={0.7}>
-        <MaterialCommunityIcons name="layers" size={28} color="#fff" />
-      </TouchableOpacity>
+      {/* Top toolbar — frosted glass pills */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.pill} onPress={showSortPicker} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="sort-variant" size={16} color="#fff" />
+          <Text style={styles.pillLabel}>排序</Text>
+        </TouchableOpacity>
+
+        <QuickDeleteButton
+          count={markedForDelete.size}
+          onPress={Platform.OS === 'android' ? handleQuickDelete : () => setShowDeleteConfirm(true)}
+          loading={quickDeleting}
+        />
+      </View>
 
       {/* Gates */}
       {(() => {
@@ -271,15 +292,6 @@ export default function BrowseScreen() {
       >
         <PhotoCard photo={currentPhoto} hideHeader />
       </SwipeableCard>
-
-      {/* Quick delete button — top right */}
-      <View style={styles.quickDeleteWrap}>
-        <QuickDeleteButton
-          count={markedForDelete.size}
-          onPress={Platform.OS === 'android' ? handleQuickDelete : () => setShowDeleteConfirm(true)}
-          loading={quickDeleting}
-        />
-      </View>
 
       {Platform.OS !== 'android' && (
         <DeleteConfirmSheet
@@ -316,6 +328,13 @@ export default function BrowseScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Album button — bottom left */}
+          <View style={styles.albumBtnWrap}>
+            <TouchableOpacity style={styles.infoBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
+              <MaterialCommunityIcons name="layers" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
           <GroupProgressBar
             current={groupIndex}
             total={currentGroup.length}
@@ -339,21 +358,47 @@ export default function BrowseScreen() {
         photo={detailPhoto}
         onClose={() => setDetailPhoto(null)}
       />
+      <SortPickerSheet
+        visible={sortSheetVisible}
+        selected={sortMode}
+        onSelect={handleSortSelect}
+        onClose={() => setSortSheetVisible(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
-  albumBtnWrap: { position: 'absolute', top: 54, left: 20, alignItems: 'center', zIndex: 30 },
-  infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },
-  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  quickDeleteWrap: {
+  topBar: {
     position: 'absolute',
     top: 54,
-    right: 20,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     zIndex: 30,
   },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  pillLabel: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  albumBtnWrap: { position: 'absolute', bottom: 100, left: 16, zIndex: 20 },
+  infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },
+  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
   centered: { flex: 1, backgroundColor: Tokens.color.background, justifyContent: 'center', alignItems: 'center', padding: Tokens.spacing.xxl },
   errorText: { ...Tokens.typography.body, color: Tokens.color.danger, textAlign: 'center' },
 });

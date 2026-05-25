@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PickUp - 顶部工具栏设计选项</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 40px 20px;
+  }
+  h1 { text-align: center; margin-bottom: 8px; font-size: 24px; }
+  .subtitle { text-align: center; color: #888; margin-bottom: 40px; font-size: 13px; }
+
+  .variant-section {
+    margin-bottom: 60px;
+  }
+  .variant-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFCC00;
+    margin-bottom: 16px;
+    padding-left: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ─── Phone frame ─── */
+  .phone {
+    width: 375px;
+    height: 220px;
+    margin: 0 auto;
+    background: #111;
+    border-radius: 32px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #222;
+  }
+
+  /* ─── Mock photo background ─── */
+  .photo-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 40%, #2a2a3e 0%, #1a1a2e 40%, #0d0d1a 100%);
+  }
+  .photo-bg::after {
+    content: '';
+    position: absolute;
+    top: 30%; left: 20%;
+    width: 120px; height: 180px;
+    background: linear-gradient(135deg, #3a3a5c 0%, #252540 100%);
+    border-radius: 8px;
+    transform: rotate(-5deg);
+  }
+  .photo-bg::before {
+    content: '';
+    position: absolute;
+    top: 25%; right: 15%;
+    width: 100px; height: 150px;
+    background: linear-gradient(225deg, #333358 0%, #1e1e38 100%);
+    border-radius: 8px;
+    transform: rotate(3deg);
+  }
+
+  /* ══════════════════════════════════════ */
+  /* VARIANT 1 — Frosted glass pills      */
+  /* ══════════════════════════════════════ */
+  .v1-bar {
+    position: absolute; top: 16px; left: 12px; right: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .v1-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .v1-pill:hover { background: rgba(255,255,255,0.2); }
+  .v1-pill svg { width: 16px; height: 16px; opacity: 0.9; }
+  .v1-pill span { font-size: 12px; color: #fff; font-weight: 500; }
+
+  .v1-badge {
+    min-width: 22px; height: 22px;
+    border-radius: 11px;
+    background: #FF3B30;
+    color: #fff;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 6px;
+  }
+
+  /* ══════════════════════════════════════ */
+  /* VARIANT 2 — iOS Photos style         */
+  /* ══════════════════════════════════════ */
+  .v2-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 16px 8px;
+  }
+  .v2-btn {
+    display: flex; align-items: center; gap: 4px;
+    cursor: pointer; opacity: 0.9;
+    transition: opacity 0.2s;
+  }
+  .v2-btn:hover { opacity: 1; }
+  .v2-btn svg { width: 18px; height: 18px; }
+  .v2-btn-text {
+    font-size: 13px; color: #fff; font-weight: 500;
+  }
+  .v2-count {
+    background: #FF3B30;
+    color: #fff;
+    font-size: 11px; font-weight: 700;
+    min-width: 20px; height: 20px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    margin-left: 2px;
+  }
+
+  /* ══════════════════════════════════════ */
+  /* VARIANT 3 — Material 3 chips         */
+  /* ══════════════════════════════════════ */
+  .v3-bar {
+    position: absolute; top: 14px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .v3-chip-group {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .v3-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(30,30,30,0.85);
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .v3-chip:hover { background: rgba(50,50,50,0.9); }
+  .v3-chip svg { width: 16px; height: 16px; opacity: 0.85; }
+  .v3-chip-label {
+    font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 500;
+  }
+  .v3-fab {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: #FF3B30;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255,59,48,0.4);
+    position: relative;
+  }
+  .v3-fab svg { width: 20px; height: 20px; }
+  .v3-fab-badge {
+    position: absolute; top: -4px; right: -4px;
+    min-width: 18px; height: 18px;
+    border-radius: 9px;
+    background: #fff;
+    color: #FF3B30;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+  }
+
+  /* ══════════════════════════════════════ */
+  /* VARIANT 4 — Minimal icon bar         */
+  /* ══════════════════════════════════════ */
+  .v4-bar {
+    position: absolute; top: 12px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .v4-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    cursor: pointer; opacity: 0.75; transition: opacity 0.2s;
+  }
+  .v4-item:hover { opacity: 1; }
+  .v4-icon-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .v4-icon-circle svg { width: 18px; height: 18px; }
+  .v4-label { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 500; }
+  .v4-badge-dot {
+    position: absolute; top: -2px; right: -2px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #FF3B30;
+    border: 1.5px solid #111;
+  }
+
+  /* ══════════════════════════════════════ */
+  /* Description row                       */
+  /* ══════════════════════════════════════ */
+  .desc {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+  }
+  .desc strong { color: #aaa; }
+</style>
+</head>
+<body>
+<h1>PickUp · 工具栏设计方案</h1>
+<p class="subtitle">4 种风格 — 选择你喜欢的，标注编号即可</p>
+
+<!-- VARIANT 1 -->
+<div class="variant-section">
+  <div class="variant-label">方案 A — 毛玻璃胶囊</div>
+  <div class="phone">
+    <div class="photo-bg"></div>
+    <div class="v1-bar">
+      <div class="v1-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7h18M6 12h12M9 17h6"/></svg>
+        <span>排序</span>
+      </div>
+      <div class="v1-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <span>删除</span>
+        <div class="v1-badge">3</div>
+      </div>
+    </div>
+  </div>
+  <p class="desc"><strong>特点：</strong>磨砂玻璃质感，胶囊造型，带文字标签，现代感强<br><strong>适合：</strong>追求精致 UI 的产品</p>
+</div>
+
+<!-- VARIANT 2 -->
+<div class="variant-section">
+  <div class="variant-label">方案 B — iOS 相册原生风</div>
+  <div class="phone">
+    <div class="photo-bg"></div>
+    <div class="v2-top">
+      <div class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7h18M6 12h12M9 17h6"/></svg>
+        <span class="v2-btn-text">排序</span>
+      </div>
+      <div class="v2-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <span class="v2-btn-text">删除</span>
+        <span class="v2-count">3</span>
+      </div>
+    </div>
+  </div>
+  <p class="desc"><strong>特点：</strong>半透明渐变顶栏，图标+文字+数字，iPhone 相册原生体验<br><strong>适合：</strong>追求原生 iOS 体验</p>
+</div>
+
+<!-- VARIANT 3 -->
+<div class="variant-section">
+  <div class="variant-label">方案 C — Material 3 卡片 + FAB</div>
+  <div class="phone">
+    <div class="photo-bg"></div>
+    <div class="v3-bar">
+      <div class="v3-chip-group">
+        <div class="v3-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7h18M6 12h12M9 17h6"/></svg>
+          <span class="v3-chip-label">排序方式</span>
+        </div>
+      </div>
+      <div class="v3-fab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <div class="v3-fab-badge">3</div>
+      </div>
+    </div>
+  </div>
+  <p class="desc"><strong>特点：</strong>Material 3 卡片+FAB，删除按钮突出、更易触达<br><strong>适合：</strong>强调删除操作的快捷性</p>
+</div>
+
+<!-- VARIANT 4 -->
+<div class="variant-section">
+  <div class="variant-label">方案 D — 极简圆形图标</div>
+  <div class="phone">
+    <div class="photo-bg"></div>
+    <div class="v4-bar">
+      <!-- Album button (leftmost) -->
+      <div class="v4-item">
+        <div class="v4-icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        </div>
+        <span class="v4-label">相册</span>
+      </div>
+      <!-- Sort button -->
+      <div class="v4-item">
+        <div class="v4-icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7h18M6 12h12M9 17h6"/></svg>
+        </div>
+        <span class="v4-label">排序</span>
+      </div>
+      <!-- Delete button (rightmost) -->
+      <div class="v4-item">
+        <div class="v4-icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          <div class="v4-badge-dot"></div>
+        </div>
+        <span class="v4-label">删除</span>
+      </div>
+    </div>
+  </div>
+  <p class="desc"><strong>特点：</strong>极简图标+标签，圆形半透明底，所有操作平铺可见<br><strong>适合：</strong>功能数量多时保持视觉整洁</p>
+</div>
+
+</body>
+</html>

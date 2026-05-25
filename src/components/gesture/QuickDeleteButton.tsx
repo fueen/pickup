@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface Props {
@@ -13,44 +13,49 @@ export function QuickDeleteButton({ count, onPress, loading }: Props) {
 
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={styles.pill}
       onPress={onPress}
       disabled={loading}
       activeOpacity={0.7}
     >
-      <MaterialCommunityIcons name="delete-outline" size={22} color="#FFFFFF" />
-      {count > 0 && (
-        <Text style={styles.badge}>{count}</Text>
-      )}
+      <MaterialCommunityIcons name="delete-outline" size={16} color="#fff" />
+      <Text style={styles.label}>删除</Text>
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>{count}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(28,28,30,0.9)',
+  pill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  label: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
   },
   badge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    minWidth: 19,
-    height: 19,
+    minWidth: 20,
+    height: 20,
     borderRadius: 10,
     backgroundColor: '#FF3B30',
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 5,
-    overflow: 'hidden',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
   },
 });
