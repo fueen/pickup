@@ -13,48 +13,40 @@ export function QuickDeleteButton({ count, onPress, loading }: Props) {
 
   return (
     <TouchableOpacity
-      style={styles.pill}
+      style={styles.container}
       onPress={onPress}
       disabled={loading}
       activeOpacity={0.7}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
     >
-      <MaterialCommunityIcons name="delete-outline" size={16} color="#fff" />
-      <Text style={styles.label}>删除</Text>
+      <MaterialCommunityIcons name="delete-outline" size={18} color="#fff" />
       <View style={styles.badge}>
-        <Text style={styles.badgeText}>{count}</Text>
+        <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
       </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  pill: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  label: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '500',
+    gap: 4,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   badge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: '#FF3B30',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#fff',
   },

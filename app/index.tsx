@@ -7,7 +7,7 @@ import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
-import { PhotoCard, PhotoHeader } from '../src/components/photo-card/PhotoCard';
+import { PhotoCard } from '../src/components/photo-card/PhotoCard';
 import { GroupProgressBar } from '../src/components/photo-card/GroupProgressBar';
 import { SwipeableCard } from '../src/components/gesture/SwipeableCard';
 import { GestureGuideOverlay } from '../src/components/gesture/GestureGuideOverlay';
@@ -20,6 +20,8 @@ import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReache
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
 import { SortPickerSheet } from '../src/components/photo-card/SortPickerSheet';
 import { File } from 'expo-file-system';
+import { formatPhotoDate } from '../src/utils/date-utils';
+import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
 import { deletePhotos } from '../src/services/delete-service';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
 import { Tokens } from '../src/design-tokens';
@@ -50,6 +52,8 @@ export default function BrowseScreen() {
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const [sortSheetVisible, setSortSheetVisible] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationCount, setCelebrationCount] = useState(0);
   const [guideVisible, setGuideVisible] = useState(false);
   const lastViewedGroupRef = useRef<string>('');
   const triedLoadRef = useRef(false);
@@ -226,6 +230,8 @@ export default function BrowseScreen() {
           const maxIdx = Math.max(0, currentGroup.length - deleteCount - 1);
           return Math.max(0, Math.min(prev, maxIdx));
         });
+        setCelebrationCount(result.successCount);
+        setShowCelebration(true);
       }
     } finally {
       setQuickDeleting(false);
@@ -259,6 +265,17 @@ export default function BrowseScreen() {
           <Text style={styles.pillLabel}>排序</Text>
         </TouchableOpacity>
 
+        <View style={styles.topCenter}>
+          <Text style={styles.topDate} numberOfLines={1} ellipsizeMode="tail">
+            {currentPhoto ? formatPhotoDate(currentPhoto.creationTime) : ''}
+          </Text>
+          {currentPhoto?.mediaType === 'livePhoto' && (
+            <View style={styles.liveBadge}>
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          )}
+        </View>
+
         <QuickDeleteButton
           count={markedForDelete.size}
           onPress={Platform.OS === 'android' ? handleQuickDelete : () => setShowDeleteConfirm(true)}
@@ -280,7 +297,6 @@ export default function BrowseScreen() {
 
       {!isGate && (
         <>
-          <PhotoHeader photo={currentPhoto} />
           <SwipeableCard
             key={currentPhoto.id}
         onMarkDelete={handleMarkDelete}
@@ -364,6 +380,11 @@ export default function BrowseScreen() {
         onSelect={handleSortSelect}
         onClose={() => setSortSheetVisible(false)}
       />
+      <CelebrationOverlay
+        visible={showCelebration}
+        count={celebrationCount}
+        onDone={() => setShowCelebration(false)}
+      />
     </View>
   );
 }
@@ -395,6 +416,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     fontWeight: '500',
+  },
+  topCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginHorizontal: 8,
+  },
+  topDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+    letterSpacing: -0.3,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowRadius: 4,
+    flexShrink: 1,
+  },
+  liveBadge: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
   },
   albumBtnWrap: { position: 'absolute', bottom: 100, left: 16, zIndex: 20 },
   infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },

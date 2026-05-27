@@ -79,7 +79,9 @@ export default function RecentDeletesScreen() {
           <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
-      <Text style={[styles.title, { marginTop: insets.top + 20 }]}>最近删除</Text>
+      <Text style={[styles.title, { marginTop: insets.top + 20 }]} numberOfLines={1} ellipsizeMode="tail">
+        {records.length > 0 ? `最近删除 · ${records.length} 张` : '最近删除'}
+      </Text>
 
       {records.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -121,6 +123,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     letterSpacing: 4,
+    paddingHorizontal: 56,
   },
   thumbnailWrap: {
     width: IMAGE_SIZE,

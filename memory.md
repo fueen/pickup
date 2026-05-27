@@ -273,3 +273,100 @@ v1.0.1 Bug 修复 + UI 打磨完成，README 架构文档更新，Android previe
 - EAS 配额重置后可恢复到 EAS 构建流程
 
 ---
+
+## 2026-05-25 22:30 | 项目进展-pickup
+
+### 一句话概述
+
+v1.2 功能优化全部完成 + 3 个用户反馈 Bug 修复，Release APK 本地构建成功并推送到 GitHub。
+
+### v1.2 完成项（PRD-v1.2 4 个需求）
+
+- **REQ-01 释放空间累计**：像素估算法 `Math.round(width * height * 3 * 0.4)` 作为 `new File(uri).size` 返回 0 或抛异常时的兜底
+- **REQ-02 统计卡片改造**：中文 label `fontWeight: '700'`，"最近删除"卡片 `onPress` 跳转 `/recent-deletes`，cheveron-right 箭头
+- **REQ-03 最近删除页**：`app/recent-deletes.tsx` 3 列网格，`useFocusEffect` 每次进入重新加载，图片加载失败显示 `image-off-outline` 占位图标
+- **REQ-04 排序功能**：`SortMode = 'random' | 'sizeDesc' | 'timeNewest' | 'timeOldest'`，`generateGroup()` 重构支持 sortMode，`generateRandomGroup()` 保留为薄封装向后兼容
+
+### Bug 修复（用户反馈）
+
+- **最近删除空白页**：根因 `addRecentDeletes()` fire-and-forget + `useEffect([], ...)` 只加载一次。修复：`await addRecentDeletes()` + `useFocusEffect` 每次聚焦重新拉取
+- **StatCard "已浏览"右偏**：根因 pressable/non-pressable 卡片 DOM 结构不一致（有无 `cardWrapper` 外层）。修复：无 onPress 时也用 `<View style={cardWrapper}>` 包裹
+- **黑色缩略图**：已删除照片 URI 失效，`Image onError` 捕获 → 显示 `image-off-outline` 占位符
+
+### UI 打磨
+
+- **毛玻璃胶囊工具栏**：方案 A 落地，`rgba(0,0,0,0.45)` 半透明底 + `0.5px rgba(255,255,255,0.15)` 边框，图标+中文标签+红色计数角标
+- **SortPickerSheet**：自定义底部弹出卡片替代 `Alert.alert`（Android 仅支持 3 按钮，4 选项会被截断），毛玻璃背景 + 滑入动画 + 图标+勾选高亮 + 点击空白关闭
+- **QuickDeleteButton 重写**：圆形图标按钮 → 胶囊按钮（图标+"删除"文字+红色计数 badge）
+
+### 构建
+
+- **EAS 免费配额已用尽**（6月1日重置），本地 Gradle `assembleRelease` 成功
+- **APK 路径**：`android/app/build/outputs/apk/release/app-release.apk`，106MB
+- **Git push**：`2637361` master → origin/master，13 files changed
+
+### 关键文件（本次涉及）
+
+| 新增 | 修改 |
+|------|------|
+| `app/recent-deletes.tsx` | `app/index.tsx`, `app/settings.tsx` |
+| `src/components/photo-card/SortPickerSheet.tsx` | `src/services/delete-service.ts`, `stats-service.ts`, `photo-service.ts` |
+| `designs/toolbar-options.html` | `src/hooks/usePhotoEngine.ts`, `src/types/photo.ts` |
+| | `src/components/gesture/QuickDeleteButton.tsx` |
+| | `src/components/settings/StatCard.tsx` |
+| | `__tests__/unit/photo-service.test.ts` |
+
+### 下一步
+
+- 安装 `app-release.apk` 到手机测试全部功能
+- 排序切换、最近删除加载、删除后缩略图占位等场景验证
+- EAS 配额 6/1 重置后可考虑 EAS 构建替代本地 Gradle
+
+---
+
+## 2026-05-27 22:20 | 项目进展-pickup
+
+### 一句话概述
+
+v1.7 全部需求实现 + 滑动动效增强 + 庆祝动画 + 新手引导重做 + release APK 打包完成。
+
+### 当前进度 / 关键结论
+
+- **v1.7 四项需求完成**：
+  - REQ-01：QuickDeleteButton 去文字去胶囊框，仅图标+badge
+  - REQ-02：日期文字移入 topBar flexbox，与排序/删除按钮严格水平对齐，恢复 LIVE badge
+  - REQ-03：delete-service.ts 增加缓存逻辑，删除前复制照片到 `Paths.cache/deleted-thumbnails/`，最近删除页缩略图可见
+  - REQ-04：recent-deletes.tsx 标题改为 "最近删除 · X 张"，paddingHorizontal 防返回按钮重叠
+- **审查修复**：expo-file-system API 误用（File→Directory、copy 是同步不是 async、目录创建竞态）、LIVE badge 回归、dead code loading 分支
+- **StatCard 调整**：去掉最近删除 `>` 箭头，文字改为红色 (`#FF3B30`)
+- **滑动效果注释**：settings.tsx 中整个滑动特效 section 已注释
+- **左右滑动动画增强**：SwipeableCard 增加 rotationZ(±8°) + cardScale(0.92→0.82) + withSpring 回弹 + Easing.out(Easing.cubic) 飞出
+- **庆祝动画**：CelebrationOverlay 组件 — 黄色 ✓ 图标弹入 + 12 颗彩色粒子爆散 + "完成！已清理 X 张"，接入 review.tsx 和 index.tsx
+- **新手引导重做**：GestureGuideOverlay 完整覆盖顶部工具栏（排序/批量删除）、四向手势、底部按钮（相册/详情）、进度圆点（黄=删 绿=留）
+- **Dev APK**：`android/app/build/outputs/apk/debug/app-debug.apk`，192MB，包名 `com.zackf.pickup.dev`
+- **Release APK**：`android/app/build/outputs/apk/release/app-release.apk`，105MB，包名 `com.zackf.pickup.preview`，不覆盖 dev
+- **Metro IP 变更**：当前本机 IP 为 `192.168.5.15`（之前是 `.68`）
+
+### 关键文件（本次涉及）
+
+| 新增 | 修改 |
+|------|------|
+| `src/components/ui/CelebrationOverlay.tsx` | `src/components/gesture/QuickDeleteButton.tsx` |
+| | `app/index.tsx` |
+| | `app/review.tsx` |
+| | `app/recent-deletes.tsx` |
+| | `app/settings.tsx` |
+| | `src/services/delete-service.ts` |
+| | `src/components/gesture/SwipeableCard.tsx` |
+| | `src/components/gesture/GestureGuideOverlay.tsx` |
+| | `src/components/settings/StatCard.tsx` |
+
+### 下一步
+
+- 安装 release APK 到手机测试全部 v1.7 功能
+- 验证庆祝动画效果
+- 验证左右滑动动画流畅度
+- 验证新手引导显示完整
+- 后续如需正式发布，需用 `EAS_BUILD_PROFILE=production` 生成正式包名 `com.zackf.pickup`
+
+---

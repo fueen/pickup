@@ -17,7 +17,7 @@ import { SettingsSection } from '../src/components/settings/SettingsSection';
 import { SettingsRow } from '../src/components/settings/SettingsRow';
 import { Toast } from '../src/components/ui/Toast';
 import { Tokens } from '../src/design-tokens';
-import { SwipeEffect, getSwipeEffect, setSwipeEffect as saveSwipeEffect } from '../src/services/preferences-service';
+// import { SwipeEffect, getSwipeEffect, setSwipeEffect as saveSwipeEffect } from '../src/services/preferences-service';
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
@@ -36,17 +36,17 @@ function subscriptionLabelFromType(type: string): string {
   }
 }
 
-const SWIPE_EFFECTS: { key: SwipeEffect; label: string }[] = [
-  { key: 'default', label: '默认' },
-  { key: 'momentum', label: '仿真' },
-  { key: 'pageFlip', label: '翻页' },
-  { key: 'rubberBand', label: '弹性' },
-  { key: 'smooth', label: '平滑' },
-];
+// const SWIPE_EFFECTS: { key: SwipeEffect; label: string }[] = [
+//   { key: 'default', label: '默认' },
+//   { key: 'momentum', label: '仿真' },
+//   { key: 'pageFlip', label: '翻页' },
+//   { key: 'rubberBand', label: '弹性' },
+//   { key: 'smooth', label: '平滑' },
+// ];
 
-function swipeEffectLabel(effect: SwipeEffect): string {
-  return SWIPE_EFFECTS.find(e => e.key === effect)?.label ?? '默认';
-}
+// function swipeEffectLabel(effect: SwipeEffect): string {
+//   return SWIPE_EFFECTS.find(e => e.key === effect)?.label ?? '默认';
+// }
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -60,9 +60,9 @@ export default function SettingsScreen() {
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [swipeEffect, setSwipeEffectState] = useState<SwipeEffect>('default');
+  // const [swipeEffect, setSwipeEffectState] = useState<SwipeEffect>('default');
 
-  useEffect(() => { getSwipeEffect().then(setSwipeEffectState); }, []);
+  // useEffect(() => { getSwipeEffect().then(setSwipeEffectState); }, []);
 
   const effectivePro = isPro || devProEnabled;
   const subscriptionLabel = effectivePro
@@ -88,16 +88,16 @@ export default function SettingsScreen() {
     }
   };
 
-  const showSwipeEffectPicker = () => {
-    const buttons = SWIPE_EFFECTS.map((e) => ({
-      text: e.label + (swipeEffect === e.key ? ' ✓' : ''),
-      onPress: () => {
-        setSwipeEffectState(e.key);
-        saveSwipeEffect(e.key);
-      },
-    }));
-    Alert.alert('选择滑动特效', undefined, [...buttons, { text: '取消', style: 'cancel' as const }]);
-  };
+  // const showSwipeEffectPicker = () => {
+  //   const buttons = SWIPE_EFFECTS.map((e) => ({
+  //     text: e.label + (swipeEffect === e.key ? ' ✓' : ''),
+  //     onPress: () => {
+  //       setSwipeEffectState(e.key);
+  //       saveSwipeEffect(e.key);
+  //     },
+  //   }));
+  //   Alert.alert('选择滑动特效', undefined, [...buttons, { text: '取消', style: 'cancel' as const }]);
+  // };
 
   const handleRateApp = () => {
     const storeUrl = Platform.select({
@@ -171,14 +171,14 @@ export default function SettingsScreen() {
           </View>
         </SettingsSection>
 
-        {/* Swipe Effect */}
-        <SettingsSection title="滑动效果">
+        {/* Swipe Effect — temporarily disabled */}
+        {/* <SettingsSection title="滑动效果">
           <SettingsRow
             label="照片滑动特效"
             rightContent={<Text style={styles.secondaryText}>{swipeEffectLabel(swipeEffect)}</Text>}
             onPress={() => showSwipeEffectPicker()}
           />
-        </SettingsSection>
+        </SettingsSection> */}
 
         {/* Help */}
         <SettingsSection title="帮助">

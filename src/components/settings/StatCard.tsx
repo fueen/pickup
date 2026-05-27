@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tokens } from '../../design-tokens';
 
 interface StatCardProps {
@@ -18,10 +17,7 @@ export function StatCard({ label, value, unit, onPress }: StatCardProps) {
         {unit ? <Text style={styles.unit}> {unit}</Text> : null}
       </Text>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>{label}</Text>
-        {onPress && (
-          <MaterialCommunityIcons name="chevron-right" size={14} color={Tokens.color.textMuted} />
-        )}
+        <Text style={[styles.label, onPress && styles.labelLink]}>{label}</Text>
       </View>
     </View>
   );
@@ -54,6 +50,7 @@ const styles = StyleSheet.create({
     ...Tokens.typography.title,
     color: Tokens.color.textPrimary,
     marginBottom: Tokens.spacing.xs,
+    textAlign: 'center',
   },
   unit: {
     fontSize: 13,
@@ -68,5 +65,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: Tokens.color.textSecondary,
+  },
+  labelLink: {
+    color: '#FF3B30',
   },
 });

@@ -11,6 +11,7 @@ import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { EmptyReviewPlaceholder } from '../src/components/delete-review/EmptyReviewPlaceholder';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
+import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
 
@@ -25,6 +26,8 @@ export default function ReviewScreen() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [limitModalVisible, setLimitModalVisible] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationCount, setCelebrationCount] = useState(0);
   const deletingRef = useRef(false);
   const insets = useSafeAreaInsets();
 
@@ -71,19 +74,16 @@ export default function ReviewScreen() {
         clearMarkedPhotos();
         setMarkedForDelete(new Set());
         dispatch({ type: 'RESET_SESSION' });
+        setCelebrationCount(result.successCount);
+        setShowCelebration(true);
+        return; // celebration onDone handles navigation
       }
     } finally {
       setDeleting(false);
       setShowDeleteSheet(false);
       deletingRef.current = false;
     }
-    if (!canBrowseNextGroup) {
-      setLimitModalVisible(true);
-      return;
-    }
-    incrementGroupCount();
-    loadNextGroup();
-    router.replace('/');
+    handleDiscardAndNext();
   }, [selectedPhotos, canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, recordDeleted]);
 
   return (
@@ -132,6 +132,21 @@ export default function ReviewScreen() {
       <LimitReachedModal
         visible={limitModalVisible}
         onClose={() => setLimitModalVisible(false)}
+      />
+
+      <CelebrationOverlay
+        visible={showCelebration}
+        count={celebrationCount}
+        onDone={() => {
+          setShowCelebration(false);
+          if (!canBrowseNextGroup) {
+            setLimitModalVisible(true);
+            return;
+          }
+          incrementGroupCount();
+          loadNextGroup();
+          router.replace('/');
+        }}
       />
 
       {Platform.OS !== 'android' && (

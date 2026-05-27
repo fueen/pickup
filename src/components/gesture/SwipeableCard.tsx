@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, runOnJS, Easing } from 'react-native-reanimated';
 import { Tokens } from '../../design-tokens';
 import { DeleteOverlay } from './DeleteOverlay';
 import { ActionIndicator } from './ActionIndicator';
@@ -26,6 +26,8 @@ export function SwipeableCard({
 }: Props) {
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
+  const rotationZ = useSharedValue(0);
+  const cardScale = useSharedValue(1);
   const markProgress = useSharedValue(0);
   const skipProgress = useSharedValue(0);
   const isAnimating = useSharedValue(false);
@@ -62,11 +64,18 @@ export function SwipeableCard({
       isAnimating.value = true;
       const goingLeft = tx < 0;
       const direction = goingLeft ? -1 : 1;
-      translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, { duration: hDuration }, () => {
+      rotationZ.value = withTiming(direction * 12, { duration: hDuration, easing: Easing.out(Easing.cubic) });
+      cardScale.value = withTiming(0.82, { duration: hDuration, easing: Easing.out(Easing.cubic) });
+      translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, {
+        duration: hDuration,
+        easing: Easing.out(Easing.cubic),
+      }, () => {
         translateX.value = 0;
         translateY.value = 0;
         markProgress.value = 0;
         skipProgress.value = 0;
+        rotationZ.value = 0;
+        cardScale.value = 1;
         isAnimating.value = false;
         runOnJS(goingLeft ? onSkip : onPrevious)();
       });
@@ -93,9 +102,11 @@ export function SwipeableCard({
         });
       }
     } else {
-      // Snap back
-      translateY.value = withTiming(0, { duration: snapDuration });
-      translateX.value = withTiming(0, { duration: snapDuration });
+      // Snap back with spring
+      translateY.value = withSpring(0, { damping: 18, stiffness: 250 });
+      translateX.value = withSpring(0, { damping: 18, stiffness: 250 });
+      rotationZ.value = withSpring(0, { damping: 15, stiffness: 200 });
+      cardScale.value = withSpring(1, { damping: 15, stiffness: 200 });
       markProgress.value = 0;
       skipProgress.value = 0;
     }
@@ -117,10 +128,14 @@ export function SwipeableCard({
         const progressX = Math.max(-1, Math.min(1, dx / maxDist));
         skipProgress.value = progressX;
         markProgress.value = 0;
+        rotationZ.value = progressX * 8;
+        cardScale.value = 1 - Math.abs(progressX) * 0.08;
       } else {
         const progressY = Math.max(-1, Math.min(1, dy / maxDist));
         markProgress.value = Math.abs(dy) > Math.abs(dx) * 1.2 ? progressY : 0;
         skipProgress.value = 0;
+        rotationZ.value = 0;
+        cardScale.value = 1;
       }
       const overThreshold = Math.abs(markProgress.value) >= Tokens.photo.markThreshold
         || Math.abs(skipProgress.value) >= Tokens.photo.markThreshold;
@@ -138,7 +153,12 @@ export function SwipeableCard({
     });
 
   const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+      { rotateZ: `${rotationZ.value}deg` },
+      { scale: cardScale.value },
+    ],
   }));
 
   return (
