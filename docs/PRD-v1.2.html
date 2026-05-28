@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>拾遗 PickUp · 功能优化需求文档</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--ink2:#333;--ink3:#555;--bg:#FAFAF8;--bg2:#F2F1ED;--accent:#BDC0BA;--accent2:#9DA09A;--accent3:#E8EAE6;--red:#D9483B;--amber:#C4863B;--green:#5B8F6B;--rule:#E0DED8;--display:'Playfair Display','Noto Serif SC',serif;--body:'Source Sans 3','PingFang SC','Microsoft YaHei',sans-serif;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+
+/* ═══ HERO ═══ */
+.hero{background:linear-gradient(165deg,#F8F7F4 0%,#EDECE8 40%,#E3E2DD 100%);padding:80px 60px 64px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-60px;width:400px;height:400px;border-radius:50%;background:rgba(189,192,186,0.2);z-index:0}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--ink3);margin-bottom:28px}
+.hero h1{font-family:var(--display);font-size:clamp(44px,7vw,80px);font-weight:900;line-height:1.05;letter-spacing:-.02em;max-width:800px}
+.hero h1 em{font-style:italic;color:var(--accent2)}
+.hero-sub{font-family:var(--display);font-size:clamp(18px,2.5vw,26px);font-weight:500;font-style:italic;color:var(--ink2);margin-top:20px;max-width:600px}
+.hero-meta{display:flex;gap:48px;margin-top:40px;padding-top:28px;border-top:1px solid var(--rule)}
+.hero-meta .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);margin-bottom:2px}
+.hero-meta .val{font-size:16px;font-weight:700}
+
+/* ═══ STICKY NAV ═══ */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--rule);padding:0 60px}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:50px;gap:8px}
+.nav-inner a{font-size:12px;font-weight:700;color:var(--ink2);text-decoration:none;padding:4px 12px;border-radius:4px;white-space:nowrap;transition:all .15s}
+.nav-inner a:hover,.nav-inner a.on{color:var(--ink);background:var(--accent3)}
+.nav-inner .sep{width:1px;height:16px;background:var(--rule);margin:0 4px}
+.nav-brand{font-family:var(--display);font-size:16px!important;font-weight:700!important;color:var(--ink)!important;background:none!important;padding:4px 8px 4px 0!important;margin-right:12px}
+
+/* ═══ MAIN ═══ */
+main{max-width:1100px;margin:0 auto;padding:0 60px 120px}
+
+/* ═══ VERSION BLOCK ═══ */
+.ver-block{margin-top:64px}
+.ver-bar{display:flex;align-items:baseline;gap:16px;padding-bottom:16px;border-bottom:2px solid var(--accent);margin-bottom:36px}
+.ver-bar .vnum{font-family:var(--display);font-size:56px;font-weight:900;line-height:1;color:var(--accent2)}
+.ver-bar .vmeta{display:flex;flex-direction:column;gap:2px}
+.ver-bar .vtitle{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.2}
+.ver-bar .vdesc{font-size:14px;color:var(--ink3)}
+.ver-bar .vbadges{display:flex;gap:10px;margin-top:6px}
+.vb{font-size:10px;font-weight:700;letter-spacing:.15em;padding:3px 10px;border-radius:3px;text-transform:uppercase}
+.vb-date{background:var(--accent3);color:var(--ink3)}
+.vb-count{background:var(--accent3);color:var(--ink2)}
+.vb-done{background:#E8F0E8;color:var(--green)}
+
+/* ═══ REQ CARD (nested under version) ═══ */
+.req{margin-bottom:36px;margin-left:32px;padding:32px 36px;background:#FFF;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);border-left:4px solid var(--accent);position:relative}
+.req::before{content:'REQ-' attr(data-n);position:absolute;top:-12px;left:20px;background:var(--accent2);color:#FFF;font-size:11px;font-weight:700;letter-spacing:.15em;padding:4px 14px;border-radius:20px}
+.req-head{margin-bottom:20px}
+.req-head h3{font-family:var(--display);font-size:24px;font-weight:700;margin-bottom:8px}
+.req-head .sub{font-size:14px;color:var(--ink3);line-height:1.6}
+.prio{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.15em;padding:3px 10px;border-radius:3px;margin-left:10px}
+.p0{background:#FDE8E5;color:var(--red)}.p1{background:#FEF3E0;color:var(--amber)}.p2{background:var(--accent3);color:#6B7B6B}
+
+/* ═══ TABLES ═══ */
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+th{text-align:left;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);padding:10px 14px;border-bottom:2px solid var(--rule);background:var(--bg2)}
+td{padding:10px 14px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:top}
+td strong{color:var(--ink)}
+tr:last-child td{border-bottom:none}
+.hit{text-align:center;color:var(--green);font-weight:700}
+.empty{text-align:center;color:var(--ink3)}
+
+/* ═══ CODE ═══ */
+pre{background:#F6F5F2;border:1px solid var(--rule);border-radius:8px;padding:20px 24px;overflow-x:auto;margin:16px 0;font-size:13px}
+code{font-family:var(--mono);font-size:13px;color:var(--ink)}
+
+/* ═══ ILLUSTRATION ═══ */
+.illo{background:var(--bg2);border:1px solid var(--rule);border-radius:10px;padding:24px;margin:20px 0;text-align:center;overflow-x:auto}
+.illo svg{max-width:100%;height:auto}
+.illo-caption{font-size:12px;color:var(--ink3);margin-top:10px;font-style:italic}
+
+/* ═══ BLOCKQUOTE ═══ */
+blockquote{margin:20px 0;padding:20px 24px;border-left:4px solid var(--accent);background:var(--bg2);border-radius:0 8px 8px 0;font-style:italic;color:var(--ink2)}
+
+/* ═══ CHECKLIST ═══ */
+.chk{margin:16px 0;padding:0;list-style:none}
+.chk li{padding:4px 0;font-size:14px;color:var(--ink2);display:flex;align-items:flex-start;gap:8px}
+.chk li::before{content:'☐';color:var(--accent2);font-size:16px;flex-shrink:0}
+
+/* ═══ VER FLOW DIAGRAM ═══ */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;font-size:13px}
+.flow .node{padding:6px 14px;border-radius:6px;font-weight:700;font-size:12px}
+.flow .n-red{background:#FDE8E5;color:var(--red)}
+.flow .n-amb{background:#FEF3E0;color:var(--amber)}
+.flow .n-grn{background:#E8F0E8;color:var(--green)}
+.flow .n-def{background:var(--accent3);color:var(--ink2)}
+.flow .arr{color:var(--accent2);font-weight:700;font-size:18px}
+
+/* ═══ FOOTER ═══ */
+footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-top:1px solid var(--rule);margin-top:40px}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+  .hero{padding:48px 24px 40px}
+  main{padding:0 24px 80px}
+  .ver-bar .vnum{font-size:40px}
+  .req{margin-left:0;padding:24px 20px}
+  .hero-meta{flex-wrap:wrap;gap:24px}
+}
+</style></head><body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero"><div class="hero-inner">
+<div class="hero-eyebrow">Product Requirements Document</div>
+<h1>拾遗 <em>PickUp</em><br>功能优化需求</h1>
+<p class="hero-sub">从交互打磨到空状态体验优化 — 三个版本，十三项需求</p>
+<div class="hero-meta">
+<div><div class="lbl">版本范围</div><div class="val">v1.2 → v1.8</div></div>
+<div><div class="lbl">需求总数</div><div class="val">13 项</div></div>
+<div><div class="lbl">状态</div><div class="val">✓ 全部完成</div></div>
+<div><div class="lbl">日期</div><div class="val">2026-05</div></div>
+</div></div></section>
+
+<!-- ═══ NAV ═══ -->
+<nav><div class="nav-inner">
+<a href="#" class="nav-brand">PickUp PRD</a>
+<span class="sep"></span><a href="#v12">v1.2</a><a href="#v12-r1">01</a><a href="#v12-r2">02</a><a href="#v12-r3">03</a><a href="#v12-r4">04</a>
+<span class="sep"></span><a href="#v17">v1.7</a><a href="#v17-r1">01</a><a href="#v17-r2">02</a><a href="#v17-r3">03</a><a href="#v17-r4">04</a>
+<span class="sep"></span><a href="#v18">v1.8</a><a href="#v18-r1">01</a><a href="#v18-r2">02</a><a href="#v18-r3">03</a><a href="#v18-r4">04</a><a href="#v18-r5">05</a>
+</div></nav>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+<!-- ═══════════════ v1.2 ═══════════════ -->
+<div class="ver-block" id="v12">
+<div class="ver-bar">
+<div class="vnum">1.2</div>
+<div class="vmeta">
+<div class="vtitle">交互打磨与流程优化</div>
+<div class="vdesc">聚焦释放空间累计、统计卡片改造、最近删除记录页以及 Review 页面排序与布局调整。</div>
+<div class="vbadges"><span class="vb vb-date">2026-05-25</span><span class="vb vb-count">4 项需求</span><span class="vb vb-done">已完成</span></div>
+</div></div>
+
+<!-- v1.2 · REQ-01 -->
+<div class="req" data-n="01" id="v12-r1">
+<div class="req-head">
+<h3>释放空间连续累计 <span class="prio p0">P0</span></h3>
+<div class="sub">释放空间统计数据必须在每次删除成功后连续累计，不因 App 重启、切换相册等操作重置。</div>
+</div>
+<blockquote>"每次只记那一组的空间，而且经常显示 0" — 用户感知的数据失真问题需要在本次彻底修复。</blockquote>
+
+<div class="illo">
+<svg width="600" height="120" viewBox="0 0 600 120"><defs><marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#9DA09A"/></marker></defs>
+<rect x="10" y="30" width="110" height="50" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="65" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#111">deletePhotos()</text><text x="65" y="68" text-anchor="middle" font-size="10" fill="#555">删除 N 张照片</text>
+<line x1="120" y1="55" x2="158" y2="55" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="162" y="30" width="130" height="50" rx="8" fill="#F0F1EE" stroke="#BDC0BA" stroke-width="1.5"/><text x="227" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#111">getPhotoFileSize()</text><text x="227" y="68" text-anchor="middle" font-size="10" fill="#555">getInfoAsync → 像素估算</text>
+<line x1="292" y1="55" x2="330" y2="55" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="334" y="30" width="110" height="50" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="389" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#111">stats-service</text><text x="389" y="68" text-anchor="middle" font-size="10" fill="#555">totalFreedBytes +=</text>
+<line x1="444" y1="55" x2="482" y2="55" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="486" y="30" width="90" height="50" rx="8" fill="#E8F0E8" stroke="#5B8F6B" stroke-width="1.5"/><text x="531" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#5B8F6B">AsyncStorage</text><text x="531" y="68" text-anchor="middle" font-size="10" fill="#5B8F6B">持久化</text>
+</svg><div class="illo-caption">文件大小获取 → 累计逻辑 → 持久化存储 数据流</div></div>
+
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/services/delete-service.ts</code></td><td>改用 <code>FileSystem.getInfoAsync</code> 获取大小，回退像素估算</td></tr>
+<tr><td><code>src/services/stats-service.ts</code></td><td><code>totalFreedBytes += freedBytes</code> 持久化到 AsyncStorage</td></tr>
+</tbody></table>
+
+<ul class="chk"><li>删除后设置页"释放空间"数值增加，误差 &lt; 20%</li><li>重启 App 后数值保持累计值，不归零</li><li>多次删除连续累加，不跳变</li></ul></div>
+
+<!-- v1.2 · REQ-02 -->
+<div class="req" data-n="02" id="v12-r2">
+<div class="req-head">
+<h3>统计卡片改造：已删除 → 最近删除 <span class="prio p1">P1</span></h3>
+<div class="sub">统计卡片"已删除"改为"最近删除"，加粗中文，支持点击跳转至最近删除记录页。</div>
+</div>
+<div class="illo">
+<svg width="500" height="120" viewBox="0 0 500 120">
+<rect x="10" y="10" width="120" height="100" rx="10" fill="#FFF" stroke="#E0DED8"/><text x="20" y="32" font-size="11" fill="#555" font-weight="700">BEFORE</text><text x="70" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#555">1,234</text><text x="70" y="84" text-anchor="middle" font-size="12" fill="#555">已删除</text>
+<text x="180" y="68" font-size="24" fill="#9DA09A">→</text>
+<rect x="220" y="10" width="130" height="100" rx="10" fill="#FFF" stroke="#BDC0BA" stroke-width="2"/><text x="20" y="32" font-size="11" fill="#5B8F6B" font-weight="700">AFTER</text><text x="285" y="62" text-anchor="middle" font-size="20" font-weight="700" fill="#111">1,234</text><text x="285" y="84" text-anchor="middle" font-size="14" font-weight="700" fill="#111">最近删除 →</text>
+</svg><div class="illo-caption">StatCard 改造：加粗 + 可点击 + 箭头指示器</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/components/settings/StatCard.tsx</code></td><td>label fontWeight: 700，新增 onPress 属性，TouchableOpacity 包裹</td></tr>
+<tr><td><code>app/settings.tsx</code></td><td>"已删除" → "最近删除"，点击跳转 /recent-deletes</td></tr></tbody></table>
+</div>
+
+<!-- v1.2 · REQ-03 -->
+<div class="req" data-n="03" id="v12-r3">
+<div class="req-head">
+<h3>最近删除照片记录页 <span class="prio p0">P0</span></h3>
+<div class="sub">新增 /recent-deletes 页面，3列网格展示已删除照片缩略图，按时间倒序，上限200条。</div>
+</div>
+<div class="illo">
+<svg width="520" height="120" viewBox="0 0 520 120"><defs><marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#9DA09A"/></marker></defs>
+<rect x="5" y="30" width="120" height="50" rx="8" fill="#FDE8E5" stroke="#D9483B"/><text x="65" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#D9483B">deletePhotos()</text>
+<line x1="125" y1="55" x2="163" y2="55" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="166" y="30" width="130" height="50" rx="8" fill="#FEF3E0" stroke="#C4863B"/><text x="231" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#C4863B">写入 recentDeletes</text>
+<line x1="296" y1="55" x2="334" y2="55" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a3)"/>
+<rect x="338" y="30" width="120" height="50" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="398" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#111">recordDeleted()</text>
+<text x="410" y="100" text-anchor="middle" font-size="11" fill="#555">→ recent-deletes.tsx 网格页面加载 AsyncStorage</text>
+</svg><div class="illo-caption">删除 → 记录持久化 → 网格页展示 数据流</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/types/photo.ts</code></td><td>新增 DeletedPhotoRecord 类型</td></tr>
+<tr><td><code>src/services/stats-service.ts</code></td><td>新增 recentDeletes 读写（上限200条）</td></tr>
+<tr><td><code>app/recent-deletes.tsx</code></td><td><strong>新建</strong>：3列网格 + FlatList + 空状态占位</td></tr>
+</tbody></table>
+</div>
+
+<!-- v1.2 · REQ-04 -->
+<div class="req" data-n="04" id="v12-r4">
+<div class="req-head">
+<h3>Review 页面排序与布局调整 <span class="prio p1">P1</span></h3>
+<div class="sub">相册按钮移至左下角，原位置放排序按钮。支持随机/面积↓/最新↑/最早↑ 四种排序模式。</div>
+</div>
+<div class="illo">
+<svg width="500" height="130" viewBox="0 0 500 130">
+<rect x="0" y="0" width="500" height="130" rx="10" fill="#FFF" stroke="#E0DED8"/>
+<rect x="20" y="20" width="80" height="32" rx="16" fill="#F0F1EE" stroke="#BDC0BA"/><text x="60" y="41" text-anchor="middle" font-size="11" font-weight="700" fill="#111">☰ 排序</text>
+<text x="250" y="41" text-anchor="middle" font-size="12" fill="#555">2024年3月15日 · LIVE</text>
+<text x="440" y="41" text-anchor="middle" font-size="14">🗑</text>
+<rect x="20" y="90" width="80" height="32" rx="16" fill="#F0F1EE" stroke="#BDC0BA"/><text x="60" y="111" text-anchor="middle" font-size="11" font-weight="700" fill="#111">📁 相册</text>
+<text x="250" y="75" text-anchor="middle" font-size="10" fill="#555">← 照片卡片区域 →</text>
+<text x="440" y="111" text-anchor="middle" font-size="14">ℹ️</text>
+</svg><div class="illo-caption">首页布局示意：排序(左上) + 日期居中 + 删除(右上) | 相册(左下) + 详情(右下)</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/types/photo.ts</code></td><td>新增 SortMode 类型</td></tr>
+<tr><td><code>src/services/photo-service.ts</code></td><td>新增非随机排序分组函数</td></tr>
+<tr><td><code>app/index.tsx</code></td><td>布局调整 + 排序按钮 + SortPickerSheet</td></tr>
+</tbody></table>
+</div></div><!-- /v1.2 -->
+
+<!-- ═══════════════ v1.7 ═══════════════ -->
+<div class="ver-block" id="v17">
+<div class="ver-bar">
+<div class="vnum">1.7</div>
+<div class="vmeta">
+<div class="vtitle">按钮精简 · 布局对齐 · 缩略图修复 · 计数居中</div>
+<div class="vdesc">浏览页工具栏视觉精简、日期与按钮水平对齐、最近删除页缩略图可见性修复。</div>
+<div class="vbadges"><span class="vb vb-date">2026-05-27</span><span class="vb vb-count">4 项需求</span><span class="vb vb-done">已完成</span></div>
+</div></div>
+
+<!-- v1.7 · REQ-01 -->
+<div class="req" data-n="01" id="v17-r1">
+<div class="req-head"><h3>浏览页右上角删除按钮精简：去文字 + 去胶囊框 <span class="prio p1">P1</span></h3>
+<div class="sub">QuickDeleteButton 只保留 delete-outline 图标 + 红色圆形计数 badge，去掉"删除"文字和毛玻璃胶囊框。</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/components/gesture/QuickDeleteButton.tsx</code></td><td>删除文字标签 + 胶囊容器样式，仅保留图标+badge</td></tr></tbody></table>
+</div>
+
+<!-- v1.7 · REQ-02 -->
+<div class="req" data-n="02" id="v17-r2">
+<div class="req-head"><h3>PhotoHeader 与左右按钮水平对齐 <span class="prio p0">P0</span></h3>
+<div class="sub">日期文字、排序按钮、删除按钮整合到同一个 flexbox 行容器，严格水平居中对齐。</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>app/index.tsx</code></td><td>重构 topBar 布局，内联日期文字</td></tr></tbody></table>
+</div>
+
+<!-- v1.7 · REQ-03 -->
+<div class="req" data-n="03" id="v17-r3">
+<div class="req-head"><h3>最近删除页缩略图可见性修复 <span class="prio p0">P0</span></h3>
+<div class="sub">删除前将照片复制到 App 缓存目录，存储缓存路径而非原始 URI，使最近删除页可展示实际缩略图。</div></div>
+<div class="illo">
+<svg width="500" height="80" viewBox="0 0 500 80">
+<rect x="10" y="20" width="100" height="40" rx="8" fill="#FDE8E5" stroke="#D9483B"/><text x="60" y="45" text-anchor="middle" font-size="10" font-weight="700" fill="#D9483B">原始 content:// URI</text>
+<text x="160" y="45" font-size="18" fill="#9DA09A">→</text>
+<rect x="200" y="20" width="100" height="40" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="250" y="45" text-anchor="middle" font-size="10" font-weight="700" fill="#111">缓存复制 File.copy()</text>
+<text x="340" y="45" font-size="18" fill="#9DA09A">→</text>
+<rect x="375" y="20" width="100" height="40" rx="8" fill="#E8F0E8" stroke="#5B8F6B"/><text x="425" y="45" text-anchor="middle" font-size="10" font-weight="700" fill="#5B8F6B">缓存路径可用</text>
+</svg><div class="illo-caption">删除前缓存流程：原始URI → 复制到 cache → 存储缓存路径</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/services/delete-service.ts</code></td><td>删除前缓存照片到 FileSystem.cacheDirectory</td></tr>
+</tbody></table>
+</div>
+
+<!-- v1.7 · REQ-04 -->
+<div class="req" data-n="04" id="v17-r4">
+<div class="req-head"><h3>最近删除页数量文字居中 <span class="prio p1">P1</span></h3>
+<div class="sub">标题区域显示"最近删除 · X 张"，严格水平居中，不因左侧返回按钮偏移。</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>app/recent-deletes.tsx</code></td><td>标题改为"最近删除 · {N} 张"，左右 padding 防重叠</td></tr></tbody></table>
+</div></div><!-- /v1.7 -->
+
+<!-- ═══════════════ v1.8 ═══════════════ -->
+<div class="ver-block" id="v18">
+<div class="ver-bar">
+<div class="vnum">1.8</div>
+<div class="vmeta">
+<div class="vtitle">细节打磨与空状态体验优化</div>
+<div class="vdesc">日期居中修复、空相册美化、相册按钮可见性、Review 捏合缩放、庆祝动画闪屏优化。</div>
+<div class="vbadges"><span class="vb vb-date">2026-05-28</span><span class="vb vb-count">5 项需求</span><span class="vb vb-done">已完成</span></div>
+</div></div>
+
+<!-- v1.8 · REQ-01 -->
+<div class="req" data-n="01" id="v18-r1">
+<div class="req-head"><h3>浏览页日期文字严格水平居中 <span class="prio p0">P0</span></h3>
+<div class="sub">日期文字从 flex 子元素改为 <code>position:absolute</code> + <code>left:0/right:0</code>，不受左右按钮宽度差异影响。</div></div>
+<div class="illo">
+<svg width="500" height="70" viewBox="0 0 500 70">
+<rect x="0" y="0" width="500" height="70" rx="10" fill="#FFF" stroke="#E0DED8"/>
+<rect x="16" y="18" width="80" height="32" rx="16" fill="#F0F1EE" stroke="#BDC0BA"/><text x="56" y="39" text-anchor="middle" font-size="10" font-weight="700" fill="#111">☰ 排序</text>
+<text x="250" y="39" text-anchor="middle" font-size="12" font-weight="700" fill="#D9483B">绝对定位 center</text>
+<text x="450" y="39" text-anchor="middle" font-size="14">🗑</text>
+<line x1="250" y1="8" x2="250" y2="62" stroke="#D9483B" stroke-width="1" stroke-dasharray="4,3"/>
+</svg><div class="illo-caption">日期脱离 flex 文档流，绝对定位严格屏幕居中，pointerEvents:none 不阻挡按钮</div></div>
+<table><thead><tr><th>改动文件</th></tr></thead><tbody><tr><td><code>app/index.tsx</code></td></tr></tbody></table>
+</div>
+
+<!-- v1.8 · REQ-02 -->
+<div class="req" data-n="02" id="v18-r2">
+<div class="req-head"><h3>空相册界面美化 <span class="prio p1">P1</span></h3>
+<div class="sub">EmptyGate 从 emoji 升级为 MaterialCommunityIcons 卡通幽灵插图，与 EmptyReviewPlaceholder 风格统一。</div></div>
+<div class="illo">
+<svg width="500" height="100" viewBox="0 0 500 100">
+<rect x="10" y="10" width="180" height="80" rx="10" fill="#FDE8E5" stroke="#D9483B"/><text x="100" y="48" text-anchor="middle" font-size="32">📷</text><text x="100" y="70" text-anchor="middle" font-size="11" fill="#D9483B">相册空空如也</text>
+<text x="230" y="55" font-size="24" fill="#9DA09A">→</text>
+<rect x="280" y="10" width="200" height="80" rx="10" fill="#E8F0E8" stroke="#5B8F6B"/><text x="380" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#111">👻 image-outline + ghost</text><text x="380" y="62" text-anchor="middle" font-size="11" fill="#5B8F6B">还没有可整理的照片</text>
+</svg></div>
+<table><thead><tr><th>改动文件</th></tr></thead><tbody><tr><td><code>src/components/photo-card/EmptyGate.tsx</code></td></tr></tbody></table>
+</div>
+
+<!-- v1.8 · REQ-03 -->
+<div class="req" data-n="03" id="v18-r3">
+<div class="req-head"><h3>空相册时相册切换按钮保持可见 <span class="prio p1">P1</span></h3>
+<div class="sub">albumBtnWrap 移出 <code>!isGate</code> 条件块，空相册时也显示，仅权限被拒时隐藏。</div></div>
+<table><thead><tr><th>改动文件</th></tr></thead><tbody><tr><td><code>app/index.tsx</code></td></tr></tbody></table>
+</div>
+
+<!-- v1.8 · REQ-04 -->
+<div class="req" data-n="04" id="v18-r4">
+<div class="req-head"><h3>Review 页照片支持两指捏合缩放 <span class="prio p2">P2</span></h3>
+<div class="sub">新建 PhotoZoomModal 组件，ScrollView 原生缩放 1x~5x，长按缩略图触发全屏预览。</div></div>
+<div class="illo">
+<svg width="460" height="90" viewBox="0 0 460 90">
+<rect x="10" y="10" width="120" height="70" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="70" y="50" text-anchor="middle" font-size="11" fill="#111">DeleteGrid</text>
+<text x="70" y="65" text-anchor="middle" font-size="10" fill="#555">longPress →</text>
+<text x="180" y="55" font-size="18" fill="#9DA09A">→</text>
+<rect x="220" y="10" width="220" height="70" rx="12" fill="#111" opacity="0.9"/><text x="330" y="40" text-anchor="middle" font-size="12" fill="#FFF" font-weight="700">PhotoZoomModal</text><text x="330" y="60" text-anchor="middle" font-size="10" fill="#CCC">ScrollView 1x~5x | 单击关闭</text>
+</svg></div>
+<table><thead><tr><th>改动文件</th><th>类型</th></tr></thead><tbody>
+<tr><td><code>src/components/delete-review/PhotoZoomModal.tsx</code></td><td><strong>新建</strong></td></tr>
+<tr><td><code>src/components/delete-review/DeleteGrid.tsx</code></td><td>新增 onPhotoPreview</td></tr>
+<tr><td><code>app/review.tsx</code></td><td>集成 PhotoZoomModal</td></tr></tbody></table>
+</div>
+
+<!-- v1.8 · REQ-05 -->
+<div class="req" data-n="05" id="v18-r5">
+<div class="req-head"><h3>庆祝动画后空页面闪屏优化 <span class="prio p0">P0</span></h3>
+<div class="sub">onDone 回调先执行 router.replace() 导航再 setTimeout 关闭动画；庆祝中跳过 gates 渲染 + 防御遮罩。</div></div>
+<div class="illo">
+<svg width="520" height="110" viewBox="0 0 520 110"><defs><marker id="a5" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#D9483B"/></marker></defs>
+<rect x="5" y="20" width="100" height="40" rx="8" fill="#FDE8E5" stroke="#D9483B"/><text x="55" y="45" text-anchor="middle" font-size="10" font-weight="700" fill="#D9483B">删除成功</text>
+<line x1="105" y1="30" x2="145" y2="30" stroke="#D9483B" stroke-width="1.5" marker-end="url(#a5)"/>
+<text x="130" y="20" text-anchor="middle" font-size="9" fill="#D9483B">❌ 旧</text>
+<rect x="150" y="20" width="100" height="40" rx="8" fill="#FFF" stroke="#E0DED8"/><text x="200" y="40" text-anchor="middle" font-size="10" fill="#555">setShowCelebration(false)</text><text x="200" y="55" text-anchor="middle" font-size="9" fill="#D9483B">闪现空页面!</text>
+<text x="310" y="45" font-size="20">→</text>
+<rect x="340" y="20" width="160" height="40" rx="8" fill="#E8F0E8" stroke="#5B8F6B"/><text x="420" y="38" text-anchor="middle" font-size="10" fill="#5B8F6B">✅ router.replace() 先导航</text><text x="420" y="52" text-anchor="middle" font-size="10" fill="#5B8F6B">setTimeout 80ms 再关动画</text>
+<text x="260" y="95" text-anchor="middle" font-size="10" fill="#555">防御：showCelebration 时跳过 gates 渲染 + celebrationBackdrop 纯黑遮罩</text>
+</svg></div>
+<table><thead><tr><th>改动文件</th></tr></thead><tbody>
+<tr><td><code>app/review.tsx</code></td></tr><tr><td><code>app/index.tsx</code></td></tr></tbody></table>
+</div>
+
+<!-- ═══ v1.9 ═══ -->
+<div class="ver-block">
+<div class="ver-bar"><div class="vnum">1.9</div><div class="vmeta"><div class="vtitle">浏览页日期对齐与照片地理位置</div><div class="vdesc">日期位置微调 + 照片拍摄城市名展示。共 2 项需求。</div><div class="vbadges"><span class="vb vb-f">P1~P2</span><span class="vb vb-d">待开发</span></div></div></div>
+
+<!-- v1.9 · REQ-01 -->
+<div class="req"><div class="req-bar"><div class="req-num">01</div><div class="req-head"><h3>浏览页日期位置下移对齐按钮</h3><div class="req-tags"><span class="vb vb-d">P1</span></div></div></div>
+<div class="req-body">
+<p>浏览页顶部日期文字的 <code>top</code> 值为 54，与 topBar 容器顶部对齐。但按钮有 <code>paddingVertical: 8</code>，按钮内图标/文字起始位置在 62px 处，日期视觉上偏高 8px。将 <code>topCenter</code> 的 <code>top</code> 值从 54 改为 60，日期行布局改为 column（日期 → 地点）。</p>
+<table><thead><tr><th>改动项</th><th>之前</th><th>之后</th></tr></thead><tbody>
+<tr><td>topCenter.top</td><td><code>54</code></td><td><code>60</code></td></tr>
+<tr><td>布局方向</td><td><code>flexDirection: 'row'</code></td><td>column（日期行 + 地点行）</td></tr></tbody></table>
+</div></div>
+
+<!-- v1.9 · REQ-02 -->
+<div class="req"><div class="req-bar"><div class="req-num">02</div><div class="req-head"><h3>照片地理位置信息展示</h3><div class="req-tags"><span class="vb vb-f">P2</span></div></div></div>
+<div class="req-body">
+<p>浏览照片时在日期下方显示拍摄城市名，数据来源为照片 EXIF 中的 GPS 坐标。通过 <code>getAssetInfoAsync(id)</code> 读取 <code>info.location</code>，用 Nominatim API 逆向地理编码到城市级，API 不可用时降级显示原始坐标。无 GPS 数据的照片不显示地点行。</p>
+<div class="illo-wrap"><svg width="620" height="130" viewBox="0 0 620 130" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#9DA09A"/></marker></defs>
+<rect x="10" y="20" width="100" height="44" rx="8" fill="#F8F7F4" stroke="#E0DED8"/>
+<text x="60" y="40" text-anchor="middle" font-size="11" font-weight="600" fill="#1C1C1C">getAssetInfoAsync</text>
+<text x="60" y="54" text-anchor="middle" font-size="9" fill="#999">读 EXIF · GPS</text>
+<line x1="110" y1="42" x2="155" y2="42" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="160" y="20" width="130" height="44" rx="8" fill="#F0F1EE" stroke="#BDC0BA" stroke-width="1.5"/>
+<text x="225" y="40" text-anchor="middle" font-size="11" font-weight="600" fill="#1C1C1C">Nominatim API</text>
+<text x="225" y="54" text-anchor="middle" font-size="9" fill="#999">lat/lng → 城市名</text>
+<line x1="290" y1="42" x2="335" y2="42" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a1)"/>
+<rect x="340" y="20" width="100" height="44" rx="8" fill="#fff" stroke="#5B8F6B" stroke-width="1.5"/>
+<text x="390" y="40" text-anchor="middle" font-size="11" font-weight="600" fill="#5B8F6B">📍 上海市</text>
+<text x="390" y="54" text-anchor="middle" font-size="9" fill="#5B8F6B">居中展示</text>
+<text x="310" y="95" text-anchor="middle" font-size="10" fill="#999">降级策略：API 不通时显示 "31.23, 121.47" 坐标</text>
+<text x="310" y="115" text-anchor="middle" font-size="10" fill="#999">无 GPS 照片：不显示地点行</text>
+</svg></div>
+<h4>验收标准</h4>
+<ul class="check"><li>有 GPS 的照片显示 "📍 城市名"</li><li>无 GPS 的照片不显示地点行</li><li>切换照片时地点实时更新</li><li>API 失败时降级显示坐标</li></ul>
+</div></div>
+</div>
+
+<!-- ═══ IMPACT SUMMARY ═══ -->
+<div class="ver-block">
+<div class="ver-bar"><div class="vnum" style="font-size:48px">📊</div><div class="vmeta"><div class="vtitle">全版本影响范围汇总</div><div class="vdesc">四个版本共涉及 13 个文件，其中 3 个新增文件，10 个修改文件。</div></div></div>
+<table class="matrix"><thead><tr><th>文件</th><th>v1.2</th><th>v1.7</th><th>v1.8</th><th>v1.9</th></tr></thead><tbody>
+<tr><td><code>src/services/delete-service.ts</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td></tr>
+<tr><td><code>src/components/settings/StatCard.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/settings.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>src/types/photo.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>src/services/stats-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/recent-deletes.tsx</code> 🆕</td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td></tr>
+<tr><td><code>src/services/photo-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/index.tsx</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/gesture/QuickDeleteButton.tsx</code></td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td></tr>
+<tr><td><code>src/components/photo-card/EmptyGate.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>app/review.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/delete-review/PhotoZoomModal.tsx</code> 🆕</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+</tbody></table></div>
+
+</main>
+<footer>拾遗 PickUp · 功能优化需求文档 · 2026-05 · Generated with ❤️</footer>
+</body></html>

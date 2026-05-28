@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>拾遗 PickUp · 开发日志</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--ink2:#333;--ink3:#555;--bg:#FAFAF8;--bg2:#F2F1ED;--accent:#BDC0BA;--accent2:#9DA09A;--accent3:#E8EAE6;--red:#D9483B;--amber:#C4863B;--green:#5B8F6B;--rule:#E0DED8;--display:'Playfair Display','Noto Serif SC',serif;--body:'Source Sans 3','PingFang SC','Microsoft YaHei',sans-serif;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+
+.hero{background:linear-gradient(165deg,#F8F7F4 0%,#EDECE8 40%,#E3E2DD 100%);padding:80px 60px 56px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-60px;width:400px;height:400px;border-radius:50%;background:rgba(189,192,186,0.2);z-index:0}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--ink3);margin-bottom:24px}
+.hero h1{font-family:var(--display);font-size:clamp(44px,7vw,80px);font-weight:900;line-height:1.05;letter-spacing:-.02em;max-width:800px}
+.hero h1 em{font-style:italic;color:var(--accent2)}
+.hero-sub{font-family:var(--display);font-size:clamp(18px,2.5vw,26px);font-weight:500;font-style:italic;color:var(--ink2);margin-top:16px;max-width:600px}
+.hero-meta{display:flex;gap:48px;margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+.hero-meta .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);margin-bottom:2px}
+.hero-meta .val{font-size:16px;font-weight:700}
+
+/* stats bar */
+.stats-bar{max-width:1100px;margin:-40px auto 0;padding:0 60px;position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat-card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:24px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-card .n{font-family:var(--display);font-size:36px;font-weight:900;color:var(--accent2);line-height:1}
+.stat-card .l{font-size:12px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.15em;margin-top:8px}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--rule);padding:0 60px}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:50px;gap:6px;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-inner a{font-size:12px;font-weight:700;color:var(--ink2);text-decoration:none;padding:4px 10px;border-radius:4px;white-space:nowrap;transition:all .15s}
+.nav-inner a:hover{color:var(--ink);background:var(--accent3)}
+.nav-brand{font-family:var(--display);font-size:16px!important;font-weight:700!important;color:var(--ink)!important;background:none!important;padding:4px 16px 4px 0!important;margin-right:8px}
+
+main{max-width:1100px;margin:0 auto;padding:0 60px 120px}
+
+/* ═══ ENTRY ═══ */
+.entry{margin-top:48px;display:grid;grid-template-columns:140px 1fr;gap:40px;padding-bottom:48px;border-bottom:1px solid var(--rule)}
+.entry-date{position:sticky;top:70px;align-self:start}
+.entry-date .d{font-family:var(--display);font-size:28px;font-weight:900;line-height:1;color:var(--accent2)}
+.entry-date .t{font-size:12px;font-weight:700;color:var(--ink3);margin-top:4px;letter-spacing:.1em}
+.entry-date .w{display:inline-block;margin-top:12px;font-size:10px;font-weight:700;letter-spacing:.15em;padding:3px 10px;border-radius:3px;background:var(--accent3);color:var(--accent2)}
+.entry-body{min-width:0}
+
+.entry-summary{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.35;color:var(--ink);margin-bottom:20px;padding-left:20px;border-left:4px solid var(--accent)}
+.entry-summary::before{content:open-quote;color:var(--accent2);font-size:32px;line-height:0;vertical-align:-8px;margin-right:4px}
+.entry-summary::after{content:close-quote;color:var(--accent2);font-size:32px;line-height:0;vertical-align:-8px;margin-left:4px}
+
+.entry-section{margin-bottom:24px}
+.entry-section h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--accent2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.entry-section h3::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+.entry-section ul{list-style:none;display:grid;gap:10px}
+.entry-section ul li{font-size:15px;color:var(--ink2);padding-left:20px;position:relative;line-height:1.6}
+.entry-section ul li::before{content:'';position:absolute;left:0;top:11px;width:6px;height:6px;border-radius:50%;background:var(--accent2)}
+
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.12em;padding:2px 8px;border-radius:3px;margin-right:4px}
+.tag-bug{background:#FDE8E5;color:var(--red)}
+.tag-feat{background:#E8F0EB;color:var(--green)}
+.tag-build{background:var(--accent3);color:var(--accent2)}
+.tag-design{background:#FEF3E0;color:var(--amber)}
+.tag-important{background:#F0E6E0;color:#C53030}
+
+.file-ref{font-family:var(--mono);font-size:13px;background:var(--bg2);padding:2px 8px;border-radius:4px;color:var(--ink2);white-space:nowrap}
+
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--ink3);padding:8px 16px;border-bottom:2px solid var(--accent)}
+td{padding:8px 16px;border-bottom:1px solid var(--rule);color:var(--ink2)}
+tr:last-child td{border-bottom:none}
+
+.next-block{background:var(--bg2);border-radius:10px;padding:20px 24px;margin-top:16px}
+.next-block .nb-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--accent2);margin-bottom:10px}
+.next-block ul{list-style:none;display:grid;gap:6px}
+.next-block ul li{font-size:14px;color:var(--ink2)}
+.next-block ul li::before{content:'→ ';color:var(--accent2);font-weight:700}
+
+footer{text-align:center;padding:48px;font-size:13px;color:var(--ink3);border-top:1px solid var(--rule);margin-top:80px}
+</style></head><body>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Development Journal</div>
+    <h1>拾遗 <em>PickUp</em><br>开发日志</h1>
+    <p class="hero-sub">从第一条提交到 v1.8 上线 — 一部产品的进化轨迹，记录每一个关键里程碑</p>
+    <div class="hero-meta">
+      <div><div class="lbl">时间跨度</div><div class="val">2026-05-21 → 05-28</div></div>
+      <div><div class="lbl">日志条目</div><div class="val">10 条</div></div>
+      <div><div class="lbl">版本迭代</div><div class="val">v1.0 → v1.8</div></div>
+      <div><div class="lbl">状态</div><div class="val">持续更新中</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-card"><div class="n">8</div><div class="l">版本迭代</div></div>
+  <div class="stat-card"><div class="n">30+</div><div class="l">Bug 修复</div></div>
+  <div class="stat-card"><div class="n">13</div><div class="l">PRD 需求</div></div>
+  <div class="stat-card"><div class="n">4</div><div class="l">构建成功</div></div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">PickUp Log</a>
+    <a href="#d0521a">05-21 ①</a><a href="#d0521b">05-21 ②</a><a href="#d0523a">05-23 ①</a><a href="#d0523b">05-23 ②</a><a href="#d0523c">05-23 ③</a>
+    <a href="#d0524a">05-24 ①</a><a href="#d0524b">05-24 ②</a><a href="#d0525">05-25</a><a href="#d0527">05-27</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══ 05-21 ① ═══ -->
+<article class="entry" id="d0521a">
+  <div class="entry-date"><div class="d">21</div><div class="t">MAY 2026</div><div class="w">20:10</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">拾遗 App Android 开发构建成功，save-memory 技能创建完成。</p>
+    <div class="entry-section"><h3>关键结论</h3><ul>
+      <li>Plan 审计完成：原 15 个 task 中 4 项缺失（E2E test, stats-service test, Modal, GestureGuideOverlay），已全部补齐</li>
+      <li>权限崩溃修复：expo-media-library 在 Expo Go 中不可用，必须用 development build</li>
+      <li>EAS 构建配置：eas.json 配好 development / preview / production 三个 profile</li>
+      <li>构建 #1-#3 均失败，根因 react-native-reanimated v4 强制要求 newArchEnabled: true</li>
+      <li>构建 #4 成功，APK 已生成（192MB，开发包正常体积）</li>
+    </ul></div>
+    <div class="next-block"><div class="nb-title">下一步</div><ul>
+      <li>在 Android 手机上安装 APK 并测试基本功能</li>
+      <li>验证媒体库权限、照片浏览、标记删除/保留、撤销等核心流程</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-21 ② ═══ -->
+<article class="entry" id="d0521b">
+  <div class="entry-date"><div class="d">21</div><div class="t">MAY 2026</div><div class="w">22:45</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">修复了滑动抽搐、黑屏、无限循环等关键 Bug，优化手势交互体验，推送代码到 GitHub。</p>
+    <div class="entry-section"><h3>关键结论</h3><ul>
+      <li><span class="tag tag-bug">BUG</span> 滑动抽搐：withSpring → withTiming，消除欠阻尼振荡</li>
+      <li><span class="tag tag-bug">BUG</span> 黑屏根因：advanceToNext 闭包过期，currentGroup.length 不在依赖数组</li>
+      <li><span class="tag tag-bug">BUG</span> 无限循环：review.tsx useEffect 加 autoNavRef 守卫</li>
+      <li><span class="tag tag-bug">BUG</span> 导航错误：router.back() 在 Expo Tabs 中不可靠，全部改为 router.replace('/')</li>
+      <li><span class="tag tag-feat">FEAT</span> 底部进度条圆点可点击跳转、左滑跳过/右滑上一张、零删除直接跳下一组</li>
+      <li><span class="tag tag-design">ADJUST</span> 每组 15→10 张、隐藏开发者模式提示文字</li>
+    </ul></div>
+    <div class="next-block"><div class="nb-title">下一步</div><ul>
+      <li>预览构建 c4ca434e 完成后下载 APK 安装测试</li>
+      <li>后续可考虑：照片元数据显示、相册分类、iCloud 照片支持</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-23 ① ═══ -->
+<article class="entry" id="d0523a">
+  <div class="entry-date"><div class="d">23</div><div class="t">MAY 2026</div><div class="w">00:53</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">完成多项 UI/UX 需求改动，修复多个 JS 层 Bug，并定位修复了困扰已久的 Android 原生崩溃 getDirectConverter。</p>
+    <div class="entry-section"><h3>需求改动</h3><ul>
+      <li><span class="tag tag-feat">FEAT</span> 动态包名配置：app.config.js 区分三套包名（dev / preview / prod），同设备并存</li>
+      <li><span class="tag tag-feat">FEAT</span> 首次启动手势引导：GestureGuideOverlay，四向滑动操作说明，4 秒自动消失</li>
+      <li><span class="tag tag-feat">FEAT</span> 批量删除按钮：QuickDeleteButton，浮动右下角，一键批量删除</li>
+      <li><span class="tag tag-feat">FEAT</span> SplashScreen 启动页：标题+标语渐入效果</li>
+      <li><span class="tag tag-design">UI</span> PhotoCard 卡片重设计、ActionIndicator 胶囊样式、底部进度条增强</li>
+    </ul></div>
+    <div class="entry-section"><h3>Bug 修复</h3><ul>
+      <li><span class="tag tag-important">CRITICAL</span> getDirectConverter 原生崩溃：expo-font@56.0.5 不兼容 SDK 54 → 降至 14.0.11</li>
+      <li><span class="tag tag-bug">BUG</span> @expo/vector-icons 异常 → 替换 emoji 临时方案，重建后恢复矢量图标</li>
+      <li><span class="tag tag-bug">BUG</span> refillGroup 崩溃风险 / handleQuickDelete UI 锁定 / advanceToNext 闭包过期</li>
+    </ul></div>
+    <div class="entry-section"><h3><span class="tag tag-important">教训</span> 重要教训</h3><ul>
+      <li>添加 Expo 包务必用 <span class="file-ref">npx expo install &lt;pkg&gt;</span>，不能用 npm install</li>
+      <li>EAS 构建日志里的 duplicate / missing peer dependency 警告是崩溃的直接线索</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-23 ② ═══ -->
+<article class="entry" id="d0523b">
+  <div class="entry-date"><div class="d">23</div><div class="t">MAY 2026</div><div class="w">15:10</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">v1.0.1 Bug 修复 + UI 打磨完成，README 架构文档更新，Android preview 构建提交中。</p>
+    <div class="entry-section"><h3>Bug 修复</h3><ul>
+      <li>日限制重启失效：dailyUsageLoaded 未导出 → loadPhotos() 提前执行。导出并 gate 等待</li>
+      <li>权限弹窗闪屏：permissionStatus 初始化为 undetermined。挂载时调用 getPermissionsAsync() 同步真实状态</li>
+      <li>日限制时 Loading 死循环：调整渲染顺序，先检查 canBrowseNextGroup 再检查 isLoading</li>
+      <li>进度条圆点着色错位：改传 Set&lt;number&gt; 索引集合，每个圆点独立判断</li>
+      <li>删除确认页预勾选失效：React 状态批处理竞态，加 useEffect 同步</li>
+    </ul></div>
+    <div class="entry-section"><h3>UI 打磨</h3><ul>
+      <li>照片原比例展示：getDisplaySize() 根据宽高比计算 + borderRadius: 24</li>
+      <li>相对日期："2024年3月15日 · X天前/昨天/今天"</li>
+      <li>进度条位置下调：50→34，去掉文字计数器；卡片间距收紧</li>
+    </ul></div>
+    <div class="entry-section"><h3><span class="tag tag-important">教训</span></h3><ul>
+      <li>index.tsx 渲染检查顺序至关重要：权限 → 日用量 → 限制 → 加载 → 空相册</li>
+      <li>getPermissionsAsync() 不弹对话框也能获取真实权限状态</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-23 ③ ═══ -->
+<article class="entry" id="d0523c">
+  <div class="entry-date"><div class="d">23</div><div class="t">MAY 2026</div><div class="w">18:00</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">用户提出 4 个新改动点，已整理为 v1.3 需求文档。</p>
+    <div class="entry-section"><h3>新需求清单</h3><ul>
+      <li><span class="tag tag-design">UI</span> 删除确认弹框改造：毛玻璃 + 圆角卡片 + 淡入淡出动画，次按钮统一为"取消"</li>
+      <li><span class="tag tag-bug">BUG</span> 修复不弹框 Bug：排查 markedForDelete 与 currentGroup 同步竞态</li>
+      <li><span class="tag tag-design">UI</span> Tab 栏 Touch Bar 改造：透明背景 + 浮动胶囊 + 毛玻璃 + 发光边框</li>
+      <li><span class="tag tag-feat">FEAT</span> 新增聚合图标入口，占位页面"更多功能 · 敬请期待"</li>
+    </ul></div>
+    <div class="entry-section"><h3>决策</h3><ul>
+      <li>v1.3 需求文档已追加到 REQUIREMENTS-v1.1.md 末尾</li>
+      <li>聚合页路由暂定为 <span class="file-ref">app/hub.tsx</span></li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-24 ① ═══ -->
+<article class="entry" id="d0524a">
+  <div class="entry-date"><div class="d">24</div><div class="t">MAY 2026</div><div class="w">01:20</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">深入探索绕过 Android 系统删除弹框方案，经历多轮尝试，最终结论不可行，回退到系统弹框方案。</p>
+    <div class="entry-section"><h3>技术探索过程</h3><ul>
+      <li><span class="tag tag-important">失败</span> 方案 A：MANAGE_EXTERNAL_STORAGE + FileSystem.deleteAsync → SDK 54 已弃用</li>
+      <li><span class="tag tag-important">失败</span> 改用新 File/Directory 类 → File.delete() 仍被系统 rejected</li>
+      <li>根本原因：Android 11+ Scoped Storage 对共享存储文件删除有 OS 级保护，无法绕过</li>
+    </ul></div>
+    <div class="entry-section"><h3>当前方案</h3><ul>
+      <li><span class="tag tag-build">Android</span> MediaLibrary.deleteAssetsAsync → 系统弹框确认（一次）</li>
+      <li><span class="tag tag-build">iOS</span> 自定义毛玻璃 DeleteConfirmSheet → MediaLibrary.deleteAssetsAsync（无系统弹框）</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-24 ② ═══ -->
+<article class="entry" id="d0524b">
+  <div class="entry-date"><div class="d">24</div><div class="t">MAY 2026</div><div class="w">16:30</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">修复 Tab bar 图标左偏 + 幽灵点击区域 Bug，最终方案：隐藏默认 tab bar + 独立 SimpleTabBar 组件。</p>
+    <div class="entry-section"><h3>关键结论</h3><ul>
+      <li>Bug 根因：自定义 TabBar 与默认 tab bar 双重渲染叠加</li>
+      <li>尝试过的失败方案：flex/justifyContent 调整、去胶囊框、绝对定位 —— 均未解决</li>
+      <li><span class="tag tag-feat">方案</span> tabBarStyle: display: none + SimpleTabBar 独立渲染</li>
+      <li>纯黑背景、图标居中、选中金色 / 未选中灰色</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-24 ③ ═══ -->
+<article class="entry" id="d0524c">
+  <div class="entry-date"><div class="d">24</div><div class="t">MAY 2026</div><div class="w">17:30</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">完成 v1.4-v1.6 多轮迭代——首页架构重构、Hub 柱状图、滑动优化、品牌改名 PickUp、新 LOGO、本地构建环境搭建。</p>
+    <div class="entry-section"><h3>v1.4</h3><ul>
+      <li>首页相册选择、PhotoContext 新增 selectedAlbum、Hub 月度柱状图</li>
+    </ul></div>
+    <div class="entry-section"><h3>v1.5</h3><ul>
+      <li>浏览页回归默认首页，删除 browse.tsx，流程简化为 index ↔ albums ↔ review</li>
+    </ul></div>
+    <div class="entry-section"><h3>v1.6</h3><ul>
+      <li>滑动优化：卡片独立移动、去红背景；Hub 年份筛选；Review 空状态卡通幽灵</li>
+      <li>滑动特效设置（5 种）、Tab 栏 usePathname 修复</li>
+    </ul></div>
+    <div class="entry-section"><h3>品牌</h3><ul>
+      <li>拾遗 → PickUp，标语：记忆由你选择；新 LOGO 堆叠滑出设计；assets/icon.png 已替换</li>
+    </ul></div>
+    <div class="entry-section"><h3><span class="tag tag-build">BUILD</span> 本地构建环境</h3><ul>
+      <li>EAS 免费配额已用完（6月1日重置），放弃 EAS 改用本地 Gradle</li>
+      <li>已配置阿里云 / 腾讯云 / 华为云镜像解决国内网络问题</li>
+      <li>Android SDK 36、NDK 27、Build-Tools 37 已安装</li>
+      <li>备选方案：GitHub Actions workflow 已配好</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-25 ═══ -->
+<article class="entry" id="d0525">
+  <div class="entry-date"><div class="d">25</div><div class="t">MAY 2026</div><div class="w">22:30</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">v1.2 功能优化全部完成 + 3 个用户反馈 Bug 修复，Release APK 本地构建成功并推送到 GitHub。</p>
+    <div class="entry-section"><h3>v1.2 完成项</h3><ul>
+      <li><span class="tag tag-feat">REQ-01</span> 释放空间累计：像素估算法作为兜底</li>
+      <li><span class="tag tag-feat">REQ-02</span> 统计卡片改造：中文加粗 + "最近删除"可点击跳转</li>
+      <li><span class="tag tag-feat">REQ-03</span> 最近删除页：3 列网格 + useFocusEffect 重新加载</li>
+      <li><span class="tag tag-feat">REQ-04</span> 排序功能：SortMode 四种模式，generateGroup() 重构</li>
+    </ul></div>
+    <div class="entry-section"><h3>关键文件</h3>
+      <table><thead><tr><th>新增</th><th>修改</th></tr></thead><tbody>
+        <tr><td><span class="file-ref">app/recent-deletes.tsx</span></td><td><span class="file-ref">app/index.tsx</span> <span class="file-ref">app/settings.tsx</span></td></tr>
+        <tr><td><span class="file-ref">SortPickerSheet.tsx</span></td><td><span class="file-ref">delete-service.ts</span> <span class="file-ref">stats-service.ts</span> <span class="file-ref">photo-service.ts</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="entry-section"><h3><span class="tag tag-build">BUILD</span></h3><ul>
+      <li>EAS 配额用尽，本地 Gradle assembleRelease 成功</li>
+      <li>APK 路径：<span class="file-ref">android/app/build/outputs/apk/release/app-release.apk</span>（106MB）</li>
+      <li>Git push：2637361 master → origin/master，13 files changed</li>
+    </ul></div>
+  </div>
+</article>
+
+<!-- ═══ 05-27 ═══ -->
+<article class="entry" id="d0527">
+  <div class="entry-date"><div class="d">27</div><div class="t">MAY 2026</div><div class="w">22:20</div></div>
+  <div class="entry-body">
+    <p class="entry-summary">v1.7 全部需求实现 + 滑动动效增强 + 庆祝动画 + 新手引导重做 + release APK 打包完成。</p>
+    <div class="entry-section"><h3>v1.7 四项需求</h3><ul>
+      <li><span class="tag tag-feat">REQ-01</span> QuickDeleteButton 去文字去胶囊框，仅图标+badge</li>
+      <li><span class="tag tag-feat">REQ-02</span> 日期文字移入 topBar flexbox，严格水平对齐，恢复 LIVE badge</li>
+      <li><span class="tag tag-feat">REQ-03</span> delete-service.ts 增加缓存逻辑，最近删除页缩略图可见</li>
+      <li><span class="tag tag-feat">REQ-04</span> 标题改为 "最近删除 · X 张"，paddingHorizontal 防重叠</li>
+    </ul></div>
+    <div class="entry-section"><h3>新增</h3><ul>
+      <li><span class="tag tag-feat">FEAT</span> 左右滑动动画增强：rotationZ(±8°) + cardScale + withSpring 回弹</li>
+      <li><span class="tag tag-feat">FEAT</span> 庆祝动画：CelebrationOverlay — 黄色 ✓ + 12 颗彩色粒子爆散</li>
+      <li><span class="tag tag-design">UI</span> 新手引导重做：GestureGuideOverlay 完整覆盖全部 UI 区域</li>
+    </ul></div>
+    <div class="entry-section"><h3>关键文件</h3>
+      <table><thead><tr><th>新增</th><th>修改</th></tr></thead><tbody>
+        <tr><td><span class="file-ref">CelebrationOverlay.tsx</span></td><td><span class="file-ref">QuickDeleteButton.tsx</span> <span class="file-ref">SwipeableCard.tsx</span></td></tr>
+        <tr><td></td><td><span class="file-ref">app/index.tsx</span> <span class="file-ref">app/review.tsx</span> <span class="file-ref">app/recent-deletes.tsx</span></td></tr>
+        <tr><td></td><td><span class="file-ref">delete-service.ts</span> <span class="file-ref">GestureGuideOverlay.tsx</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="entry-section"><h3><span class="tag tag-build">BUILD</span></h3><ul>
+      <li>Dev APK：192MB，包名 <span class="file-ref">com.zackf.pickup.dev</span></li>
+      <li>Release APK：105MB，包名 <span class="file-ref">com.zackf.pickup.preview</span></li>
+      <li>Metro IP：192.168.5.15</li>
+    </ul></div>
+  </div>
+</article>
+
+</main>
+<footer>拾遗 PickUp · 开发日志 · 2026-05 · Generated with ❤️</footer>
+</body></html>

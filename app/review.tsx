@@ -12,6 +12,7 @@ import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfir
 import { EmptyReviewPlaceholder } from '../src/components/delete-review/EmptyReviewPlaceholder';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
+import { PhotoZoomModal } from '../src/components/delete-review/PhotoZoomModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
 
@@ -28,6 +29,7 @@ export default function ReviewScreen() {
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationCount, setCelebrationCount] = useState(0);
+  const [previewPhoto, setPreviewPhoto] = useState<typeof photosInGroup[number] | null>(null);
   const deletingRef = useRef(false);
   const insets = useSafeAreaInsets();
 
@@ -104,6 +106,7 @@ export default function ReviewScreen() {
               photos={photosInGroup}
               onTap={handleTogglePhoto}
               selectedIds={selectedIds}
+              onPhotoPreview={setPreviewPhoto}
             />
           </ScrollView>
 
@@ -138,16 +141,25 @@ export default function ReviewScreen() {
         visible={showCelebration}
         count={celebrationCount}
         onDone={() => {
-          setShowCelebration(false);
+          // Navigate FIRST so the new page replaces review before we unmount celebration.
+          // This prevents a flash of EmptyReviewPlaceholder between celebration dismissal and navigation.
           if (!canBrowseNextGroup) {
+            setShowCelebration(false);
             setLimitModalVisible(true);
             return;
           }
           incrementGroupCount();
           loadNextGroup();
           router.replace('/');
+          // Delay to let navigation commit before hiding overlay
+          setTimeout(() => setShowCelebration(false), 80);
         }}
       />
+
+      {/* When celebration is active, suppress the empty placeholder to avoid flash */}
+      {showCelebration && photosInGroup.length === 0 && (
+        <View style={styles.celebrationBackdrop} pointerEvents="none" />
+      )}
 
       {Platform.OS !== 'android' && (
         <DeleteConfirmSheet
@@ -161,6 +173,12 @@ export default function ReviewScreen() {
           onCancel={() => setShowDeleteSheet(false)}
         />
       )}
+
+      <PhotoZoomModal
+        visible={previewPhoto !== null}
+        photo={previewPhoto}
+        onClose={() => setPreviewPhoto(null)}
+      />
     </View>
   );
 }
@@ -178,4 +196,9 @@ const styles = StyleSheet.create({
   deleteButtonDisabled: { backgroundColor: '#3A3A3C' },
   deleteText: { fontSize: 16, fontWeight: '700', color: '#000000', letterSpacing: 1 },
   deleteTextDisabled: { color: '#8E8E93' },
+  celebrationBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Tokens.color.background,
+    zIndex: 150,
+  },
 });

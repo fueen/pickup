@@ -9,9 +9,10 @@ interface Props {
   photos: PhotoAsset[];
   onTap: (id: string) => void;
   selectedIds: Set<string>;
+  onPhotoPreview?: (photo: PhotoAsset) => void;
 }
 
-export function DeleteGrid({ photos, onTap, selectedIds }: Props) {
+export function DeleteGrid({ photos, onTap, selectedIds, onPhotoPreview }: Props) {
   return (
     <View style={styles.grid}>
       {photos.map((photo) => {
@@ -21,6 +22,8 @@ export function DeleteGrid({ photos, onTap, selectedIds }: Props) {
             key={photo.id}
             style={styles.cell}
             onPress={() => onTap(photo.id)}
+            onLongPress={() => onPhotoPreview?.(photo)}
+            delayLongPress={300}
             activeOpacity={0.8}
           >
             <Image source={{ uri: photo.uri }} style={styles.image} />

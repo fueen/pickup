@@ -20,6 +20,7 @@ import { DailyLimitReached } from '../src/components/photo-card/DailyLimitReache
 import { QuickDeleteButton } from '../src/components/gesture/QuickDeleteButton';
 import { SortPickerSheet } from '../src/components/photo-card/SortPickerSheet';
 import { File } from 'expo-file-system';
+import { getAssetInfoAsync } from 'expo-media-library';
 import { formatPhotoDate } from '../src/utils/date-utils';
 import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
 import { deletePhotos } from '../src/services/delete-service';
@@ -55,6 +56,7 @@ export default function BrowseScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationCount, setCelebrationCount] = useState(0);
   const [guideVisible, setGuideVisible] = useState(false);
+  const [photoLocation, setPhotoLocation] = useState<string | null>(null);
   const lastViewedGroupRef = useRef<string>('');
   const triedLoadRef = useRef(false);
   const hasLoadedRef = useRef(false);
@@ -154,6 +156,43 @@ export default function BrowseScreen() {
       triedLoadRef.current = false;
     }
   }, [currentPhoto]);
+
+  // Fetch location (city-level) for current photo
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLocation = async () => {
+      if (!currentPhoto) { setPhotoLocation(null); return; }
+      try {
+        const info = await getAssetInfoAsync(currentPhoto.id);
+        const loc = info.location;
+        if (!loc || cancelled) { setPhotoLocation(null); return; }
+        const { latitude, longitude } = loc;
+        if (latitude == null || longitude == null) { setPhotoLocation(null); return; }
+        // Show coordinates immediately from EXIF data (no API needed)
+        const coordStr = `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`;
+        if (!cancelled) setPhotoLocation(coordStr);
+        // Async: try reverse geocode to replace coordinates with city name
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=zh`;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 3000);
+          const resp = await fetch(url, { headers: { 'User-Agent': 'PickUp/1.0' }, signal: controller.signal });
+          clearTimeout(timeout);
+          const data = await resp.json();
+          if (!cancelled && data?.address) {
+            const city = data.address.city || data.address.town || data.address.county || data.address.state || '';
+            if (city) setPhotoLocation(city);
+          }
+        } catch {
+          // Keep coordStr — already displayed
+        }
+      } catch {
+        if (!cancelled) setPhotoLocation(null);
+      }
+    };
+    fetchLocation();
+    return () => { cancelled = true; };
+  }, [currentPhoto?.id]);
 
   const advanceToNext = useCallback((justMarkedDelete = false) => {
     if (groupIndex + 1 >= currentGroup.length) {
@@ -258,23 +297,12 @@ export default function BrowseScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top toolbar — frosted glass pills */}
+      {/* Top toolbar — left: sort, right: quick-delete */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.pill} onPress={showSortPicker} activeOpacity={0.7}>
           <MaterialCommunityIcons name="sort-variant" size={16} color="#fff" />
           <Text style={styles.pillLabel}>排序</Text>
         </TouchableOpacity>
-
-        <View style={styles.topCenter}>
-          <Text style={styles.topDate} numberOfLines={1} ellipsizeMode="tail">
-            {currentPhoto ? formatPhotoDate(currentPhoto.creationTime) : ''}
-          </Text>
-          {currentPhoto?.mediaType === 'livePhoto' && (
-            <View style={styles.liveBadge}>
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
-          )}
-        </View>
 
         <QuickDeleteButton
           count={markedForDelete.size}
@@ -283,8 +311,27 @@ export default function BrowseScreen() {
         />
       </View>
 
-      {/* Gates */}
-      {(() => {
+      {/* Date + Location — absolute centered */}
+      {!isGate && currentPhoto && (
+        <View style={styles.topCenter} pointerEvents="none">
+          <View style={styles.topDateRow}>
+            <Text style={styles.topDate} numberOfLines={1} ellipsizeMode="tail">
+              {formatPhotoDate(currentPhoto.creationTime)}
+            </Text>
+            {currentPhoto?.mediaType === 'livePhoto' && (
+              <View style={styles.liveBadge}>
+                <Text style={styles.liveText}>LIVE</Text>
+              </View>
+            )}
+          </View>
+          {photoLocation ? (
+            <Text style={styles.topLocation} numberOfLines={1}>📍 {photoLocation}</Text>
+          ) : null}
+        </View>
+      )}
+
+      {/* Gates — suppressed while celebration is showing to avoid flash */}
+      {!showCelebration && (() => {
         if (permissionStatus === 'denied') return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
         if (!dailyUsageLoaded) return <LoadingGate />;
         if (permissionStatus === 'undetermined') return <PermissionGate status={permissionStatus} onRequest={requestPermissions} />;
@@ -344,13 +391,6 @@ export default function BrowseScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Album button — bottom left */}
-          <View style={styles.albumBtnWrap}>
-            <TouchableOpacity style={styles.infoBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
-              <MaterialCommunityIcons name="layers" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
           <GroupProgressBar
             current={groupIndex}
             total={currentGroup.length}
@@ -359,6 +399,15 @@ export default function BrowseScreen() {
             onSelectIndex={setGroupIndex}
           />
         </>
+      )}
+
+      {/* Album button — always visible (including empty albums) */}
+      {permissionStatus !== 'denied' && (
+        <View style={styles.albumBtnWrap}>
+          <TouchableOpacity style={styles.infoBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="layers" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       )}
 
       <LimitReachedModal
@@ -418,12 +467,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   topCenter: {
-    flex: 1,
-    flexDirection: 'row',
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 31,
+  },
+  topDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
-    marginHorizontal: 8,
   },
   topDate: {
     fontSize: 14,
@@ -432,7 +487,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 4,
-    flexShrink: 1,
+  },
+  topLocation: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.5,
+    marginTop: 3,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowRadius: 3,
   },
   liveBadge: {
     backgroundColor: 'rgba(0,0,0,0.5)',
