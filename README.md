@@ -7,26 +7,40 @@
 ## 功能
 
 ### 核心流程
-- **滑动整理**：上滑标记删除、下滑标记保留、左滑跳过、右滑上一张，配合触觉反馈
-- **批量确认**：每组 10 张，确认页支持二次勾选/取消，确认后通过 `expo-media-library` 原生删除
-- **快速删除**：浏览页右上角一键删除当前组所有已标记照片，无需进入确认页
-- **智能分组**：Fisher-Yates 随机乱序 + 已浏览去重，照片看完一圈后从最早浏览的开始回填，不重复不遗漏
+- **滑动整理**：上滑标记删除、下滑标记保留、左滑跳过、右滑上一张，配合触觉反馈 + 回弹动画
+- **批量确认**：每组 10 张，确认页支持点击勾选/取消 + **长按照片全屏预览** + **两指捏合缩放**（1x~5x）
+- **快速删除**：浏览页右上角图标 + 计数 badge 一键删除，无需进入确认页
+- **智能分组**：Fisher-Yates 随机乱序 + 已浏览去重，照片看完一圈后从最早浏览的回填
+- **排序模式**：支持随机 / 面积↓ / 最新↑ / 最早↑ 四种排序，偏好持久化
+
+### 照片信息
+- **相对日期**：显示为"年月日 · X天前/昨天/今天"，日期严格水平居中
+- **地理位置**：自动读取照片 EXIF GPS 坐标，显示拍摄城市名（如 📍 上海市）
+- **LIVE 标识**：Live Photo 显示 LIVE 徽章
 
 ### 会员与限制
 - **免费用户**：每日 3 组（30 张），可浏览但受限制
 - **Pro 订阅**：无限使用，通过 RevenueCat 管理周/月/年/永久订阅
 - **开发者模式**：设置页连续点击底部文字 5 次解锁，绕过所有限制
 
+### 最近删除
+- 删除照片后自动记录缩略图到本地缓存，可在「最近删除」页回溯查看
+- 3 列网格展示，按删除时间倒序，支持点击查看详情
+
+### 庆祝动画
+- 完成一组删除后弹出庆祝动画：黄色 ✓ 弹入 + 彩色粒子爆散 + "已清理 X 张"
+
 ### 体验细节
-- **手势引导**：首次启动弹出操作说明覆盖层，记录到 AsyncStorage 不再重复
+- **手势引导**：首次启动弹出四方向操作说明覆盖层，覆盖全部 UI 区域，4 秒自动消失
 - **原比例展示**：照片按原始宽高比显示，圆角卡片，不裁切不拉伸
-- **相对日期**：照片时间显示为"年月日 · X天前/昨天/今天"
 - **进度指示**：底部圆点按实际标记索引着色（黄=删除、绿=保留），支持点击跳转
-- **触觉反馈**：滑动标记时触发 haptic 反馈，增强操作确认感
+- **触觉反馈**：滑动标记时触发 haptic 反馈
 - **启动闪屏**：品牌 Splash 动画
+- **空状态**：空相册展示卡通幽灵占位图，与整体设计风格统一
+- **相册切换**：支持选择系统相册，左下角按钮随时可切换
 
 ### 统计面板
-- 累计浏览 / 累计删除 / 连续使用天数 / 释放空间
+- 累计浏览 / 累计删除 / 连续使用天数 / 释放空间（连续累计，重启不归零）
 - 日使用量跨天自动重置
 
 ## 技术栈
@@ -49,10 +63,13 @@
 ```
 app/                          # 页面 (expo-router file-based routing)
   _layout.tsx                 # 根布局：Provider 嵌套 + Tab 导航 + Splash + ErrorBoundary
-  index.tsx                   # 主浏览页：滑动卡片、进度条、快速删除、手势引导
-  review.tsx                  # 删除确认页：网格预览、二次勾选、确认删除
-  settings.tsx                # 设置页：会员状态、统计数据、帮助、开发者模式入口
+  index.tsx                   # 主浏览页：滑动卡片、排序、相册选择、日期 + 地理位置
+  review.tsx                  # 删除确认页：网格预览、勾选/取消、捏合缩放预览
+  settings.tsx                # 设置页：会员状态、统计数据、开发者模式入口
   paywall.tsx                 # Pro 订阅页：定价卡片、购买/恢复
+  recent-deletes.tsx          # 最近删除页：3 列网格，已删照片缩略图回溯
+  albums.tsx                  # 相册选择页：2 列缩略图，按数量降序
+  hub.tsx                     # 聚合页：更多功能入口（占位）
 
 src/
   components/
@@ -62,25 +79,29 @@ src/
       QuickDeleteButton.tsx   # 快速删除浮动按钮
       GestureGuideOverlay.tsx # 首次启动手势引导覆盖层
       DeleteOverlay.tsx       # 标记删除红色蒙层
-    photo-card/               # 照片浏览组件
-      PhotoCard.tsx           # 照片卡片：原比例计算、圆角图片、日期标签
-      GroupProgressBar.tsx    # 底部圆点进度条，支持点击跳转
-      PermissionGate.tsx      # 权限请求/被拒门
-      LoadingGate.tsx         # 加载中占位
-      EmptyGate.tsx           # 空相册占位
-      DailyLimitReached.tsx   # 每日限制达到占位（带动画）
-      LimitReachedModal.tsx   # 限制达到弹窗
     delete-review/            # 删除确认
-      DeleteGrid.tsx          # 照片网格，支持点击勾选/取消
-      DeleteConfirmSheet.tsx  # 确认删除底部表单
+      DeleteGrid.tsx          # 照片网格，点击勾选/取消 + 长按预览
+      DeleteConfirmSheet.tsx  # iOS 毛玻璃确认删除底部表单
+      PhotoZoomModal.tsx      # 全屏缩放预览（两指捏合 1x~5x）
+      EmptyReviewPlaceholder.tsx # 无待删照片的卡通占位图
     settings/                 # 设置页组件
       StatCard.tsx            # 统计卡片
       SettingsSection.tsx     # 设置分组容器
       SettingsRow.tsx         # 设置行
       PricingCard.tsx         # 定价卡片
+    photo-card/               # 照片浏览组件
+      PhotoCard.tsx           # 照片卡片：原比例计算、圆角图片、日期标签
+      GroupProgressBar.tsx    # 底部圆点进度条，支持点击跳转
+      SortPickerSheet.tsx     # 排序模式底部弹出选择器
+      PermissionGate.tsx      # 权限请求/被拒门
+      LoadingGate.tsx         # 加载中占位
+      EmptyGate.tsx           # 空相册占位（卡通幽灵插图）
+      DailyLimitReached.tsx   # 每日限制达到占位（带动画）
+      LimitReachedModal.tsx   # 限制达到弹窗
     ui/                       # 通用 UI
       Modal.tsx               # 通用模态框
       Toast.tsx               # Toast 提示
+      CelebrationOverlay.tsx  # 删除完成庆祝动画（✓ + 粒子爆散）
     ErrorBoundary.tsx         # 全局错误边界
     SplashScreen.tsx          # 品牌闪屏动画
 
@@ -155,15 +176,15 @@ GestureHandlerRootView
 
 ## 构建配置
 
-项目使用 `app.config.js` 动态配置，通过 `EAS_BUILD_PROFILE` 环境变量切换：
+项目使用 `app.config.js` 动态配置 + `build.gradle` 的 `applicationIdSuffix` 区分包名：
 
-| Profile | App 名 | Package ID | 用途 |
-|---------|--------|------------|------|
-| development | 拾遗 Dev | com.zackf.pickup.dev | 本地 dev-client 热更新 |
-| preview | PickUp | com.zackf.pickup.preview | Android 内部分发测试 |
-| production | 拾遗 | com.zackf.pickup | 正式发布 |
+| Build Type | App 名 | Package ID | 体积 | 用途 |
+|-----------|--------|------------|------|------|
+| debug | 拾忆 | com.zackf.pickup.dev | ~192MB | 本地 dev-client 热更新 |
+| release | PickUp | com.zackf.pickup.preview | ~100MB | Android 内部分发测试 |
+| production | 拾遗 | com.zackf.pickup | — | 正式发布 |
 
-Metro 打包时通过 `pure_funcs` 配置在生产/预览构建中去掉 `console.log/info/debug`。
+Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
 
 ## 开始开发
 
@@ -174,11 +195,9 @@ npm install
 # 启动 dev-client（支持热更新）
 npm start
 
-# Android 预览构建
-npx eas build --profile preview --platform android
-
-# iOS 预览构建（首次需交互式配置证书）
-npx eas build --profile preview --platform ios
+# 本地 Gradle 构建（无需 EAS）
+cd android && gradlew assembleDebug      # dev 包 (拾忆, com.zackf.pickup.dev)
+cd android && gradlew assembleRelease    # release 包 (PickUp, com.zackf.pickup.preview)
 
 # 运行测试
 npx jest
@@ -194,6 +213,12 @@ npx jest
 | → 右滑 | 返回上一张 | "上一张" |
 
 底部进度条圆点可直接点击跳转到对应照片。浏览页右上角按钮可一键删除当前组所有已标记照片。
+
+## 文档
+
+- [功能优化需求文档 (PRD v1.2-v1.9)](./PRD-v1.2-功能优化需求.md)
+- [需求文档 HTML 版](./docs/PRD-v1.2.html) — 杂志风格排版
+- [开发日志 HTML 版](./docs/memory.html) — 时间线式开发记录
 
 ## License
 
