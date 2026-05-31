@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
 import { StatCard } from '../src/components/settings/StatCard';
@@ -17,6 +17,7 @@ import { SettingsSection } from '../src/components/settings/SettingsSection';
 import { SettingsRow } from '../src/components/settings/SettingsRow';
 import { Toast } from '../src/components/ui/Toast';
 import { Tokens } from '../src/design-tokens';
+import { getValidRecentDeletes } from '../src/services/stats-service';
 // import { SwipeEffect, getSwipeEffect, setSwipeEffect as saveSwipeEffect } from '../src/services/preferences-service';
 
 function formatBytes(bytes: number): string {
@@ -54,9 +55,10 @@ export default function SettingsScreen() {
     isPro, subscriptionType, devProEnabled, setDevPro,
     todayGroupCount,
   } = useSubscriptionContext();
-  const { totalViewed, totalDeleted, totalFreedBytes, streakDays } = useStatsContext();
+  const { totalViewed, totalFreedBytes, streakDays } = useStatsContext();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [recentDeleteCount, setRecentDeleteCount] = useState(0);
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -111,6 +113,21 @@ export default function SettingsScreen() {
     Linking.openURL('https://pickup.app/privacy').catch(() => Alert.alert('无法打开链接', '请稍后重试'));
   };
 
+  useFocusEffect(useCallback(() => {
+    let isActive = true;
+    getValidRecentDeletes()
+      .then((records) => {
+        if (isActive) setRecentDeleteCount(records.length);
+      })
+      .catch(() => {
+        if (isActive) setRecentDeleteCount(0);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []));
+
   const isProStyle = effectivePro;
 
   return (
@@ -163,7 +180,7 @@ export default function SettingsScreen() {
         <SettingsSection title="统计">
           <View style={styles.statsGrid}>
             <StatCard label="已浏览" value={totalViewed} />
-            <StatCard label="最近删除" value={totalDeleted} onPress={() => router.push('/recent-deletes')} />
+            <StatCard label="最近删除" value={recentDeleteCount} />
           </View>
           <View style={styles.statsGrid}>
             <StatCard label="连续天数" value={streakDays} unit="天" />

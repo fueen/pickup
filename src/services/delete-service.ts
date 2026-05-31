@@ -1,12 +1,20 @@
 import * as MediaLibrary from 'expo-media-library';
 import { File, Directory, Paths } from 'expo-file-system';
 import { PhotoAsset, DeletedPhotoRecord } from '../types/photo';
-import { addRecentDeletes } from './stats-service';
+import { addRecentDeletes, removeRecentDeletes } from './stats-service';
 
 export interface DeleteResult {
   successCount: number;
   failedCount: number;
   freedBytes: number;
+  errors: string[];
+}
+
+export interface RestoreResult {
+  successCount: number;
+  failedCount: number;
+  restoredIds: string[];
+  failedIds: string[];
   errors: string[];
 }
 
@@ -74,11 +82,56 @@ export async function deletePhotos(photos: PhotoAsset[]): Promise<DeleteResult> 
   }
 
   try {
-    await MediaLibrary.deleteAssetsAsync(photos.map((p) => p.id));
+    const deleted = await MediaLibrary.deleteAssetsAsync(photos.map((p) => p.id));
+    if (deleted === false) {
+      throw new Error('delete was cancelled or rejected');
+    }
     await addRecentDeletes(records);
     return { successCount: photos.length, failedCount: 0, freedBytes: totalFreed, errors: [] };
   } catch (e) {
     const message = e instanceof Error ? e.message : 'delete failed';
     return { successCount: 0, failedCount: photos.length, freedBytes: 0, errors: [message] };
   }
+}
+
+function canRestoreRecord(record: DeletedPhotoRecord): boolean {
+  try {
+    return new File(record.uri).exists;
+  } catch {
+    return false;
+  }
+}
+
+export async function restoreDeletedPhotos(records: DeletedPhotoRecord[]): Promise<RestoreResult> {
+  const restoredIds: string[] = [];
+  const failedIds: string[] = [];
+  const errors: string[] = [];
+
+  for (const record of records) {
+    if (!canRestoreRecord(record)) {
+      failedIds.push(record.id);
+      errors.push(`missing cached file: ${record.id}`);
+      continue;
+    }
+
+    try {
+      await MediaLibrary.createAssetAsync(record.uri);
+      restoredIds.push(record.id);
+    } catch (e) {
+      failedIds.push(record.id);
+      errors.push(e instanceof Error ? e.message : `restore failed: ${record.id}`);
+    }
+  }
+
+  if (restoredIds.length > 0) {
+    await removeRecentDeletes(restoredIds);
+  }
+
+  return {
+    successCount: restoredIds.length,
+    failedCount: failedIds.length,
+    restoredIds,
+    failedIds,
+    errors,
+  };
 }

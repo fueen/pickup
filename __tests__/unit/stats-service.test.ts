@@ -1,14 +1,27 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  addRecentDeletes,
+  getRecentDeletes,
+  getValidRecentDeletes,
   loadStats,
+  removeRecentDeletes,
   saveStats,
   recordViewed,
   recordDeleted,
 } from '../../src/services/stats-service';
+import { DeletedPhotoRecord } from '../../src/types/photo';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
+}));
+
+const mockExistingUris = new Set<string>();
+
+jest.mock('expo-file-system', () => ({
+  File: jest.fn().mockImplementation((uri: string) => ({
+    exists: mockExistingUris.has(uri),
+  })),
 }));
 
 const mockGetItem = AsyncStorage.getItem as jest.Mock;
@@ -16,9 +29,23 @@ const mockSetItem = AsyncStorage.setItem as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockExistingUris.clear();
   mockGetItem.mockResolvedValue(null);
   mockSetItem.mockResolvedValue(undefined);
 });
+
+function makeDeletedRecord(id: string, uri = `file:///cache/${id}.jpg`): DeletedPhotoRecord {
+  return {
+    id,
+    uri,
+    width: 100,
+    height: 100,
+    creationTime: 1000,
+    fileSize: 1200,
+    deletedAt: 2000,
+    mediaType: 'photo',
+  };
+}
 
 describe('loadStats', () => {
   it('returns default stats when nothing stored', async () => {
@@ -119,5 +146,69 @@ describe('recordDeleted', () => {
     const stats = await recordDeleted(5, 2000000);
     expect(stats.totalDeleted).toBe(5);
     expect(stats.totalFreedBytes).toBe(2000000);
+  });
+});
+
+describe('recent delete records', () => {
+  it('adds recent delete records before older records and caps at 200', async () => {
+    const existing = Array.from({ length: 199 }, (_, i) => makeDeletedRecord(`old-${i}`));
+    const incoming = [makeDeletedRecord('new-1'), makeDeletedRecord('new-2')];
+    mockGetItem.mockResolvedValue(JSON.stringify(existing));
+
+    await addRecentDeletes(incoming);
+
+    const saved = JSON.parse(mockSetItem.mock.calls[0][1]) as DeletedPhotoRecord[];
+    expect(mockSetItem).toHaveBeenCalledWith('recentDeletes', expect.any(String));
+    expect(saved).toHaveLength(200);
+    expect(saved[0].id).toBe('new-1');
+    expect(saved[1].id).toBe('new-2');
+    expect(saved[199].id).toBe('old-197');
+  });
+
+  it('returns only records whose cached file still exists and persists the filtered list', async () => {
+    const kept = makeDeletedRecord('kept', 'file:///cache/kept.jpg');
+    const missing = makeDeletedRecord('missing', 'file:///cache/missing.jpg');
+    mockExistingUris.add(kept.uri);
+    mockGetItem.mockResolvedValue(JSON.stringify([kept, missing]));
+
+    const result = await getValidRecentDeletes();
+
+    expect(result).toEqual([kept]);
+    expect(mockSetItem).toHaveBeenCalledWith('recentDeletes', JSON.stringify([kept]));
+  });
+
+  it('keeps recently deleted records when their cached file exists', async () => {
+    const justDeleted = makeDeletedRecord('just-deleted', 'file:///cache/just-deleted.jpg');
+    mockExistingUris.add(justDeleted.uri);
+    mockGetItem.mockResolvedValue(JSON.stringify([justDeleted]));
+
+    const result = await getValidRecentDeletes();
+
+    expect(result).toEqual([justDeleted]);
+    expect(mockSetItem).not.toHaveBeenCalledWith('recentDeletes', expect.any(String));
+  });
+
+  it('does not rewrite storage when all recent delete records are still valid', async () => {
+    const kept = makeDeletedRecord('kept', 'file:///cache/kept.jpg');
+    mockExistingUris.add(kept.uri);
+    mockGetItem.mockResolvedValue(JSON.stringify([kept]));
+
+    const result = await getValidRecentDeletes();
+
+    expect(result).toEqual([kept]);
+    expect(mockSetItem).not.toHaveBeenCalledWith('recentDeletes', expect.any(String));
+  });
+
+  it('removes recent delete records by id', async () => {
+    const kept = makeDeletedRecord('kept');
+    const removed = makeDeletedRecord('removed');
+    mockGetItem.mockResolvedValue(JSON.stringify([kept, removed]));
+
+    await removeRecentDeletes(['removed']);
+    const result = await getRecentDeletes();
+
+    const saved = JSON.parse(mockSetItem.mock.calls[0][1]) as DeletedPhotoRecord[];
+    expect(saved).toEqual([kept]);
+    expect(result).toEqual([kept, removed]);
   });
 });

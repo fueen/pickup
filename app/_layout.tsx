@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
@@ -25,29 +25,50 @@ function SimpleTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const currentRoute = pathname === '/' ? 'index' : pathname.replace(/^\//, '');
+  const isRecentDeletes = currentRoute === 'recent-deletes';
+
+  if (isRecentDeletes) {
+    return null;
+  }
 
   return (
-    <View style={[tabStyles.bar, { paddingBottom: insets.bottom + 6 }]}>
-      {TABS.map((tab) => {
-        const isFocused = currentRoute === tab.name;
+    <View pointerEvents="box-none" style={[tabStyles.bar, { paddingBottom: insets.bottom + 8 }]}>
+      <View style={tabStyles.capsule}>
+        <View pointerEvents="none" style={tabStyles.materialLayer} />
+        <View pointerEvents="none" style={tabStyles.innerStroke} />
+        <View style={tabStyles.itemsLayer}>
+          {TABS.map((tab) => {
+            const isFocused = currentRoute === tab.name;
 
-        return (
-          <TouchableOpacity
-            key={tab.name}
-            onPress={() => {
-              router.navigate(`/${tab.name === 'index' ? '' : tab.name}`);
-            }}
-            style={tabStyles.item}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name={tab.icon as any}
-              size={tab.size}
-              color={isFocused ? Tokens.color.accent : Tokens.color.textMuted}
-            />
-          </TouchableOpacity>
-        );
-      })}
+            return (
+              <Pressable
+                key={tab.name}
+                onPress={() => {
+                  router.navigate(`/${tab.name === 'index' ? '' : tab.name}`);
+                }}
+                style={tabStyles.item}
+              >
+                <View style={tabStyles.iconSlot}>
+                  <MaterialCommunityIcons
+                    name={tab.icon as any}
+                    size={tab.size}
+                    color="#FFFFFF"
+                  />
+                  {isFocused && (
+                    <MaterialCommunityIcons
+                      pointerEvents="none"
+                      name={tab.icon as any}
+                      size={tab.size}
+                      color={Tokens.color.accent}
+                      style={tabStyles.activeIcon}
+                    />
+                  )}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 }
@@ -58,18 +79,60 @@ const tabStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
-    paddingTop: 8,
-    gap: 4,
+    zIndex: 50,
+  },
+  capsule: {
+    minWidth: 196,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 28,
+    backgroundColor: 'rgba(10,10,10,0.72)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.34,
+    shadowRadius: 18,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  materialLayer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 28,
+    backgroundColor: 'rgba(10,10,10,0.78)',
+  },
+  innerStroke: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 28,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.55)',
+  },
+  itemsLayer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    elevation: 2,
   },
   item: {
-    width: 52,
-    height: 48,
+    width: 58,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 3,
+    elevation: 3,
+  },
+  iconSlot: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeIcon: {
+    position: 'absolute',
   },
 });
 

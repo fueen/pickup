@@ -5,8 +5,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getRecentDeletes } from '../src/services/stats-service';
-import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
+import { getValidRecentDeletes } from '../src/services/stats-service';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
 import { DeletedPhotoRecord } from '../src/types/photo';
@@ -23,15 +22,17 @@ export default function RecentDeletesScreen() {
   const [records, setRecords] = useState<DeletedPhotoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [failedUris, setFailedUris] = useState<Set<string>>(new Set());
-  const [detailPhoto, setDetailPhoto] = useState<{
-    creationTime: number; width: number; height: number; fileSize?: number; filename?: string;
-  } | null>(null);
+
+  const loadRecords = useCallback(async () => {
+    const validRecords = await getValidRecentDeletes();
+    setRecords(validRecords);
+  }, []);
 
   useFocusEffect(useCallback(() => {
     setLoading(true);
     setFailedUris(new Set());
-    getRecentDeletes().then(setRecords).finally(() => setLoading(false));
-  }, []));
+    loadRecords().finally(() => setLoading(false));
+  }, [loadRecords]));
 
   const handleImageError = useCallback((uri: string) => {
     setFailedUris((prev) => {
@@ -45,16 +46,7 @@ export default function RecentDeletesScreen() {
   const renderItem = useCallback(({ item }: { item: DeletedPhotoRecord }) => {
     const isFailed = failedUris.has(item.uri);
     return (
-      <TouchableOpacity
-        style={styles.thumbnailWrap}
-        onPress={() => setDetailPhoto({
-          creationTime: item.creationTime,
-          width: item.width,
-          height: item.height,
-          fileSize: item.fileSize > 0 ? item.fileSize : undefined,
-        })}
-        activeOpacity={0.7}
-      >
+      <View style={styles.thumbnailWrap}>
         {isFailed ? (
           <View style={styles.placeholder}>
             <MaterialCommunityIcons name="image-off-outline" size={24} color={Tokens.color.textMuted} />
@@ -66,7 +58,7 @@ export default function RecentDeletesScreen() {
             onError={() => handleImageError(item.uri)}
           />
         )}
-      </TouchableOpacity>
+      </View>
     );
   }, [failedUris, handleImageError]);
 
@@ -100,12 +92,6 @@ export default function RecentDeletesScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      <PhotoDetailSheet
-        visible={detailPhoto !== null}
-        photo={detailPhoto}
-        onClose={() => setDetailPhoto(null)}
-      />
     </View>
   );
 }

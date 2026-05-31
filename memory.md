@@ -2,6 +2,51 @@
 
 ---
 
+## 2026-05-31 15:36 | v1.10 交互与最近删除状态记录
+
+### 当前关键结论
+
+- Codex Desktop / Windows App 当前检查结果：`26.519.11010.0`，Microsoft Store / winget 未发现可用更新；Codex CLI 稳定版为 `@openai/codex@0.135.0`，仅有 `0.136.0-alpha.1` 预发布版更高。
+- `AGENTS.md` 已调整为：使用项目已安装 Expo 版本和既有代码模式；只有任务依赖当前 Expo 行为/API 时才查 Expo 文档。
+- 已读取 `README.md` 和 `memory.md` 熟悉项目：Expo SDK 54、React Native 0.81.5、expo-router 6，PickUp 是照片清理 app。
+
+### v1.10 已落地功能
+
+- 需求文档：
+  - 已追加 v1.10 到 `PRD-v1.2-功能优化需求.md`。
+  - 已同步更新 `docs/PRD-v1.2.html`，覆盖 v1.2 到 v1.10。
+  - 计划文件：`docs/superpowers/plans/2026-05-31-v1.10-review-tab-restore-plan.md`。
+- Review 照片页：
+  - `PhotoZoomModal.tsx` 支持进入时重置缩放状态，并更新提示为查看细节。
+  - `ActionIndicator.tsx` / `SwipeableCard.tsx` 已去掉左滑时的“上一张”文字提示。
+- 最近删除服务：
+  - `delete-service.ts` 删除前会缓存缩略图到 `Paths.cache/deleted-thumbnails/`。
+  - `stats-service.ts` 维护 `recentDeletes` 记录，`getValidRecentDeletes()` 当前只校验缓存缩略图文件是否存在。
+  - 注意：不要用 `MediaLibrary.getAssetInfoAsync(originalAssetId)` 判断最近删除是否有效。刚删除后原 asset 会从普通媒体库移走，这会把刚删除的照片误判为无效，导致个人中心最近删除数量变 0。
+- 最近删除页面：
+  - `app/recent-deletes.tsx` 当前只展示缩略图列表和数量，不再支持点击选中、长按详情、还原操作栏。
+  - 用户后续又明确：个人中心里的“最近删除”卡片只展示数量，不应该跳转。当前 `app/settings.tsx` 已移除该卡片的 `onPress`。
+- 个人中心最近删除数量：
+  - `app/settings.tsx` 使用 `useFocusEffect` 调用 `getValidRecentDeletes()`，进入个人中心时刷新有效最近删除数量。
+  - 该数字不是累计删除总数 `totalDeleted`，而是当前 app 最近删除记录的有效数量。
+- 底部 tab 胶囊：
+  - `app/_layout.tsx` 当前隐藏 recent-deletes 页的 tab 胶囊。
+  - 胶囊背景改为纯 RN 半透明层，移除 `BlurView`。
+  - 图标逻辑按用户要求处理：底层图标始终 `#FFFFFF`，选中态额外叠加一枚金色 `Tokens.color.accent` 图标；无选中圆圈、无按压透明。
+
+### 测试状态
+
+- 最近一次验证：
+  - `npx.cmd tsc --noEmit` 通过。
+  - `npx.cmd jest --runInBand` 通过，8 个 suites / 47 个 tests。
+  - 测试仍有既有 `react-test-renderer is deprecated` warning，不影响通过。
+
+### 当前需注意
+
+- 如果用户再次要求“系统相册彻底删除后不要展示”，Expo MediaLibrary 当前没有可靠直接查询系统“最近删除”相册的接口；仅用原始 asset id 查询会误伤刚删除记录。
+- 当前实现的可靠边界是：app 删除时保存记录和缓存缩略图；缓存还在则计入最近删除，缓存没了则过滤。
+- 当前工作区有多处历史/本轮改动，未做 git commit。不要随意 revert 用户或历史生成的变更。
+
 ## 2026-05-21 20:10 | 项目进展-pickup
 
 ### 一句话概述

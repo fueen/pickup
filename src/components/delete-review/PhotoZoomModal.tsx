@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
@@ -25,6 +25,12 @@ interface Props {
 
 export function PhotoZoomModal({ visible, photo, onClose }: Props) {
   const [zoomScale, setZoomScale] = useState(1);
+
+  useEffect(() => {
+    if (visible) {
+      setZoomScale(1);
+    }
+  }, [photo?.id, visible]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scale = e.nativeEvent.zoomScale;
@@ -69,6 +75,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
 
         {/* Pinch-to-zoom via ScrollView */}
         <ScrollView
+          key={photo.id}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           maximumZoomScale={5}
@@ -100,7 +107,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
         {/* Hint */}
         <View style={styles.hintBar}>
           <Text style={styles.hintText}>
-            {zoomScale < 1.05 ? '双指捏合缩放 · 单击关闭' : '单击还原'}
+            {zoomScale < 1.05 ? '双指捏合缩放 · 单击关闭' : '拖动查看细节'}
           </Text>
         </View>
       </View>

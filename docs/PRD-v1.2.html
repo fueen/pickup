@@ -103,11 +103,11 @@ footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-to
 <section class="hero"><div class="hero-inner">
 <div class="hero-eyebrow">Product Requirements Document</div>
 <h1>拾遗 <em>PickUp</em><br>功能优化需求</h1>
-<p class="hero-sub">从交互打磨到空状态体验优化 — 三个版本，十三项需求</p>
+<p class="hero-sub">从交互打磨到最近删除还原 — 五个版本，十九项需求</p>
 <div class="hero-meta">
-<div><div class="lbl">版本范围</div><div class="val">v1.2 → v1.8</div></div>
-<div><div class="lbl">需求总数</div><div class="val">13 项</div></div>
-<div><div class="lbl">状态</div><div class="val">✓ 全部完成</div></div>
+<div><div class="lbl">版本范围</div><div class="val">v1.2 → v1.10</div></div>
+<div><div class="lbl">需求总数</div><div class="val">19 项</div></div>
+<div><div class="lbl">状态</div><div class="val">已完成 + 待开发</div></div>
 <div><div class="lbl">日期</div><div class="val">2026-05</div></div>
 </div></div></section>
 
@@ -117,6 +117,8 @@ footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-to
 <span class="sep"></span><a href="#v12">v1.2</a><a href="#v12-r1">01</a><a href="#v12-r2">02</a><a href="#v12-r3">03</a><a href="#v12-r4">04</a>
 <span class="sep"></span><a href="#v17">v1.7</a><a href="#v17-r1">01</a><a href="#v17-r2">02</a><a href="#v17-r3">03</a><a href="#v17-r4">04</a>
 <span class="sep"></span><a href="#v18">v1.8</a><a href="#v18-r1">01</a><a href="#v18-r2">02</a><a href="#v18-r3">03</a><a href="#v18-r4">04</a><a href="#v18-r5">05</a>
+<span class="sep"></span><a href="#v19">v1.9</a><a href="#v19-r1">01</a><a href="#v19-r2">02</a>
+<span class="sep"></span><a href="#v110">v1.10</a><a href="#v110-r1">01</a><a href="#v110-r2">02</a><a href="#v110-r3">03</a><a href="#v110-r4">04</a>
 </div></nav>
 
 <!-- ═══ MAIN ═══ -->
@@ -352,11 +354,11 @@ footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-to
 </div>
 
 <!-- ═══ v1.9 ═══ -->
-<div class="ver-block">
+<div class="ver-block" id="v19">
 <div class="ver-bar"><div class="vnum">1.9</div><div class="vmeta"><div class="vtitle">浏览页日期对齐与照片地理位置</div><div class="vdesc">日期位置微调 + 照片拍摄城市名展示。共 2 项需求。</div><div class="vbadges"><span class="vb vb-f">P1~P2</span><span class="vb vb-d">待开发</span></div></div></div>
 
 <!-- v1.9 · REQ-01 -->
-<div class="req"><div class="req-bar"><div class="req-num">01</div><div class="req-head"><h3>浏览页日期位置下移对齐按钮</h3><div class="req-tags"><span class="vb vb-d">P1</span></div></div></div>
+<div class="req" data-n="01" id="v19-r1"><div class="req-bar"><div class="req-num">01</div><div class="req-head"><h3>浏览页日期位置下移对齐按钮</h3><div class="req-tags"><span class="vb vb-d">P1</span></div></div></div>
 <div class="req-body">
 <p>浏览页顶部日期文字的 <code>top</code> 值为 54，与 topBar 容器顶部对齐。但按钮有 <code>paddingVertical: 8</code>，按钮内图标/文字起始位置在 62px 处，日期视觉上偏高 8px。将 <code>topCenter</code> 的 <code>top</code> 值从 54 改为 60，日期行布局改为 column（日期 → 地点）。</p>
 <table><thead><tr><th>改动项</th><th>之前</th><th>之后</th></tr></thead><tbody>
@@ -365,7 +367,7 @@ footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-to
 </div></div>
 
 <!-- v1.9 · REQ-02 -->
-<div class="req"><div class="req-bar"><div class="req-num">02</div><div class="req-head"><h3>照片地理位置信息展示</h3><div class="req-tags"><span class="vb vb-f">P2</span></div></div></div>
+<div class="req" data-n="02" id="v19-r2"><div class="req-bar"><div class="req-num">02</div><div class="req-head"><h3>照片地理位置信息展示</h3><div class="req-tags"><span class="vb vb-f">P2</span></div></div></div>
 <div class="req-body">
 <p>浏览照片时在日期下方显示拍摄城市名，数据来源为照片 EXIF 中的 GPS 坐标。通过 <code>getAssetInfoAsync(id)</code> 读取 <code>info.location</code>，用 Nominatim API 逆向地理编码到城市级，API 不可用时降级显示原始坐标。无 GPS 数据的照片不显示地点行。</p>
 <div class="illo-wrap"><svg width="620" height="130" viewBox="0 0 620 130" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#9DA09A"/></marker></defs>
@@ -388,22 +390,111 @@ footer{text-align:center;padding:40px;color:var(--ink3);font-size:13px;border-to
 </div></div>
 </div>
 
+<!-- ═══ v1.10 ═══ -->
+<div class="ver-block" id="v110">
+<div class="ver-bar">
+<div class="vnum">1.10</div>
+<div class="vmeta">
+<div class="vtitle">Review 缩放 · Tab 胶囊 · 最近删除还原 · 提示精简</div>
+<div class="vdesc">确认删除前缩放查看、底部导航视觉升级、最近删除多选还原、滑动提示去噪。共 4 项需求。</div>
+<div class="vbadges"><span class="vb vb-date">2026-05-31</span><span class="vb vb-count">4 项需求</span><span class="vb vb-date">待开发</span></div>
+</div></div>
+
+<!-- v1.10 · REQ-01 -->
+<div class="req" data-n="01" id="v110-r1">
+<div class="req-head"><h3>Review 页面照片支持双指捏合放大/缩小 <span class="prio p1">P1</span></h3>
+<div class="sub">在 Review 全屏预览中补强双指捏合缩放体验，支持 1x~5x 放大、缩小回弹、放大后拖动查看细节。</div></div>
+<div class="illo">
+<svg width="520" height="110" viewBox="0 0 520 110">
+<rect x="10" y="18" width="115" height="72" rx="10" fill="#FFF" stroke="#E0DED8"/><text x="67" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#111">DeleteGrid</text><text x="67" y="67" text-anchor="middle" font-size="10" fill="#555">点击/长按预览</text>
+<text x="160" y="58" font-size="22" fill="#9DA09A">→</text>
+<rect x="205" y="12" width="155" height="84" rx="14" fill="#111"/><rect x="235" y="26" width="95" height="55" rx="8" fill="#333" stroke="#BDC0BA"/><text x="282" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#FFF">PhotoZoomModal</text>
+<text x="405" y="42" font-size="12" font-weight="700" fill="#5B8F6B">双指捏合</text><text x="405" y="60" font-size="11" fill="#555">1x ~ 5x</text><text x="405" y="78" font-size="11" fill="#555">拖动查看局部</text>
+</svg><div class="illo-caption">Review 网格 → 全屏缩放预览 → 缩放/平移查看细节</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>app/review.tsx</code></td><td>管理预览状态，关闭后保持勾选状态</td></tr>
+<tr><td><code>src/components/delete-review/DeleteGrid.tsx</code></td><td>接入预览入口，避免与勾选/取消误触</td></tr>
+<tr><td><code>src/components/delete-review/PhotoZoomModal.tsx</code></td><td>补强捏合缩放、缩小回弹、放大后平移</td></tr>
+</tbody></table>
+<ul class="chk"><li>双指捏合可以平滑放大/缩小照片</li><li>缩放后可拖动查看局部</li><li>关闭预览后 Review 网格勾选状态不丢失</li></ul>
+</div>
+
+<!-- v1.10 · REQ-02 -->
+<div class="req" data-n="02" id="v110-r2">
+<div class="req-head"><h3>底部三功能 Tab 栏增加胶囊形容器包裹 <span class="prio p1">P1</span></h3>
+<div class="sub">在 <code>SimpleTabBar</code> 三个功能入口外层增加浮动胶囊容器，保持黑金风格、选中高亮和充足触控区域。</div></div>
+<div class="illo">
+<svg width="520" height="115" viewBox="0 0 520 115">
+<rect x="120" y="28" width="280" height="58" rx="29" fill="#111" stroke="#BDC0BA" opacity="0.95"/>
+<circle cx="180" cy="57" r="21" fill="#222" stroke="#FFCC00"/><text x="180" y="62" text-anchor="middle" font-size="16" fill="#FFCC00">◉</text>
+<circle cx="260" cy="57" r="21" fill="#1A1A1A"/><text x="260" y="62" text-anchor="middle" font-size="16" fill="#999">▦</text>
+<circle cx="340" cy="57" r="21" fill="#1A1A1A"/><text x="340" y="62" text-anchor="middle" font-size="16" fill="#999">◎</text>
+<text x="260" y="102" text-anchor="middle" font-size="11" fill="#555">独立 SimpleTabBar + 胶囊外框，继续规避默认 TabBar 幽灵点击问题</text>
+</svg><div class="illo-caption">底部三入口统一包裹在浮动胶囊控制条中</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>app/_layout.tsx</code></td><td>调整 SimpleTabBar 外层容器、胶囊背景、选中态、底部安全区</td></tr>
+</tbody></table>
+<ul class="chk"><li>三个 Tab 图标在胶囊内等距居中</li><li>选中态金色高亮清晰</li><li>触控区域不小于 44x44，且不恢复默认 tab bar</li></ul>
+</div>
+
+<!-- v1.10 · REQ-03 -->
+<div class="req" data-n="03" id="v110-r3">
+<div class="req-head"><h3>个人中心最近删除支持多选与还原 <span class="prio p0">P0</span></h3>
+<div class="sub">最近删除页支持选中多张照片，右上角显示打勾，底部出现"还原照片"操作区；不可还原记录不展示。</div></div>
+<div class="illo">
+<svg width="560" height="150" viewBox="0 0 560 150"><defs><marker id="a110" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#9DA09A"/></marker></defs>
+<rect x="15" y="20" width="90" height="90" rx="8" fill="#F0F1EE" stroke="#BDC0BA"/><circle cx="90" cy="35" r="13" fill="#FFCC00"/><text x="90" y="40" text-anchor="middle" font-size="14" font-weight="700" fill="#111">✓</text><text x="60" y="126" text-anchor="middle" font-size="10" fill="#555">选中缩略图</text>
+<line x1="110" y1="65" x2="155" y2="65" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a110)"/>
+<rect x="165" y="38" width="135" height="54" rx="27" fill="#111" stroke="#FFCC00"/><text x="232" y="69" text-anchor="middle" font-size="12" font-weight="700" fill="#FFCC00">还原照片</text><text x="232" y="126" text-anchor="middle" font-size="10" fill="#555">底部操作栏</text>
+<line x1="305" y1="65" x2="350" y2="65" stroke="#9DA09A" stroke-width="1.5" marker-end="url(#a110)"/>
+<rect x="360" y="28" width="155" height="74" rx="10" fill="#E8F0E8" stroke="#5B8F6B"/><text x="437" y="55" text-anchor="middle" font-size="12" font-weight="700" fill="#5B8F6B">恢复到系统相册</text><text x="437" y="76" text-anchor="middle" font-size="10" fill="#5B8F6B">成功后移除记录</text>
+</svg><div class="illo-caption">选择照片 → 底部还原 → 创建系统相册资产并清理本地记录</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>app/recent-deletes.tsx</code></td><td>选择模式、多选勾选态、底部还原操作栏、列表刷新</td></tr>
+<tr><td><code>src/services/stats-service.ts</code></td><td>读取时过滤无效记录，还原成功后批量移除记录</td></tr>
+<tr><td><code>src/services/delete-service.ts</code></td><td>提供基于缓存文件创建媒体资产的还原能力</td></tr>
+<tr><td><code>src/types/photo.ts</code></td><td>为 DeletedPhotoRecord 补充可还原状态所需字段</td></tr>
+</tbody></table>
+<blockquote>Android 系统删除可能是永久删除，最近删除页的还原能力以 App 删除前保存的缓存文件为准；缓存文件不存在时，该记录视为不可还原并从页面隐藏。</blockquote>
+<ul class="chk"><li>支持多选，选中照片右上角显示打勾</li><li>选中后底部显示"还原照片"</li><li>还原成功后系统相册可见，最近删除记录移除</li><li>系统中已彻底清理或缓存缺失的照片不展示</li></ul>
+</div>
+
+<!-- v1.10 · REQ-04 -->
+<div class="req" data-n="04" id="v110-r4">
+<div class="req-head"><h3>浏览页左滑时去掉"上一张"文字展示 <span class="prio p2">P2</span></h3>
+<div class="sub">移除滑动过程中的"上一张 →"即时提示文案，只保留卡片动画和必要的低干扰反馈，导航行为保持不变。</div></div>
+<div class="illo">
+<svg width="500" height="90" viewBox="0 0 500 90">
+<rect x="30" y="22" width="160" height="46" rx="8" fill="#FDE8E5" stroke="#D9483B"/><text x="110" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#D9483B">上一张 →</text>
+<text x="235" y="52" font-size="22" fill="#9DA09A">→</text>
+<rect x="290" y="22" width="160" height="46" rx="8" fill="#E8F0E8" stroke="#5B8F6B"/><text x="370" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#5B8F6B">仅保留动效</text>
+</svg><div class="illo-caption">即时滑动提示去噪：移除文字，不改变手势行为</div></div>
+<table><thead><tr><th>改动文件</th><th>改动内容</th></tr></thead><tbody>
+<tr><td><code>src/components/gesture/ActionIndicator.tsx</code></td><td>移除"上一张 →"文本渲染，保留手势动画</td></tr>
+</tbody></table>
+<ul class="chk"><li>滑动过程中不再出现"上一张 →"文字</li><li>左滑/右滑行为保持不变</li><li>GestureGuideOverlay 教学说明可继续保留</li></ul>
+</div>
+</div>
+
 <!-- ═══ IMPACT SUMMARY ═══ -->
 <div class="ver-block">
-<div class="ver-bar"><div class="vnum" style="font-size:48px">📊</div><div class="vmeta"><div class="vtitle">全版本影响范围汇总</div><div class="vdesc">四个版本共涉及 13 个文件，其中 3 个新增文件，10 个修改文件。</div></div></div>
-<table class="matrix"><thead><tr><th>文件</th><th>v1.2</th><th>v1.7</th><th>v1.8</th><th>v1.9</th></tr></thead><tbody>
-<tr><td><code>src/services/delete-service.ts</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td></tr>
-<tr><td><code>src/components/settings/StatCard.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
-<tr><td><code>app/settings.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
-<tr><td><code>src/types/photo.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
-<tr><td><code>src/services/stats-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
-<tr><td><code>app/recent-deletes.tsx</code> 🆕</td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td></tr>
-<tr><td><code>src/services/photo-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
-<tr><td><code>app/index.tsx</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td></tr>
-<tr><td><code>src/components/gesture/QuickDeleteButton.tsx</code></td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td></tr>
-<tr><td><code>src/components/photo-card/EmptyGate.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
-<tr><td><code>app/review.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
-<tr><td><code>src/components/delete-review/PhotoZoomModal.tsx</code> 🆕</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<div class="ver-bar"><div class="vnum" style="font-size:48px">📊</div><div class="vmeta"><div class="vtitle">全版本影响范围汇总</div><div class="vdesc">五个版本共 19 项需求，覆盖浏览、Review、最近删除、统计、Tab 导航与照片服务。</div></div></div>
+<table class="matrix"><thead><tr><th>文件</th><th>v1.2</th><th>v1.7</th><th>v1.8</th><th>v1.9</th><th>v1.10</th></tr></thead><tbody>
+<tr><td><code>src/services/delete-service.ts</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/settings/StatCard.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/settings.tsx</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>src/types/photo.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/services/stats-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>app/recent-deletes.tsx</code> 🆕</td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/services/photo-service.ts</code></td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/index.tsx</code></td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td class="hit">✓</td><td class="empty">—</td></tr>
+<tr><td><code>app/_layout.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/gesture/QuickDeleteButton.tsx</code></td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>src/components/gesture/ActionIndicator.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/photo-card/EmptyGate.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td><td class="empty">—</td></tr>
+<tr><td><code>app/review.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/delete-review/DeleteGrid.tsx</code></td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td><td class="hit">✓</td></tr>
+<tr><td><code>src/components/delete-review/PhotoZoomModal.tsx</code> 🆕</td><td class="empty">—</td><td class="empty">—</td><td class="hit">✓</td><td class="empty">—</td><td class="hit">✓</td></tr>
 </tbody></table></div>
 
 </main>

@@ -1,3 +1,3 @@
-# Expo HAS CHANGED
+# Project Instructions
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
+Use the project's installed Expo version and existing code patterns when making changes. Check the Expo docs only when the task depends on current Expo behavior or APIs.

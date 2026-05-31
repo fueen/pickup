@@ -168,7 +168,7 @@ export function SwipeableCard({
           {children}
         </Animated.View>
         <DeleteOverlay progress={markProgress} />
-        <ActionIndicator progress={markProgress} skipProgress={skipProgress} isMarkedForDelete={isMarkedForDelete} />
+        <ActionIndicator progress={markProgress} isMarkedForDelete={isMarkedForDelete} />
       </View>
     </GestureDetector>
   );

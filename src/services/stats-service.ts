@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { File } from 'expo-file-system';
 import { DailyStats } from '../types/subscription';
 import { DeletedPhotoRecord } from '../types/photo';
 import { getTodayKey } from '../utils/date-utils';
@@ -107,11 +108,41 @@ export async function getRecentDeletes(): Promise<DeletedPhotoRecord[]> {
   }
 }
 
+function recentDeleteFileExists(uri: string): boolean {
+  try {
+    return new File(uri).exists;
+  } catch {
+    return false;
+  }
+}
+
+export async function getValidRecentDeletes(): Promise<DeletedPhotoRecord[]> {
+  const records = await getRecentDeletes();
+  const validRecords = records.filter((record) => recentDeleteFileExists(record.uri));
+
+  if (validRecords.length !== records.length) {
+    await AsyncStorage.setItem(RECENT_DELETES_KEY, JSON.stringify(validRecords));
+  }
+
+  return validRecords;
+}
+
 export async function addRecentDeletes(records: DeletedPhotoRecord[]): Promise<void> {
   try {
     const existing = await getRecentDeletes();
     const merged = [...records, ...existing].slice(0, 200);
     await AsyncStorage.setItem(RECENT_DELETES_KEY, JSON.stringify(merged));
+  } catch {
+    // silently ignore storage failures
+  }
+}
+
+export async function removeRecentDeletes(ids: string[]): Promise<void> {
+  try {
+    const idsToRemove = new Set(ids);
+    const existing = await getRecentDeletes();
+    const remaining = existing.filter((record) => !idsToRemove.has(record.id));
+    await AsyncStorage.setItem(RECENT_DELETES_KEY, JSON.stringify(remaining));
   } catch {
     // silently ignore storage failures
   }
