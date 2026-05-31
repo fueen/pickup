@@ -1,50 +1,78 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
-import { SafeBlurView } from '../ui/SafeBlurView';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Tokens } from '../../design-tokens';
+import { PhotoAsset } from '../../types/photo';
+import { buildDeleteConfirmCopy, getDeletePreviewPhotos } from '../../utils/delete-confirm-utils';
 
 interface Props {
   visible: boolean;
   count: number;
   loading: boolean;
+  photos?: PhotoAsset[];
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function DeleteConfirmSheet({ visible, count, loading, onConfirm, onCancel }: Props) {
+const STACK_ROTATIONS = ['-5deg', '4deg', '0deg'];
+const STACK_OFFSETS = [
+  { top: -26, left: 26 },
+  { top: -12, left: -20 },
+  { top: 0, left: 0 },
+];
+
+export function DeleteConfirmSheet({ visible, count, loading, photos = [], onConfirm, onCancel }: Props) {
   const [render, setRender] = useState(false);
+  const insets = useSafeAreaInsets();
   const overlayOpacity = useSharedValue(0);
-  const cardScale = useSharedValue(0.85);
-  const cardOpacity = useSharedValue(0);
+  const contentTranslate = useSharedValue(24);
+  const contentOpacity = useSharedValue(0);
   const confirmedRef = useRef(false);
   const prevVisible = useRef(false);
 
+  const previewPhotos = getDeletePreviewPhotos(photos);
+  const copy = buildDeleteConfirmCopy(photos.length > 0 ? photos : []);
+  const subtitle = photos.length > 0 ? copy.subtitle : `删除你刚归档的 ${count} 张照片。`;
+  const primaryLabel = photos.length > 0 ? copy.primaryLabel : `Delete ${count} 张`;
+
   useEffect(() => {
-    // Only act on actual visible transitions
     if (visible === prevVisible.current) return;
     prevVisible.current = visible;
 
     if (visible) {
-      // Reset confirmed flag when modal opens
       confirmedRef.current = false;
       setRender(true);
-      overlayOpacity.value = withTiming(1, { duration: 300 });
-      cardScale.value = withTiming(1, { duration: 300 });
-      cardOpacity.value = withTiming(1, { duration: 300 });
+      overlayOpacity.value = withTiming(1, { duration: 260 });
+      contentTranslate.value = withTiming(0, { duration: 300 });
+      contentOpacity.value = withTiming(1, { duration: 300 });
     } else if (render) {
-      overlayOpacity.value = withTiming(0, { duration: 200 });
-      cardScale.value = withTiming(0.85, { duration: 200 });
-      cardOpacity.value = withTiming(0, { duration: 200 }, () => {
+      overlayOpacity.value = withTiming(0, { duration: 180 });
+      contentTranslate.value = withTiming(18, { duration: 180 });
+      contentOpacity.value = withTiming(0, { duration: 180 }, () => {
         runOnJS(setRender)(false);
       });
     }
   }, [visible, render]);
 
-  // Ensure modal closes when confirmed — if parent toggles visible back
-  // to true after confirm, ignore it until the close animation completes.
+  useEffect(() => {
+    if (!loading) {
+      confirmedRef.current = false;
+    }
+  }, [loading]);
+
   const handleConfirm = () => {
-    if (confirmedRef.current) return;
+    if (confirmedRef.current || loading) return;
     confirmedRef.current = true;
     onConfirm();
   };
@@ -53,9 +81,9 @@ export function DeleteConfirmSheet({ visible, count, loading, onConfirm, onCance
     opacity: overlayOpacity.value,
   }));
 
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.value,
-    transform: [{ scale: cardScale.value }],
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ translateY: contentTranslate.value }],
   }));
 
   if (!render) return null;
@@ -63,26 +91,90 @@ export function DeleteConfirmSheet({ visible, count, loading, onConfirm, onCance
   return (
     <Modal visible transparent animationType="none" onRequestClose={onCancel}>
       <Animated.View style={[styles.overlay, overlayStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
-        <Animated.View style={[styles.card, cardStyle]}>
-          <SafeBlurView style={StyleSheet.absoluteFill} tint="dark" intensity={80} fallbackBackground="rgba(28,28,30,0.85)" />
-          <View style={styles.cardContent}>
-            <Text style={styles.title}>确认删除</Text>
-            <Text style={styles.body}>
-              将删除 {count} 张照片，删除后可在系统「最近删除」中恢复（30 天内）
-            </Text>
-            <TouchableOpacity
-              style={[styles.button, styles.deleteButton]}
+        <View style={styles.warmGlow} pointerEvents="none" />
+        <View style={styles.coolGlow} pointerEvents="none" />
+
+        <Animated.View style={[styles.content, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 22 }, contentStyle]}>
+          <TouchableOpacity
+            style={[styles.backButton, { top: insets.top + 18 }]}
+            onPress={onCancel}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="取消删除"
+          >
+            <MaterialCommunityIcons name="chevron-left" size={34} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View style={styles.header}>
+            <Text style={styles.title}>{copy.title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+          </View>
+
+          <View style={styles.previewArea} pointerEvents="none">
+            {previewPhotos.length > 0 ? (
+              <View style={styles.stackFrame}>
+                {previewPhotos.map((photo, index) => {
+                  const visualIndex = previewPhotos.length - 1 - index;
+                  return (
+                    <Image
+                      key={photo.id}
+                      source={{ uri: photo.uri }}
+                      style={[
+                        styles.previewImage,
+                        STACK_OFFSETS[index],
+                        {
+                          zIndex: index + 1,
+                          transform: [{ rotate: STACK_ROTATIONS[index] }],
+                          opacity: visualIndex === 0 ? 1 : 0.9,
+                        },
+                      ]}
+                      resizeMode="cover"
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.emptyPreview}>
+                <MaterialCommunityIcons name="image-multiple-outline" size={52} color="rgba(255,255,255,0.72)" />
+              </View>
+            )}
+          </View>
+
+          <View style={styles.doubleCheckRow}>
+            <MaterialCommunityIcons name="gesture-tap" size={20} color="rgba(255,255,255,0.34)" />
+            <Text style={styles.doubleCheckText}>tap to double check</Text>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.helper}>{copy.helper}</Text>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && !loading && styles.primaryButtonPressed,
+                loading && styles.primaryButtonDisabled,
+              ]}
               onPress={handleConfirm}
               disabled={loading}
-              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`删除 ${count} 张照片`}
             >
-              <Text style={styles.deleteText}>
-                {loading ? '删除中...' : `删除 ${count} 张`}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={onCancel} activeOpacity={0.7}>
-              <Text style={styles.cancelText}>取消</Text>
+              {loading ? (
+                <ActivityIndicator color="#111111" />
+              ) : (
+                <MaterialCommunityIcons name="trash-can-outline" size={24} color={Tokens.color.danger} />
+              )}
+              <Text style={styles.primaryButtonText}>{loading ? 'Deleting...' : primaryLabel}</Text>
+            </Pressable>
+
+            <TouchableOpacity
+              style={styles.laterButton}
+              onPress={onCancel}
+              activeOpacity={0.74}
+              accessibilityRole="button"
+              accessibilityLabel="稍后删除"
+            >
+              <Text style={styles.laterText}>稍后删除</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -94,51 +186,158 @@ export function DeleteConfirmSheet({ visible, count, loading, onConfirm, onCance
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#282826',
   },
-  card: {
-    width: '78%',
-    borderRadius: 24,
-    overflow: 'hidden',
+  warmGlow: {
+    position: 'absolute',
+    left: -120,
+    right: -80,
+    top: 280,
+    height: 440,
+    borderRadius: 220,
+    backgroundColor: 'rgba(255,204,0,0.08)',
+  },
+  coolGlow: {
+    position: 'absolute',
+    left: 60,
+    right: -180,
+    bottom: 120,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(116,109,128,0.10)',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 28,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 28,
+    top: 54,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  cardContent: {
-    padding: Tokens.spacing.xl,
-    paddingVertical: Tokens.spacing.xxl,
+    borderColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
+  header: {
+    marginTop: 106,
+    alignItems: 'center',
+    marginBottom: 46,
   },
   title: {
-    ...Tokens.typography.title,
-    color: Tokens.color.textPrimary,
-    textAlign: 'center',
-    marginBottom: Tokens.spacing.m,
-  },
-  body: {
-    ...Tokens.typography.body,
-    color: Tokens.color.textSecondary,
-    textAlign: 'center',
-    marginBottom: Tokens.spacing.xl,
-    lineHeight: 22,
-  },
-  button: {
-    width: '100%',
-    paddingVertical: Tokens.spacing.l,
-    alignItems: 'center',
-    marginBottom: Tokens.spacing.s,
-  },
-  deleteButton: {
-    backgroundColor: Tokens.color.danger,
-    borderRadius: Tokens.radius.button,
-  },
-  deleteText: {
-    ...Tokens.typography.title,
     color: '#FFFFFF',
+    fontSize: 32,
+    lineHeight: 39,
+    fontWeight: '900',
+    textAlign: 'center',
   },
-  cancelText: {
-    ...Tokens.typography.body,
-    color: Tokens.color.textSecondary,
+  subtitle: {
+    marginTop: 12,
+    color: 'rgba(255,255,255,0.56)',
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  previewArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 214,
+    marginBottom: 22,
+  },
+  stackFrame: {
+    width: 202,
+    height: 202,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewImage: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 24,
+    backgroundColor: Tokens.color.surface,
+    shadowColor: '#000',
+    shadowOpacity: 0.38,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 16 },
+  },
+  emptyPreview: {
+    width: 190,
+    height: 190,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doubleCheckRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  doubleCheckText: {
+    color: 'rgba(255,255,255,0.32)',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  footer: {
+    marginTop: 'auto',
+    paddingTop: 20,
+  },
+  helper: {
+    marginBottom: 22,
+    color: 'rgba(255,255,255,0.40)',
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  primaryButton: {
+    alignSelf: 'center',
+    width: '88%',
+    minHeight: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  primaryButtonPressed: {
+    opacity: 0.86,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.68,
+  },
+  primaryButtonText: {
+    color: '#090909',
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '900',
+  },
+  laterButton: {
+    alignSelf: 'center',
+    minHeight: 48,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  laterText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '900',
   },
 });

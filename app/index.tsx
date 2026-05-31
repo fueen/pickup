@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -106,6 +106,10 @@ export default function BrowseScreen() {
 
   const currentPhoto = currentGroup[groupIndex];
   groupLenRef.current = currentGroup.length;
+  const photosPendingDelete = useMemo(
+    () => currentGroup.filter((p) => markedForDelete.has(p.id)),
+    [currentGroup, markedForDelete],
+  );
 
   // Reset load state when album changes
   useEffect(() => {
@@ -306,7 +310,7 @@ export default function BrowseScreen() {
 
         <QuickDeleteButton
           count={markedForDelete.size}
-          onPress={Platform.OS === 'android' ? handleQuickDelete : () => setShowDeleteConfirm(true)}
+          onPress={() => setShowDeleteConfirm(true)}
           loading={quickDeleting}
         />
       </View>
@@ -356,18 +360,17 @@ export default function BrowseScreen() {
         <PhotoCard photo={currentPhoto} hideHeader />
       </SwipeableCard>
 
-      {Platform.OS !== 'android' && (
-        <DeleteConfirmSheet
-          visible={showDeleteConfirm}
-          count={markedForDelete.size}
-          loading={quickDeleting}
-          onConfirm={() => {
-            setShowDeleteConfirm(false);
-            handleQuickDelete();
-          }}
-          onCancel={() => setShowDeleteConfirm(false)}
-        />
-      )}
+      <DeleteConfirmSheet
+        visible={showDeleteConfirm}
+        count={markedForDelete.size}
+        photos={photosPendingDelete}
+        loading={quickDeleting}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          handleQuickDelete();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
           {/* Info button — bottom right */}
           <View style={styles.infoBtnWrap}>

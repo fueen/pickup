@@ -1,18 +1,14 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
-import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
 import { EmptyReviewPlaceholder } from '../src/components/delete-review/EmptyReviewPlaceholder';
 import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
 import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
-import { PhotoZoomModal } from '../src/components/delete-review/PhotoZoomModal';
 import { deletePhotos } from '../src/services/delete-service';
 import { Tokens } from '../src/design-tokens';
 
@@ -24,36 +20,26 @@ export default function ReviewScreen() {
   const { recordDeleted } = useStatsContext();
 
   const [deleting, setDeleting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(markedForDelete));
   const [limitModalVisible, setLimitModalVisible] = useState(false);
-  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = useState(markedForDelete.size > 0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationCount, setCelebrationCount] = useState(0);
-  const [previewPhoto, setPreviewPhoto] = useState<typeof photosInGroup[number] | null>(null);
   const deletingRef = useRef(false);
-  const insets = useSafeAreaInsets();
-
-  // Sync from markedForDelete; guard against cleared set during delete to avoid flicker
-  useEffect(() => {
-    if (markedForDelete.size > 0) {
-      setSelectedIds(new Set(markedForDelete));
-    }
-  }, [markedForDelete]);
 
   const photosInGroup = currentGroup.filter((p) => markedForDelete.has(p.id));
   const selectedPhotos = photosInGroup.filter((p) => selectedIds.has(p.id));
-  const hasSelection = selectedIds.size > 0;
 
-  const handleTogglePhoto = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }, []);
+  useEffect(() => {
+    if (markedForDelete.size > 0) {
+      setSelectedIds(new Set(markedForDelete));
+      setShowDeleteSheet(true);
+    }
+  }, [markedForDelete]);
 
   const handleDiscardAndNext = useCallback(() => {
     if (!canBrowseNextGroup) {
+      setShowDeleteSheet(false);
       setLimitModalVisible(true);
       return;
     }
@@ -69,6 +55,7 @@ export default function ReviewScreen() {
     if (selectedPhotos.length === 0 || deletingRef.current) return;
     deletingRef.current = true;
     setDeleting(true);
+
     try {
       const result = await deletePhotos(selectedPhotos);
       if (result.successCount > 0) {
@@ -78,58 +65,23 @@ export default function ReviewScreen() {
         dispatch({ type: 'RESET_SESSION' });
         setCelebrationCount(result.successCount);
         setShowCelebration(true);
-        return; // celebration onDone handles navigation
+        return;
       }
+
+      // User may reject the system delete prompt. Keep this page open so they can retry or cancel.
+      setShowDeleteSheet(true);
     } finally {
       setDeleting(false);
-      setShowDeleteSheet(false);
       deletingRef.current = false;
     }
-    handleDiscardAndNext();
-  }, [selectedPhotos, canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router, recordDeleted]);
+  }, [selectedPhotos, clearMarkedPhotos, setMarkedForDelete, dispatch, recordDeleted]);
 
   return (
     <View style={styles.container}>
-      <View style={[styles.backBtn, { top: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.replace('/')} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
       {photosInGroup.length === 0 ? (
         <EmptyReviewPlaceholder />
       ) : (
-        <>
-          <Text style={styles.heading}>确认删除 · {selectedPhotos.length} 张</Text>
-          <Text style={styles.hint}>点击照片可取消/重新勾选</Text>
-          <ScrollView style={styles.gridScroll} showsVerticalScrollIndicator={false}>
-            <DeleteGrid
-              photos={photosInGroup}
-              onTap={handleTogglePhoto}
-              selectedIds={selectedIds}
-              onPhotoPreview={setPreviewPhoto}
-            />
-          </ScrollView>
-
-
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.discardButton} onPress={handleDiscardAndNext} disabled={deleting}>
-              <Text style={styles.discardText}>放弃，再来一组</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.deleteButton,
-                !hasSelection && styles.deleteButtonDisabled,
-                deleting && { opacity: 0.6 },
-              ]}
-              onPress={Platform.OS === 'android' ? handleConfirmDelete : () => setShowDeleteSheet(true)}
-              disabled={!hasSelection || deleting}
-            >
-              <Text style={[styles.deleteText, !hasSelection && styles.deleteTextDisabled]}>
-                {deleting ? '删除中...' : `删除 ${selectedPhotos.length} 张`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </>
+        <View style={styles.confirmBackdrop} />
       )}
 
       <LimitReachedModal
@@ -141,8 +93,6 @@ export default function ReviewScreen() {
         visible={showCelebration}
         count={celebrationCount}
         onDone={() => {
-          // Navigate FIRST so the new page replaces review before we unmount celebration.
-          // This prevents a flash of EmptyReviewPlaceholder between celebration dismissal and navigation.
           if (!canBrowseNextGroup) {
             setShowCelebration(false);
             setLimitModalVisible(true);
@@ -151,51 +101,32 @@ export default function ReviewScreen() {
           incrementGroupCount();
           loadNextGroup();
           router.replace('/');
-          // Delay to let navigation commit before hiding overlay
           setTimeout(() => setShowCelebration(false), 80);
         }}
       />
 
-      {/* When celebration is active, suppress the empty placeholder to avoid flash */}
       {showCelebration && photosInGroup.length === 0 && (
         <View style={styles.celebrationBackdrop} pointerEvents="none" />
       )}
 
-      {Platform.OS !== 'android' && (
-        <DeleteConfirmSheet
-          visible={showDeleteSheet}
-          count={selectedPhotos.length}
-          loading={deleting}
-          onConfirm={() => {
-            setShowDeleteSheet(false);
-            handleConfirmDelete();
-          }}
-          onCancel={() => setShowDeleteSheet(false)}
-        />
-      )}
-
-      <PhotoZoomModal
-        visible={previewPhoto !== null}
-        photo={previewPhoto}
-        onClose={() => setPreviewPhoto(null)}
+      <DeleteConfirmSheet
+        visible={photosInGroup.length > 0 && showDeleteSheet}
+        count={selectedPhotos.length}
+        photos={selectedPhotos}
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleDiscardAndNext}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Tokens.color.background, paddingTop: 60 },
-  backBtn: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', zIndex: 20 },
-  heading: { ...Tokens.typography.title, color: Tokens.color.textPrimary, textAlign: 'center', marginBottom: Tokens.spacing.s },
-  hint: { ...Tokens.typography.caption, color: Tokens.color.textMuted, textAlign: 'center', marginBottom: Tokens.spacing.xl },
-  gridScroll: { maxHeight: 580 },
-  footer: { flexDirection: 'row', padding: Tokens.spacing.xl, gap: Tokens.spacing.m, position: 'absolute', bottom: 60, left: 0, right: 0 },
-  discardButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: Tokens.color.surface, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  discardText: { fontSize: 16, fontWeight: '700', color: Tokens.color.textSecondary, letterSpacing: 1 },
-  deleteButton: { flex: 1, paddingVertical: 15, alignItems: 'center', backgroundColor: '#FFCC00', borderRadius: 30 },
-  deleteButtonDisabled: { backgroundColor: '#3A3A3C' },
-  deleteText: { fontSize: 16, fontWeight: '700', color: '#000000', letterSpacing: 1 },
-  deleteTextDisabled: { color: '#8E8E93' },
+  container: { flex: 1, backgroundColor: Tokens.color.background },
+  confirmBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Tokens.color.background,
+  },
   celebrationBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Tokens.color.background,

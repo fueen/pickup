@@ -2,6 +2,50 @@
 
 ---
 
+## 2026-05-31 22:xx | 项目进展-pickup
+
+### 一句话概述
+
+v1.3 趣味化功能与删除确认体验已完成：新增每周清理回顾、清理成就、自定义全屏删除确认页，并将回顾/成就移入个人中心“更多功能”区域。
+
+### 当前进度 / 关键结论
+
+- **删除确认体验**：`DeleteConfirmSheet` 已从普通弹窗改为全屏沉浸式确认页，右上角删除按钮和一组照片看完后的 review 页面都会先展示自定义确认页；点击 Delete 后才调用系统删除授权框。
+- **系统删除弹框边界**：Android/iOS 删除系统相册原图时仍会触发系统授权弹框，样式不能自定义；当前方案是先用 App 自定义页建立预期，再进入系统授权。
+- **待删除 review 页面**：旧的网格确认页已移除，进入 `/review` 后直接展示全屏确认页；“稍后删除”走放弃当前组/下一组逻辑，系统授权拒绝时保留页面可重试。
+- **删除确认 UI 迭代**：根据反馈去掉顶部“拾忆”胶囊，修复副标题与堆叠照片重叠，缩小 Delete 与“稍后删除”按钮，让界面更精致。
+- **每周清理回顾**：新增 `weekly-review-utils.ts` 与 `WeeklyReviewCard`，展示本周浏览、本周删除、连续天数和 7 日清理柱状概览。
+- **清理成就**：新增 `achievement-utils.ts` 与 `AchievementStrip`，包含首次清理、删除入门、空间管理师、连续 3 天、相册守护者等徽章。
+- **个人中心布局**：每周清理回顾和清理成就已从独立统计区移动到“更多功能”区域，位于“月份分析”入口卡片下方，形成“月份分析 -> 每周清理回顾 -> 清理成就”的信息层级。
+- **统计卡颜色**：个人中心统计卡支持 `valueColor` / `tintColor`，最近删除、连续天数、释放空间分别使用醒目的红/绿/黄。
+- **需求文档**：新增 `PRD-v1.3-趣味化与确认删除体验需求.md` 和 superpower 执行计划 `docs/superpowers/plans/2026-05-31-v1.3-fun-and-delete-confirm-plan.md`。
+
+### 验证
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过，当前 11 个 test suites / 55 个 tests 全部通过。
+- 测试中仍有项目既有的 `react-test-renderer is deprecated` warning，不是本次改动引入。
+
+### 关键文件
+
+| 新增 | 修改 |
+|------|------|
+| `src/utils/weekly-review-utils.ts` | `app/settings.tsx` |
+| `src/utils/achievement-utils.ts` | `app/index.tsx` |
+| `src/utils/delete-confirm-utils.ts` | `app/review.tsx` |
+| `src/components/settings/WeeklyReviewCard.tsx` | `src/components/delete-review/DeleteConfirmSheet.tsx` |
+| `src/components/settings/AchievementStrip.tsx` | `src/components/settings/StatCard.tsx` |
+| `__tests__/unit/weekly-review-utils.test.ts` | |
+| `__tests__/unit/achievement-utils.test.ts` | |
+| `__tests__/unit/delete-confirm-utils.test.ts` | |
+
+### 下一步
+
+- 本地 release APK 打包后安装到真机，重点检查：删除确认页在不同屏幕高度下是否不重叠、系统删除授权拒绝/允许后的状态、更多功能区横向成就列表滚动体验。
+- 如后续准备上架 iOS，需要在真机确认 PhotoKit 删除授权弹框的实际链路文案。
+
+---
+
 ## 2026-05-31 15:36 | v1.10 交互与最近删除状态记录
 
 ### 当前关键结论

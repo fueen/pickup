@@ -9,10 +9,13 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { useStatsContext } from '../src/contexts/StatsContext';
 import { StatCard } from '../src/components/settings/StatCard';
+import { WeeklyReviewCard } from '../src/components/settings/WeeklyReviewCard';
+import { AchievementStrip } from '../src/components/settings/AchievementStrip';
 import { SettingsSection } from '../src/components/settings/SettingsSection';
 import { SettingsRow } from '../src/components/settings/SettingsRow';
 import { Toast } from '../src/components/ui/Toast';
@@ -55,7 +58,7 @@ export default function SettingsScreen() {
     isPro, subscriptionType, devProEnabled, setDevPro,
     todayGroupCount,
   } = useSubscriptionContext();
-  const { totalViewed, totalFreedBytes, streakDays } = useStatsContext();
+  const { totalViewed, totalDeleted, totalFreedBytes, streakDays, weeklyHistory } = useStatsContext();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [recentDeleteCount, setRecentDeleteCount] = useState(0);
@@ -179,12 +182,63 @@ export default function SettingsScreen() {
         {/* Statistics */}
         <SettingsSection title="统计">
           <View style={styles.statsGrid}>
-            <StatCard label="已浏览" value={totalViewed} />
-            <StatCard label="最近删除" value={recentDeleteCount} />
+            <StatCard label="已浏览" value={totalViewed} valueColor={Tokens.color.textPrimary} />
+            <StatCard
+              label="最近删除"
+              value={recentDeleteCount}
+              valueColor={Tokens.color.danger}
+              tintColor={Tokens.color.danger}
+            />
           </View>
           <View style={styles.statsGrid}>
-            <StatCard label="连续天数" value={streakDays} unit="天" />
-            <StatCard label="释放空间" value={formatBytes(totalFreedBytes)} />
+            <StatCard
+              label="连续天数"
+              value={streakDays}
+              unit="天"
+              valueColor={Tokens.color.safe}
+              tintColor={Tokens.color.safe}
+            />
+            <StatCard
+              label="释放空间"
+              value={formatBytes(totalFreedBytes)}
+              valueColor={Tokens.color.accent}
+              tintColor={Tokens.color.accent}
+            />
+          </View>
+        </SettingsSection>
+
+        {/* More features */}
+        <SettingsSection title="更多功能">
+          <View style={styles.moreContent}>
+            <TouchableOpacity
+              style={styles.monthFeature}
+              onPress={() => router.push('/hub')}
+              activeOpacity={0.74}
+            >
+              <View style={styles.monthIconWrap}>
+                <MaterialCommunityIcons name="chart-box-outline" size={24} color={Tokens.color.accent} />
+              </View>
+              <View style={styles.monthCopy}>
+                <Text style={styles.monthTitle}>月份分析</Text>
+                <Text style={styles.monthSubtitle}>按月份回看照片数量变化</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={Tokens.color.textMuted} />
+            </TouchableOpacity>
+
+            <View style={styles.featureDivider} />
+
+            <WeeklyReviewCard weeklyHistory={weeklyHistory} streakDays={streakDays} embedded />
+
+            <View style={styles.featureDividerSoft} />
+
+            <AchievementStrip
+              totalViewed={totalViewed}
+              totalDeleted={totalDeleted}
+              totalFreedBytes={totalFreedBytes}
+              streakDays={streakDays}
+              recentDeleteCount={recentDeleteCount}
+              embedded
+            />
           </View>
         </SettingsSection>
 
@@ -265,6 +319,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Tokens.spacing.m,
     padding: Tokens.spacing.l,
+  },
+  moreContent: {
+    padding: Tokens.spacing.l,
+    gap: Tokens.spacing.l,
+  },
+  monthFeature: {
+    minHeight: 76,
+    borderRadius: 18,
+    padding: Tokens.spacing.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Tokens.spacing.m,
+    backgroundColor: 'rgba(255,204,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,204,0,0.16)',
+  },
+  monthIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,204,0,0.14)',
+  },
+  monthCopy: {
+    flex: 1,
+  },
+  monthTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: '800',
+    color: Tokens.color.textPrimary,
+  },
+  monthSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Tokens.color.textSecondary,
+  },
+  featureDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
+  featureDividerSoft: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   proBadge: {
     fontSize: 11,
