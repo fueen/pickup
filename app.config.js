@@ -9,7 +9,7 @@ export default {
   expo: {
     name: APP_NAME,
     slug: 'pickup',
-    version: '1.0.2',
+    version: '1.3.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',

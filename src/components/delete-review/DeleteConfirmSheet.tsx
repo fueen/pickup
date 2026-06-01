@@ -23,6 +23,7 @@ interface Props {
   photos?: PhotoAsset[];
   onConfirm: () => void;
   onCancel: () => void;
+  onOpenList?: () => void;
 }
 
 const STACK_ROTATIONS = ['-5deg', '4deg', '0deg'];
@@ -32,7 +33,7 @@ const STACK_OFFSETS = [
   { top: 0, left: 0 },
 ];
 
-export function DeleteConfirmSheet({ visible, count, loading, photos = [], onConfirm, onCancel }: Props) {
+export function DeleteConfirmSheet({ visible, count, loading, photos = [], onConfirm, onCancel, onOpenList }: Props) {
   const [render, setRender] = useState(false);
   const insets = useSafeAreaInsets();
   const overlayOpacity = useSharedValue(0);
@@ -91,12 +92,14 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
   return (
     <Modal visible transparent animationType="none" onRequestClose={onCancel}>
       <Animated.View style={[styles.overlay, overlayStyle]}>
+        <View style={styles.backdropPanel} pointerEvents="none" />
         <View style={styles.warmGlow} pointerEvents="none" />
         <View style={styles.coolGlow} pointerEvents="none" />
+        <View style={styles.lineGlowTop} pointerEvents="none" />
 
-        <Animated.View style={[styles.content, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 22 }, contentStyle]}>
+        <Animated.View style={[styles.content, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 22 }, contentStyle]}>
           <TouchableOpacity
-            style={[styles.backButton, { top: insets.top + 18 }]}
+            style={[styles.backButton, { top: Math.max(0, insets.top - 16) }]}
             onPress={onCancel}
             activeOpacity={0.75}
             accessibilityRole="button"
@@ -110,7 +113,14 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
             <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
 
-          <View style={styles.previewArea} pointerEvents="none">
+          <TouchableOpacity
+            style={styles.previewArea}
+            activeOpacity={onOpenList ? 0.86 : 1}
+            onPress={onOpenList}
+            disabled={!onOpenList || previewPhotos.length === 0}
+            accessibilityRole="button"
+            accessibilityLabel="查看待删除照片列表"
+          >
             {previewPhotos.length > 0 ? (
               <View style={styles.stackFrame}>
                 {previewPhotos.map((photo, index) => {
@@ -138,11 +148,16 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
                 <MaterialCommunityIcons name="image-multiple-outline" size={52} color="rgba(255,255,255,0.72)" />
               </View>
             )}
-          </View>
+            {onOpenList && photos.length > 1 && (
+              <View style={styles.openListBadge}>
+                <Text style={styles.openListText}>查看全部 {photos.length} 张</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.doubleCheckRow}>
             <MaterialCommunityIcons name="gesture-tap" size={20} color="rgba(255,255,255,0.34)" />
-            <Text style={styles.doubleCheckText}>tap to double check</Text>
+            <Text style={styles.doubleCheckText}>点击照片再次确认</Text>
           </View>
 
           <View style={styles.footer}>
@@ -186,25 +201,44 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: '#282826',
+    backgroundColor: '#10100F',
+  },
+  backdropPanel: {
+    position: 'absolute',
+    left: 22,
+    right: 22,
+    top: 92,
+    bottom: 108,
+    borderRadius: 42,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
   },
   warmGlow: {
     position: 'absolute',
-    left: -120,
-    right: -80,
-    top: 280,
-    height: 440,
+    left: -110,
+    right: 40,
+    top: 110,
+    height: 360,
     borderRadius: 220,
-    backgroundColor: 'rgba(255,204,0,0.08)',
+    backgroundColor: 'rgba(255,204,0,0.09)',
   },
   coolGlow: {
     position: 'absolute',
-    left: 60,
-    right: -180,
-    bottom: 120,
-    height: 360,
+    left: 90,
+    right: -160,
+    bottom: 150,
+    height: 340,
     borderRadius: 180,
-    backgroundColor: 'rgba(116,109,128,0.10)',
+    backgroundColor: 'rgba(80,92,112,0.16)',
+  },
+  lineGlowTop: {
+    position: 'absolute',
+    left: 36,
+    right: 36,
+    top: 88,
+    height: 1,
+    backgroundColor: 'rgba(255,204,0,0.22)',
   },
   content: {
     flex: 1,
@@ -225,9 +259,9 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   header: {
-    marginTop: 106,
+    marginTop: 78,
     alignItems: 'center',
-    marginBottom: 46,
+    marginBottom: 30,
   },
   title: {
     color: '#FFFFFF',
@@ -247,8 +281,8 @@ const styles = StyleSheet.create({
   previewArea: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 214,
-    marginBottom: 22,
+    height: 204,
+    marginBottom: 16,
   },
   stackFrame: {
     width: 202,
@@ -277,7 +311,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  openListBadge: {
+    position: 'absolute',
+    bottom: 4,
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  openListText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   doubleCheckRow: {
+    marginTop: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

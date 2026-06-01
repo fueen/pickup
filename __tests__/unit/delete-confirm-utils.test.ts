@@ -1,7 +1,9 @@
 import {
   buildDeleteConfirmCopy,
   formatDeleteBytes,
+  getBrowseAdvanceAction,
   getDeletePreviewPhotos,
+  getPostDeleteAction,
 } from '../../src/utils/delete-confirm-utils';
 import { PhotoAsset } from '../../src/types/photo';
 
@@ -32,9 +34,38 @@ describe('delete confirm utils', () => {
     expect(copy.primaryLabel).toBe('Delete 30 B');
   });
 
+  it('estimates delete size when selected photos report zero bytes', () => {
+    const copy = buildDeleteConfirmCopy([makePhoto('zero', 0)]);
+
+    expect(copy.primaryLabel).toBe('Delete 938 KB');
+  });
+
   it('keeps only the first three preview photos for the stack', () => {
     const photos = ['a', 'b', 'c', 'd'].map((id) => makePhoto(id, 1));
 
     expect(getDeletePreviewPhotos(photos).map((photo) => photo.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('opens the same delete confirm flow after the group is fully swiped with pending deletes', () => {
+    expect(getBrowseAdvanceAction({
+      groupIndex: 0,
+      groupLength: 3,
+      markedForDeleteCount: 0,
+      justMarkedDelete: true,
+      canBrowseNextGroup: true,
+    })).toBe('next-photo');
+
+    expect(getBrowseAdvanceAction({
+      groupIndex: 2,
+      groupLength: 3,
+      markedForDeleteCount: 1,
+      justMarkedDelete: false,
+      canBrowseNextGroup: true,
+    })).toBe('open-confirm');
+  });
+
+  it('uses different post-delete actions for completed groups and mid-group deletes', () => {
+    expect(getPostDeleteAction('group-complete')).toBe('load-next-group');
+    expect(getPostDeleteAction('manual')).toBe('refill-current-group');
   });
 });

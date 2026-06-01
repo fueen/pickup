@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
@@ -26,9 +26,18 @@ import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
 import { deletePhotos } from '../src/services/delete-service';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
 import { Tokens } from '../src/design-tokens';
+import {
+  DeleteConfirmSource,
+  getBrowseAdvanceAction,
+  getPostDeleteAction,
+} from '../src/utils/delete-confirm-utils';
 
 export default function BrowseScreen() {
   const router = useRouter();
+  const {
+    confirmSource: confirmSourceParam,
+    showDeleteConfirm: showDeleteConfirmParam,
+  } = useLocalSearchParams<{ confirmSource?: DeleteConfirmSource; showDeleteConfirm?: string }>();
   const { selectedAlbum } = usePhotoContext();
   const albumIdStr = selectedAlbum?.id ?? '__all__';
 
@@ -47,6 +56,7 @@ export default function BrowseScreen() {
 
   const [quickDeleting, setQuickDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmSource, setDeleteConfirmSource] = useState<DeleteConfirmSource>('manual');
   const [detailPhoto, setDetailPhoto] = useState<{
     creationTime: number; width: number; height: number; fileSize?: number; filename?: string;
   } | null>(null);
@@ -58,6 +68,7 @@ export default function BrowseScreen() {
   const [guideVisible, setGuideVisible] = useState(false);
   const [photoLocation, setPhotoLocation] = useState<string | null>(null);
   const lastViewedGroupRef = useRef<string>('');
+  const lastConsumedConfirmParamRef = useRef<string | null>(null);
   const triedLoadRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const groupLenRef = useRef(currentGroup.length);
@@ -110,6 +121,19 @@ export default function BrowseScreen() {
     () => currentGroup.filter((p) => markedForDelete.has(p.id)),
     [currentGroup, markedForDelete],
   );
+
+  useEffect(() => {
+    const confirmToken = Array.isArray(showDeleteConfirmParam) ? showDeleteConfirmParam[0] : showDeleteConfirmParam;
+    if (
+      confirmToken
+      && confirmToken !== lastConsumedConfirmParamRef.current
+      && markedForDelete.size > 0
+    ) {
+      lastConsumedConfirmParamRef.current = confirmToken;
+      setDeleteConfirmSource(confirmSourceParam === 'group-complete' ? 'group-complete' : 'manual');
+      setShowDeleteConfirm(true);
+    }
+  }, [confirmSourceParam, markedForDelete.size, showDeleteConfirmParam]);
 
   // Reset load state when album changes
   useEffect(() => {
@@ -199,20 +223,32 @@ export default function BrowseScreen() {
   }, [currentPhoto?.id]);
 
   const advanceToNext = useCallback((justMarkedDelete = false) => {
-    if (groupIndex + 1 >= currentGroup.length) {
-      if (markedForDelete.size === 0 && !justMarkedDelete) {
-        if (!canBrowseNextGroup) {
-          setLimitModalVisible(true);
-          return;
-        }
-        incrementGroupCount();
-        loadNextGroup();
-      } else {
-        router.push('/review');
-      }
-    } else {
+    const action = getBrowseAdvanceAction({
+      groupIndex,
+      groupLength: currentGroup.length,
+      markedForDeleteCount: markedForDelete.size,
+      justMarkedDelete,
+      canBrowseNextGroup,
+    });
+
+    if (action === 'next-photo') {
       setGroupIndex(groupIndex + 1);
+      return;
     }
+
+    if (action === 'open-confirm') {
+      setDeleteConfirmSource('group-complete');
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    if (action === 'show-limit') {
+      setLimitModalVisible(true);
+      return;
+    }
+
+    incrementGroupCount();
+    loadNextGroup();
   }, [groupIndex, currentGroup.length, markedForDelete.size, setGroupIndex, incrementGroupCount, loadNextGroup, router, canBrowseNextGroup]);
 
   const handleMarkDelete = useCallback(() => {
@@ -266,13 +302,21 @@ export default function BrowseScreen() {
       const result = await deletePhotos(photosToDelete);
       if (result.successCount > 0) {
         recordDeleted(result.successCount, result.freedBytes).catch(() => {});
+        const postDeleteAction = getPostDeleteAction(deleteConfirmSource);
         setMarkedForDelete(new Set());
         clearMarkedPhotos();
-        refillGroup(deleteCount);
-        setGroupIndex((prev) => {
-          const maxIdx = Math.max(0, currentGroup.length - deleteCount - 1);
-          return Math.max(0, Math.min(prev, maxIdx));
-        });
+
+        if (postDeleteAction === 'load-next-group') {
+          incrementGroupCount();
+          loadNextGroup();
+        } else {
+          refillGroup(deleteCount);
+          setGroupIndex((prev) => {
+            const maxIdx = Math.max(0, currentGroup.length - deleteCount - 1);
+            return Math.max(0, Math.min(prev, maxIdx));
+          });
+        }
+
         setCelebrationCount(result.successCount);
         setShowCelebration(true);
       }
@@ -281,7 +325,19 @@ export default function BrowseScreen() {
       setShowDeleteConfirm(false);
       deletingRef.current = false;
     }
-  }, [markedForDelete, currentGroup, quickDeleting, clearMarkedPhotos, setMarkedForDelete, refillGroup, setGroupIndex, recordDeleted]);
+  }, [
+    markedForDelete,
+    currentGroup,
+    quickDeleting,
+    deleteConfirmSource,
+    clearMarkedPhotos,
+    setMarkedForDelete,
+    refillGroup,
+    setGroupIndex,
+    recordDeleted,
+    incrementGroupCount,
+    loadNextGroup,
+  ]);
 
   if (error) {
     return (
@@ -310,7 +366,10 @@ export default function BrowseScreen() {
 
         <QuickDeleteButton
           count={markedForDelete.size}
-          onPress={() => setShowDeleteConfirm(true)}
+          onPress={() => {
+            setDeleteConfirmSource('manual');
+            setShowDeleteConfirm(true);
+          }}
           loading={quickDeleting}
         />
       </View>
@@ -370,6 +429,13 @@ export default function BrowseScreen() {
           handleQuickDelete();
         }}
         onCancel={() => setShowDeleteConfirm(false)}
+        onOpenList={() => {
+          setShowDeleteConfirm(false);
+          router.push({
+            pathname: '/review',
+            params: { confirmSource: deleteConfirmSource, returnToConfirm: '1' },
+          });
+        }}
       />
 
           {/* Info button — bottom right */}

@@ -4,12 +4,15 @@
 
 像刷短视频一样快速整理相册：上滑删除、下滑保留，每 10 张一组批量确认，安全可控。
 
+当前版本：**v1.3.0**
+
 ## 功能
 
 ### 核心流程
 - **滑动整理**：上滑标记删除、下滑标记保留、左滑跳过、右滑上一张，配合触觉反馈 + 回弹动画
-- **批量确认**：每组 10 张，确认页支持点击勾选/取消 + **长按照片全屏预览** + **两指捏合缩放**（1x~5x）
-- **快速删除**：浏览页右上角图标 + 计数 badge 一键删除，无需进入确认页
+- **批量确认**：每组 10 张滑完后进入删除确认页，确认删除后自动切换下一组
+- **中途快删**：浏览页右上角图标 + 计数 badge 可在一组中途删除，删除后只补齐当前组缺口并继续浏览
+- **待删除列表**：确认页照片堆叠可进入待删除列表，支持 3 列缩略图、多选还原、长按照片全屏预览
 - **智能分组**：Fisher-Yates 随机乱序 + 已浏览去重，照片看完一圈后从最早浏览的回填
 - **排序模式**：支持随机 / 面积↓ / 最新↑ / 最早↑ 四种排序，偏好持久化
 
@@ -26,6 +29,7 @@
 ### 最近删除
 - 删除照片后自动记录缩略图到本地缓存，可在「最近删除」页回溯查看
 - 3 列网格展示，按删除时间倒序，支持点击查看详情
+- 删除前会缓存缩略图，避免系统删除后最近删除记录变成黑图
 
 ### 庆祝动画
 - 完成一组删除后弹出庆祝动画：黄色 ✓ 弹入 + 彩色粒子爆散 + "已清理 X 张"
@@ -42,6 +46,7 @@
 ### 统计面板
 - 累计浏览 / 累计删除 / 连续使用天数 / 释放空间（连续累计，重启不归零）
 - 日使用量跨天自动重置
+- 更多功能 Tab 展示月份分析、每周清理回顾、成就系统和扩展入口
 
 ## 技术栈
 
@@ -64,12 +69,12 @@
 app/                          # 页面 (expo-router file-based routing)
   _layout.tsx                 # 根布局：Provider 嵌套 + Tab 导航 + Splash + ErrorBoundary
   index.tsx                   # 主浏览页：滑动卡片、排序、相册选择、日期 + 地理位置
-  review.tsx                  # 删除确认页：网格预览、勾选/取消、捏合缩放预览
+  review.tsx                  # 待删除列表页：缩略图网格、多选还原、全屏缩放预览
   settings.tsx                # 设置页：会员状态、统计数据、开发者模式入口
   paywall.tsx                 # Pro 订阅页：定价卡片、购买/恢复
   recent-deletes.tsx          # 最近删除页：3 列网格，已删照片缩略图回溯
   albums.tsx                  # 相册选择页：2 列缩略图，按数量降序
-  hub.tsx                     # 聚合页：更多功能入口（占位）
+  hub.tsx                     # 更多功能页：概览、月份分析、每周回顾、成就、功能入口
 
 src/
   components/
@@ -80,11 +85,13 @@ src/
       GestureGuideOverlay.tsx # 首次启动手势引导覆盖层
       DeleteOverlay.tsx       # 标记删除红色蒙层
     delete-review/            # 删除确认
-      DeleteGrid.tsx          # 照片网格，点击勾选/取消 + 长按预览
-      DeleteConfirmSheet.tsx  # iOS 毛玻璃确认删除底部表单
-      PhotoZoomModal.tsx      # 全屏缩放预览（两指捏合 1x~5x）
+      DeleteGrid.tsx          # 待删除缩略图网格，点击多选 + 长按预览
+      DeleteConfirmSheet.tsx  # 全屏删除确认页，最多展示 3 张预览图
+      PhotoZoomModal.tsx      # 全屏缩放预览（捏合/双指点击/拖动）
       EmptyReviewPlaceholder.tsx # 无待删照片的卡通占位图
     settings/                 # 设置页组件
+      AchievementStrip.tsx    # 成就徽章横向列表
+      WeeklyReviewCard.tsx    # 每周清理回顾卡片
       StatCard.tsx            # 统计卡片
       SettingsSection.tsx     # 设置分组容器
       SettingsRow.tsx         # 设置行
@@ -128,6 +135,8 @@ src/
   utils/
     fisher-yates.ts           # Fisher-Yates 洗牌算法
     date-utils.ts             # 日期格式化（相对日期 + 今日键）
+    achievement-utils.ts      # 成就系统派生规则
+    delete-confirm-utils.ts   # 删除确认文案、空间估算、流程决策
 
   design-tokens.ts            # 全局设计令牌：颜色、间距、圆角、动画参数、排版
 
@@ -186,6 +195,12 @@ GestureHandlerRootView
 
 Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
 
+v1.3.0 本地 release 包输出：
+
+```
+dist/pickup-v1.3.0-release.apk
+```
+
 ## 开始开发
 
 ```bash
@@ -216,6 +231,8 @@ npx jest
 
 ## 文档
 
+- [更新日志](./CHANGELOG.md)
+- [v1.3 趣味化与确认删除体验需求文档](./PRD-v1.3-趣味化与确认删除体验需求.md)
 - [功能优化需求文档 (PRD v1.2-v1.9)](./PRD-v1.2-功能优化需求.md)
 - [需求文档 HTML 版](./docs/PRD-v1.2.html) — 杂志风格排版
 - [开发日志 HTML 版](./docs/memory.html) — 时间线式开发记录

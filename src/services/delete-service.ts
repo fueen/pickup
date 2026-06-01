@@ -2,6 +2,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { File, Directory, Paths } from 'expo-file-system';
 import { PhotoAsset, DeletedPhotoRecord } from '../types/photo';
 import { addRecentDeletes, removeRecentDeletes } from './stats-service';
+import { estimateDeleteBytes } from '../utils/delete-confirm-utils';
 
 export interface DeleteResult {
   successCount: number;
@@ -18,18 +19,18 @@ export interface RestoreResult {
   errors: string[];
 }
 
-function estimateFileSize(width: number, height: number): number {
-  return Math.round(width * height * 3 * 0.4);
-}
-
 function getPhotoSize(photo: PhotoAsset): number {
+  if (photo.fileSize > 0) {
+    return photo.fileSize;
+  }
+
   try {
     const f = new File(photo.uri);
     if (f.size > 0) return f.size;
   } catch {
     // File constructor may throw on Android content:// URIs
   }
-  return estimateFileSize(photo.width, photo.height);
+  return estimateDeleteBytes(photo);
 }
 
 /**

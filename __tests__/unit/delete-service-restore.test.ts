@@ -4,11 +4,12 @@ import { addRecentDeletes, removeRecentDeletes } from '../../src/services/stats-
 import { DeletedPhotoRecord, PhotoAsset } from '../../src/types/photo';
 
 const mockExistingUris = new Set<string>();
+const mockFileSizes = new Map<string, number>();
 
 jest.mock('expo-file-system', () => ({
   File: jest.fn().mockImplementation((uri: string) => ({
     exists: mockExistingUris.has(uri),
-    size: 1024,
+    size: mockFileSizes.get(uri) ?? 1024,
     copy: jest.fn(),
   })),
   Directory: jest.fn().mockImplementation(() => ({
@@ -49,6 +50,7 @@ function makeRecord(id: string, uri = `file:///cache/${id}.jpg`): DeletedPhotoRe
 beforeEach(() => {
   jest.clearAllMocks();
   mockExistingUris.clear();
+  mockFileSizes.clear();
   mockDeleteAssetsAsync.mockResolvedValue(true);
   mockCreateAssetAsync.mockResolvedValue({ id: 'asset-id' });
 });
@@ -67,6 +69,21 @@ function makePhoto(id: string, uri = `file:///photos/${id}.jpg`): PhotoAsset {
 }
 
 describe('deletePhotos', () => {
+  it('uses a pixel estimate when file size reads as zero', async () => {
+    const photo = { ...makePhoto('zero-size'), fileSize: 0, width: 1000, height: 800 };
+    mockFileSizes.set(photo.uri, 0);
+
+    const result = await deletePhotos([photo]);
+
+    expect(result.freedBytes).toBe(960000);
+    expect(mockAddRecentDeletes).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'zero-size',
+        fileSize: 960000,
+      }),
+    ]);
+  });
+
   it('treats deleteAssetsAsync false as a failed delete and does not write recent deletes', async () => {
     const photo = makePhoto('failed-delete');
     mockDeleteAssetsAsync.mockResolvedValue(false);

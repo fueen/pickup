@@ -25,9 +25,9 @@ function SimpleTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const currentRoute = pathname === '/' ? 'index' : pathname.replace(/^\//, '');
-  const isRecentDeletes = currentRoute === 'recent-deletes';
+  const isImmersiveRoute = currentRoute === 'recent-deletes' || currentRoute === 'review';
 
-  if (isRecentDeletes) {
+  if (isImmersiveRoute) {
     return null;
   }
 

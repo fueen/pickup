@@ -1,135 +1,302 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { useSessionContext } from '../src/contexts/SessionContext';
-import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
-import { useStatsContext } from '../src/contexts/StatsContext';
-import { DeleteConfirmSheet } from '../src/components/delete-review/DeleteConfirmSheet';
+import { DeleteGrid } from '../src/components/delete-review/DeleteGrid';
 import { EmptyReviewPlaceholder } from '../src/components/delete-review/EmptyReviewPlaceholder';
-import { LimitReachedModal } from '../src/components/photo-card/LimitReachedModal';
-import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
-import { deletePhotos } from '../src/services/delete-service';
+import { PhotoZoomModal } from '../src/components/delete-review/PhotoZoomModal';
 import { Tokens } from '../src/design-tokens';
+import { PhotoAsset } from '../src/types/photo';
+import { DeleteConfirmSource } from '../src/utils/delete-confirm-utils';
 
 export default function ReviewScreen() {
   const router = useRouter();
-  const { currentGroup, markedForDelete, setMarkedForDelete, clearMarkedPhotos, loadNextGroup } = usePhotoContext();
+  const { confirmSource, returnToConfirm } = useLocalSearchParams<{
+    confirmSource?: DeleteConfirmSource;
+    returnToConfirm?: string;
+  }>();
+  const insets = useSafeAreaInsets();
+  const { currentGroup, markedForDelete, setMarkedForDelete } = usePhotoContext();
   const { dispatch } = useSessionContext();
-  const { canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
-  const { recordDeleted } = useStatsContext();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [previewPhoto, setPreviewPhoto] = useState<PhotoAsset | null>(null);
 
-  const [deleting, setDeleting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(markedForDelete));
-  const [limitModalVisible, setLimitModalVisible] = useState(false);
-  const [showDeleteSheet, setShowDeleteSheet] = useState(markedForDelete.size > 0);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationCount, setCelebrationCount] = useState(0);
-  const deletingRef = useRef(false);
+  const photosInGroup = useMemo(
+    () => currentGroup
+      .filter((p) => markedForDelete.has(p.id))
+      .sort((a, b) => b.creationTime - a.creationTime),
+    [currentGroup, markedForDelete],
+  );
 
-  const photosInGroup = currentGroup.filter((p) => markedForDelete.has(p.id));
-  const selectedPhotos = photosInGroup.filter((p) => selectedIds.has(p.id));
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
 
-  useEffect(() => {
-    if (markedForDelete.size > 0) {
-      setSelectedIds(new Set(markedForDelete));
-      setShowDeleteSheet(true);
+  const handleRestoreSelected = useCallback(() => {
+    if (selectedIds.size === 0) return;
+
+    setMarkedForDelete((prev) => {
+      const next = new Set(prev);
+      selectedIds.forEach((id) => next.delete(id));
+      return next;
+    });
+
+    const remainingCount = photosInGroup.filter((photo) => !selectedIds.has(photo.id)).length;
+    setSelectedIds(new Set());
+
+    if (remainingCount === 0) {
+      dispatch({ type: 'RESET_SESSION' });
+      router.replace('/');
     }
-  }, [markedForDelete]);
+  }, [dispatch, photosInGroup, router, selectedIds, setMarkedForDelete]);
 
-  const handleDiscardAndNext = useCallback(() => {
-    if (!canBrowseNextGroup) {
-      setShowDeleteSheet(false);
-      setLimitModalVisible(true);
+  const handleBack = useCallback(() => {
+    if (returnToConfirm === '1' && markedForDelete.size > 0) {
+      router.replace({
+        pathname: '/',
+        params: {
+          confirmSource: confirmSource === 'group-complete' ? 'group-complete' : 'manual',
+          showDeleteConfirm: Date.now().toString(),
+        },
+      });
       return;
     }
-    incrementGroupCount();
-    clearMarkedPhotos();
-    setMarkedForDelete(new Set());
-    loadNextGroup();
-    dispatch({ type: 'RESET_SESSION' });
+
     router.replace('/');
-  }, [canBrowseNextGroup, incrementGroupCount, clearMarkedPhotos, setMarkedForDelete, loadNextGroup, dispatch, router]);
+  }, [confirmSource, markedForDelete.size, returnToConfirm, router]);
 
-  const handleConfirmDelete = useCallback(async () => {
-    if (selectedPhotos.length === 0 || deletingRef.current) return;
-    deletingRef.current = true;
-    setDeleting(true);
-
-    try {
-      const result = await deletePhotos(selectedPhotos);
-      if (result.successCount > 0) {
-        recordDeleted(result.successCount, result.freedBytes).catch(() => {});
-        clearMarkedPhotos();
-        setMarkedForDelete(new Set());
-        dispatch({ type: 'RESET_SESSION' });
-        setCelebrationCount(result.successCount);
-        setShowCelebration(true);
-        return;
-      }
-
-      // User may reject the system delete prompt. Keep this page open so they can retry or cancel.
-      setShowDeleteSheet(true);
-    } finally {
-      setDeleting(false);
-      deletingRef.current = false;
-    }
-  }, [selectedPhotos, clearMarkedPhotos, setMarkedForDelete, dispatch, recordDeleted]);
+  const selectedCount = selectedIds.size;
 
   return (
     <View style={styles.container}>
+      <View style={styles.topWash} pointerEvents="none" />
+      <View style={styles.sideGlow} pointerEvents="none" />
+      <View style={styles.gridPlate} pointerEvents="none" />
+
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel="返回浏览"
+        >
+          <MaterialCommunityIcons name="chevron-left" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={styles.headerCopy}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>待删除列表</Text>
+            {photosInGroup.length > 0 && (
+              <View style={styles.countPill}>
+                <Text style={styles.countText}>{photosInGroup.length}</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.subtitle}>
+            {photosInGroup.length > 0
+              ? selectedCount > 0
+                ? `已选择 ${selectedCount} 张`
+                : '点选照片后可批量还原'
+              : '当前没有待删除照片'}
+          </Text>
+        </View>
+      </View>
+
       {photosInGroup.length === 0 ? (
         <EmptyReviewPlaceholder />
       ) : (
-        <View style={styles.confirmBackdrop} />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.gridContent,
+            { paddingBottom: insets.bottom + (selectedCount > 0 ? 142 : 92) },
+          ]}
+        >
+          <DeleteGrid
+            photos={photosInGroup}
+            selectedIds={selectedIds}
+            onTap={toggleSelected}
+            onPhotoPreview={setPreviewPhoto}
+          />
+        </ScrollView>
       )}
 
-      <LimitReachedModal
-        visible={limitModalVisible}
-        onClose={() => setLimitModalVisible(false)}
-      />
-
-      <CelebrationOverlay
-        visible={showCelebration}
-        count={celebrationCount}
-        onDone={() => {
-          if (!canBrowseNextGroup) {
-            setShowCelebration(false);
-            setLimitModalVisible(true);
-            return;
-          }
-          incrementGroupCount();
-          loadNextGroup();
-          router.replace('/');
-          setTimeout(() => setShowCelebration(false), 80);
-        }}
-      />
-
-      {showCelebration && photosInGroup.length === 0 && (
-        <View style={styles.celebrationBackdrop} pointerEvents="none" />
+      {selectedCount > 0 && (
+        <View style={[styles.restoreBar, { paddingBottom: insets.bottom + 12 }]}>
+          <View style={styles.restoreCopy}>
+            <Text style={styles.restoreEyebrow}>已选择 {selectedCount} 张</Text>
+            <Text style={styles.restoreHint}>还原后会回到浏览列表，不会删除</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.restoreButton}
+            onPress={handleRestoreSelected}
+            activeOpacity={0.76}
+            accessibilityRole="button"
+            accessibilityLabel={`还原 ${selectedCount} 张照片`}
+          >
+            <MaterialCommunityIcons name="backup-restore" size={20} color="#080808" />
+            <Text style={styles.restoreText}>还原</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      <DeleteConfirmSheet
-        visible={photosInGroup.length > 0 && showDeleteSheet}
-        count={selectedPhotos.length}
-        photos={selectedPhotos}
-        loading={deleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleDiscardAndNext}
+      <PhotoZoomModal
+        visible={previewPhoto !== null}
+        photo={previewPhoto}
+        onClose={() => setPreviewPhoto(null)}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Tokens.color.background },
-  confirmBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Tokens.color.background,
+  container: { flex: 1, backgroundColor: '#090A0B' },
+  topWash: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 190,
+    backgroundColor: 'rgba(255,255,255,0.045)',
   },
-  celebrationBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Tokens.color.background,
-    zIndex: 150,
+  sideGlow: {
+    position: 'absolute',
+    right: -90,
+    top: 34,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,204,0,0.10)',
+  },
+  gridPlate: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 126,
+    bottom: 18,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.032)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  header: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.16)',
+  },
+  headerCopy: { flex: 1 },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '900',
+    color: Tokens.color.textPrimary,
+  },
+  countPill: {
+    minWidth: 34,
+    height: 26,
+    paddingHorizontal: 10,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,204,0,0.16)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,204,0,0.42)',
+  },
+  countText: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '900',
+    color: Tokens.color.accent,
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    color: Tokens.color.textSecondary,
+  },
+  gridContent: {
+    paddingTop: 10,
+  },
+  restoreBar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 10,
+    minHeight: 88,
+    borderRadius: 28,
+    paddingTop: 13,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(247,247,242,0.96)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.24)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 12,
+  },
+  restoreCopy: { flex: 1 },
+  restoreEyebrow: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#111111',
+  },
+  restoreHint: {
+    marginTop: 4,
+    fontSize: 11,
+    color: 'rgba(17,17,17,0.58)',
+  },
+  restoreButton: {
+    minWidth: 102,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: Tokens.color.accent,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  restoreText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#080808',
   },
 });

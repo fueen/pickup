@@ -15,7 +15,7 @@ export function StatCard({ label, value, unit, onPress, valueColor, tintColor }:
   const inner = (
     <View style={[
       styles.card,
-      tintColor && { borderColor: tintColor, backgroundColor: `${tintColor}14` },
+      tintColor && { backgroundColor: `${tintColor}14` },
     ]}>
       <Text style={[styles.value, valueColor && { color: valueColor }]}>
         {value}
@@ -46,8 +46,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Tokens.color.surface,
     borderRadius: Tokens.radius.card,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
     paddingVertical: Tokens.spacing.l,
     paddingHorizontal: Tokens.spacing.m,
     alignItems: 'center',
