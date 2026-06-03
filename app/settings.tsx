@@ -18,6 +18,7 @@ import { SettingsRow } from '../src/components/settings/SettingsRow';
 import { Toast } from '../src/components/ui/Toast';
 import { Tokens } from '../src/design-tokens';
 import { getValidRecentDeletes } from '../src/services/stats-service';
+import { APP_VERSION } from '../src/constants/app-info';
 // import { SwipeEffect, getSwipeEffect, setSwipeEffect as saveSwipeEffect } from '../src/services/preferences-service';
 
 function formatBytes(bytes: number): string {
@@ -184,7 +185,6 @@ export default function SettingsScreen() {
               label="最近删除"
               value={recentDeleteCount}
               valueColor={Tokens.color.danger}
-              tintColor={Tokens.color.danger}
             />
           </View>
           <View style={styles.statsGrid}>
@@ -193,13 +193,11 @@ export default function SettingsScreen() {
               value={streakDays}
               unit="天"
               valueColor={Tokens.color.safe}
-              tintColor={Tokens.color.safe}
             />
             <StatCard
               label="释放空间"
               value={formatBytes(totalFreedBytes)}
               valueColor={Tokens.color.accent}
-              tintColor={Tokens.color.accent}
             />
           </View>
         </SettingsSection>
@@ -229,10 +227,11 @@ export default function SettingsScreen() {
 
         {/* About */}
         <SettingsSection title="关于">
+          <SettingsRow label="PickUp" onPress={() => router.push('/about')} />
           <SettingsRow label="隐私政策" onPress={handlePrivacy} />
           <SettingsRow
             label="版本"
-            rightContent={<Text style={styles.secondaryText}>1.1.0</Text>}
+            rightContent={<Text style={styles.secondaryText}>{APP_VERSION}</Text>}
             showArrow={false}
           />
         </SettingsSection>

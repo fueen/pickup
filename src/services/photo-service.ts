@@ -14,14 +14,21 @@ function getSortComparator(mode: SortMode): (a: PhotoAsset, b: PhotoAsset) => nu
   }
 }
 
+interface GenerateGroupOptions {
+  excludedIds?: Set<string>;
+}
+
 export function generateGroup(
   allPhotos: PhotoAsset[],
   viewedPhotoIds: Set<string>,
   groupSize: number,
   viewedOrder: string[],
   sortMode: SortMode,
+  options: GenerateGroupOptions = {},
 ): PhotoAsset[] {
-  let candidates = allPhotos.filter((p) => !viewedPhotoIds.has(p.id));
+  const excludedIds = options.excludedIds ?? new Set<string>();
+  const availableIds = new Set(allPhotos.map((p) => p.id));
+  let candidates = allPhotos.filter((p) => !viewedPhotoIds.has(p.id) && !excludedIds.has(p.id));
 
   if (candidates.length < groupSize) {
     const order =
@@ -31,8 +38,9 @@ export function generateGroup(
             .filter((p) => viewedPhotoIds.has(p.id))
             .map((p) => p.id);
 
-    const refillCount = Math.min(groupSize - candidates.length, order.length);
-    const refill = order.slice(0, refillCount);
+    const refill = order
+      .filter((id) => availableIds.has(id) && !excludedIds.has(id) && !candidates.some((p) => p.id === id))
+      .slice(0, groupSize - candidates.length);
     const refillPhotos = allPhotos.filter((p) => refill.includes(p.id));
     candidates = [...candidates, ...refillPhotos];
   }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,6 +13,9 @@ import { PhotoProvider } from '../src/contexts/PhotoContext';
 import { SessionProvider } from '../src/contexts/SessionContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { SplashScreen } from '../src/components/SplashScreen';
+import { ChangelogModal } from '../src/components/ui/ChangelogModal';
+import { CURRENT_CHANGELOG } from '../src/constants/changelog';
+import { acknowledgeChangelog, shouldShowChangelog } from '../src/services/changelog-service';
 
 const TABS = [
   { name: 'index', icon: 'image-multiple-outline', size: 24 },
@@ -25,7 +28,7 @@ function SimpleTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const currentRoute = pathname === '/' ? 'index' : pathname.replace(/^\//, '');
-  const isImmersiveRoute = currentRoute === 'recent-deletes' || currentRoute === 'review';
+  const isImmersiveRoute = currentRoute === 'recent-deletes' || currentRoute === 'review' || currentRoute === 'about';
 
   if (isImmersiveRoute) {
     return null;
@@ -138,9 +141,34 @@ const tabStyles = StyleSheet.create({
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = useState(false);
+  const [changelogVisible, setChangelogVisible] = useState(false);
 
   const handleSplashFinish = useCallback(() => {
     setSplashDone(true);
+  }, []);
+
+  useEffect(() => {
+    if (!splashDone) return;
+
+    let isActive = true;
+    shouldShowChangelog()
+      .then((shouldShow) => {
+        if (isActive) setChangelogVisible(shouldShow);
+      })
+      .catch(() => {
+        if (isActive) setChangelogVisible(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [splashDone]);
+
+  const handleChangelogAcknowledge = useCallback(() => {
+    setChangelogVisible(false);
+    acknowledgeChangelog().catch(() => {
+      // The modal is intentionally closed even if persistence fails.
+    });
   }, []);
 
   if (!splashDone) {
@@ -173,8 +201,14 @@ export default function RootLayout() {
                   <Tabs.Screen name="review" options={{ href: null }} />
                   <Tabs.Screen name="paywall" options={{ href: null }} />
                   <Tabs.Screen name="albums" options={{ href: null }} />
+                  <Tabs.Screen name="about" options={{ href: null }} />
                 </Tabs>
                 <SimpleTabBar />
+                <ChangelogModal
+                  visible={changelogVisible}
+                  entry={CURRENT_CHANGELOG}
+                  onAcknowledge={handleChangelogAcknowledge}
+                />
               </SessionProvider>
             </PhotoProvider>
           </StatsProvider>

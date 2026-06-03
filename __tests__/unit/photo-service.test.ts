@@ -1,4 +1,5 @@
 import {
+  generateGroup,
   generateRandomGroup,
   shouldRefillViewedPool,
   getRefillCandidates,
@@ -50,6 +51,30 @@ describe('generateRandomGroup', () => {
     const viewed = new Set<string>();
     const result = generateRandomGroup(pool, viewed, 15);
     expect(result.length).toBe(5);
+  });
+});
+
+describe('generateGroup', () => {
+  it('refills from viewed photos that exist in the current album pool', () => {
+    const pool = [makePhoto('album-photo-1'), makePhoto('album-photo-2')];
+    const viewed = new Set(['album-photo-1', 'album-photo-2']);
+    const viewedOrder = ['other-album-1', 'other-album-2', 'album-photo-1', 'album-photo-2'];
+
+    const result = generateGroup(pool, viewed, 2, viewedOrder, 'timeOldest');
+
+    expect(result.map((photo) => photo.id)).toEqual(['album-photo-1', 'album-photo-2']);
+  });
+
+  it('excludes current group leftovers and deleted photos when refilling', () => {
+    const pool = makePhotos(8);
+    const viewed = new Set(pool.slice(0, 6).map((p) => p.id));
+    const viewedOrder = pool.slice(0, 6).map((p) => p.id);
+    const excludedIds = new Set(['photo-0', 'photo-1', 'photo-6']);
+
+    const result = generateGroup(pool, viewed, 3, viewedOrder, 'timeOldest', { excludedIds });
+
+    expect(result.map((photo) => photo.id)).toEqual(['photo-7', 'photo-2', 'photo-3']);
+    expect(result.some((photo) => excludedIds.has(photo.id))).toBe(false);
   });
 });
 

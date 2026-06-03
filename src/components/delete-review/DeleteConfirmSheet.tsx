@@ -148,11 +148,6 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
                 <MaterialCommunityIcons name="image-multiple-outline" size={52} color="rgba(255,255,255,0.72)" />
               </View>
             )}
-            {onOpenList && photos.length > 1 && (
-              <View style={styles.openListBadge}>
-                <Text style={styles.openListText}>查看全部 {photos.length} 张</Text>
-              </View>
-            )}
           </TouchableOpacity>
 
           <View style={styles.doubleCheckRow}>
@@ -310,22 +305,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  openListBadge: {
-    position: 'absolute',
-    bottom: 4,
-    alignSelf: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.52)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.14)',
-  },
-  openListText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
   },
   doubleCheckRow: {
     marginTop: 14,

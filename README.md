@@ -4,7 +4,7 @@
 
 像刷短视频一样快速整理相册：上滑删除、下滑保留，每 10 张一组批量确认，安全可控。
 
-当前版本：**v1.3.0**
+当前版本：**v1.3.4**
 
 ## 功能
 
@@ -39,9 +39,11 @@
 - **原比例展示**：照片按原始宽高比显示，圆角卡片，不裁切不拉伸
 - **进度指示**：底部圆点按实际标记索引着色（黄=删除、绿=保留），支持点击跳转
 - **触觉反馈**：滑动标记时触发 haptic 反馈
-- **启动闪屏**：品牌 Splash 动画
+- **启动闪屏**：品牌 Splash 动画，支持卡片错峰漂入、标题字母错峰和金色点脉冲
+- **更新日志弹框**：新版本首次打开展示本次更新内容，点击「我已知晓」后本版本不再重复弹出
 - **空状态**：空相册展示卡通幽灵占位图，与整体设计风格统一
 - **相册切换**：支持选择系统相册，左下角按钮随时可切换
+- **关于页**：个人中心「关于」区域提供 PickUp 信息页，展示版本、作者和联系方式
 
 ### 统计面板
 - 累计浏览 / 累计删除 / 连续使用天数 / 释放空间（连续累计，重启不归零）
@@ -75,6 +77,7 @@ app/                          # 页面 (expo-router file-based routing)
   recent-deletes.tsx          # 最近删除页：3 列网格，已删照片缩略图回溯
   albums.tsx                  # 相册选择页：2 列缩略图，按数量降序
   hub.tsx                     # 更多功能页：概览、月份分析、每周回顾、成就、功能入口
+  about.tsx                   # PickUp 信息页：App 信息、作者和联系方式
 
 src/
   components/
@@ -109,6 +112,7 @@ src/
       Modal.tsx               # 通用模态框
       Toast.tsx               # Toast 提示
       CelebrationOverlay.tsx  # 删除完成庆祝动画（✓ + 粒子爆散）
+      ChangelogModal.tsx      # 新版本首次打开更新日志弹框
     ErrorBoundary.tsx         # 全局错误边界
     SplashScreen.tsx          # 品牌闪屏动画
 
@@ -127,6 +131,7 @@ src/
     delete-service.ts         # 原生删除（MediaLibrary.deleteAssetsAsync + 文件大小）
     subscription-service.ts   # RevenueCat 封装（配置、购买、恢复、权益检查）
     stats-service.ts          # 统计持久化（浏览数、删除数、连续天数、周历史）
+    changelog-service.ts      # 更新日志版本确认状态（AsyncStorage）
 
   types/
     photo.ts                  # PhotoAsset, PermissionStatus, GestureState, InteractionLogEntry
@@ -139,6 +144,9 @@ src/
     delete-confirm-utils.ts   # 删除确认文案、空间估算、流程决策
 
   design-tokens.ts            # 全局设计令牌：颜色、间距、圆角、动画参数、排版
+  constants/
+    app-info.ts               # App 名称、版本、作者和联系方式
+    changelog.ts              # App 内结构化更新日志
 
 __tests__/unit/               # 单元测试
   date-utils.test.ts          # 日期格式化测试
@@ -195,10 +203,10 @@ GestureHandlerRootView
 
 Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
 
-v1.3.0 本地 release 包输出：
+v1.3.4 本地 release 包输出：
 
 ```
-dist/pickup-v1.3.0-release.apk
+dist/pickup-v1.3.4-release.apk
 ```
 
 ## 开始开发

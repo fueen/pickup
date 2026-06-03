@@ -61,10 +61,7 @@ export function MonthlyChart({ data }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginTop: 16,
-    paddingVertical: 16,
-    backgroundColor: Tokens.color.surface,
-    borderRadius: 16,
-    marginHorizontal: 16,
+    paddingVertical: 8,
   },
   scrollContent: {
     paddingHorizontal: 20,

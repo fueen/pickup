@@ -8,15 +8,11 @@ interface StatCardProps {
   unit?: string;
   onPress?: () => void;
   valueColor?: string;
-  tintColor?: string;
 }
 
-export function StatCard({ label, value, unit, onPress, valueColor, tintColor }: StatCardProps) {
+export function StatCard({ label, value, unit, onPress, valueColor }: StatCardProps) {
   const inner = (
-    <View style={[
-      styles.card,
-      tintColor && { backgroundColor: `${tintColor}14` },
-    ]}>
+    <View style={styles.card}>
       <Text style={[styles.value, valueColor && { color: valueColor }]}>
         {value}
         {unit ? <Text style={styles.unit}> {unit}</Text> : null}
@@ -44,7 +40,9 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: Tokens.color.surface,
+    backgroundColor: '#000000',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: Tokens.radius.card,
     paddingVertical: Tokens.spacing.l,
     paddingHorizontal: Tokens.spacing.m,

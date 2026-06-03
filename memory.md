@@ -2,6 +2,48 @@
 
 ---
 
+## 2026-06-03 22:xx | v1.3.4 开屏、关于页与更新日志发布构建
+
+### 一句话概述
+
+v1.3.4 补充需求已完成并通过本地 release 构建：新增版本更新日志弹框、PickUp 关于页，优化开屏动画，并将 v1.3.2 / v1.3.3 在 PRD 中标记为已完成。
+
+### 当前进度 / 关键结论
+
+- **版本号同步**：`package.json`、`package-lock.json`、`app.config.js` 和 `src/constants/app-info.ts` 已更新到 `1.3.4`，确保 App 内更新日志弹框按新版本触发。
+- **更新日志弹框**：新增 `ChangelogModal`、`CURRENT_CHANGELOG` 和 `changelog-service`，使用 AsyncStorage key `acknowledgedChangelogVersion` 记录已确认版本；同版本不重复弹出，版本变化后再次弹出。
+- **关于页**：新增 `/about` 路由，设置页「关于」区域新增 `PickUp` 入口，展示 App 名称、标语、版本、作者 `Zack Feng` 和邮箱 `1179722988@qq.com`。
+- **开屏动画**：`SplashScreen` 从单一淡入改为抽象卡片错峰漂入、PICKUP 字母错峰出现、标语延迟和金色点脉冲，保持约 2.6 秒后进入 App。
+- **PRD 状态**：`PRD-v1.3-趣味化与确认删除体验需求.md` 中 v1.3.2、v1.3.3、v1.3.4 状态均标记为已完成，v1.3.4 验收清单已勾选。
+- **README**：已同步当前版本、v1.3.4 体验细节、项目结构和 release 包路径。
+
+### 验证与构建
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过，当前 13 个 test suites / 69 个 tests 全部通过；仍有既有 `react-test-renderer is deprecated` warning。
+- `android/gradlew.bat assembleRelease` 本地 release 构建通过，仅输出 Expo `NODE_ENV` 未显式设置提示。
+- release APK 已复制到 `dist/pickup-v1.3.4-release.apk`，大小约 100.6 MB。
+
+### 关键文件
+
+| 新增 | 修改 |
+|------|------|
+| `app/about.tsx` | `app/_layout.tsx` |
+| `src/components/ui/ChangelogModal.tsx` | `app/settings.tsx` |
+| `src/constants/app-info.ts` | `src/components/SplashScreen.tsx` |
+| `src/constants/changelog.ts` | `PRD-v1.3-趣味化与确认删除体验需求.md` |
+| `src/services/changelog-service.ts` | `README.md` |
+| `__tests__/unit/changelog-service.test.ts` | `CHANGELOG.md` |
+| `docs/superpowers/specs/2026-06-03-v1.3.4-app-info-changelog-splash-design.md` | `package.json` |
+| `docs/superpowers/plans/2026-06-03-v1.3.4-app-info-changelog-splash-plan.md` | `package-lock.json` |
+| | `app.config.js` |
+
+### 下一步
+
+- 安装 `dist/pickup-v1.3.4-release.apk` 到 Android 真机，重点回归首次启动更新日志弹框、确认后不重复出现、设置页关于入口和开屏动画流畅度。
+
+---
+
 ## 2026-05-31 22:xx | 项目进展-pickup
 
 ### 一句话概述

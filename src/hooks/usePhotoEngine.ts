@@ -103,6 +103,9 @@ export function usePhotoEngine() {
         albumIds: a.albumId ? [a.albumId] : [],
       }));
       setAllPhotos(photos);
+      setGroupIndex(0);
+      setMarkedForDelete(new Set());
+      setMarkedForKeep(new Set());
 
       if (photos.length === 0) {
         setCurrentGroup([]);
@@ -177,6 +180,7 @@ export function usePhotoEngine() {
   const refillGroup = useCallback((deleteCount: number) => {
     setCurrentGroup((prev) => {
       const remaining = prev.filter((p) => !markedForDelete.has(p.id));
+      const excludedIds = new Set(prev.map((p) => p.id));
 
       try {
         const newIds = new Set(viewedPhotoIds);
@@ -188,6 +192,7 @@ export function usePhotoEngine() {
           fillCount,
           currentOrder,
           sortMode,
+          { excludedIds },
         );
 
         newPhotos.forEach((p) => newIds.add(p.id));

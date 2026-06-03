@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedReaction,
@@ -103,10 +103,10 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       translateY.value = clampTranslation(startY.value + event.translationY, displayHeight, SCREEN_HEIGHT, scale.value);
     });
 
-  const twoFingerTapGesture = Gesture.Tap()
-    .numberOfTaps(1)
-    .minPointers(2)
-    .maxDuration(260)
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDuration(320)
+    .maxDelay(280)
     .onEnd(() => {
       const zoomed = scale.value > 1.05;
       scale.value = withTiming(zoomed ? 1 : 2, { duration: 180 });
@@ -114,19 +114,9 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       translateY.value = withTiming(0, { duration: 180 });
     });
 
-  const singleTapGesture = Gesture.Tap()
-    .numberOfTaps(1)
-    .maxDuration(260)
-    .onEnd(() => {
-      if (scale.value <= 1.05) {
-        runOnJS(onClose)();
-      }
-    });
-
   const composedGesture = Gesture.Simultaneous(
-    pinchGesture,
-    panGesture,
-    Gesture.Exclusive(twoFingerTapGesture, singleTapGesture),
+    Gesture.Simultaneous(pinchGesture, panGesture),
+    doubleTapGesture,
   );
 
   const imageStyle = useAnimatedStyle(() => ({
@@ -156,6 +146,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       onRequestClose={onClose}
       statusBarTranslucent
     >
+      <GestureHandlerRootView style={styles.modalRoot}>
       <View style={styles.backdrop}>
         {/* Close button — top right */}
         <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
@@ -184,17 +175,21 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
         </GestureDetector>
 
         {/* Hint */}
-        <View style={styles.hintBar}>
+        <View style={styles.hintBar} pointerEvents="none">
           <Text style={styles.hintText}>
-            {displayScale < 1.05 ? '双指捏合 / 双指点击缩放 · 单击关闭' : '拖动查看细节 · 双指点击还原'}
+            {displayScale < 1.05 ? '双击 / 双指捏合缩放' : '拖动查看细节 · 双击还原'}
           </Text>
         </View>
       </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  modalRoot: {
+    flex: 1,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.96)',

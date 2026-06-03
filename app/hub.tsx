@@ -4,6 +4,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MonthlyChart } from '../src/components/hub/MonthlyChart';
+import { PawMark } from '../src/components/hub/PawMark';
 import { WeeklyReviewCard } from '../src/components/settings/WeeklyReviewCard';
 import { AchievementStrip } from '../src/components/settings/AchievementStrip';
 import { useStatsContext } from '../src/contexts/StatsContext';
@@ -154,11 +155,14 @@ export default function HubScreen() {
         {loading ? (
           <ActivityIndicator color={Tokens.color.accent} style={{ marginTop: 40 }} />
         ) : (
-          <>
-            <TouchableOpacity style={styles.yearBtn} onPress={() => setShowYearPicker(true)} activeOpacity={0.7}>
-              <Text style={styles.yearText}>{selectedYear} 年</Text>
-              <MaterialCommunityIcons name="chevron-down" size={20} color={Tokens.color.accent} />
-            </TouchableOpacity>
+          <View style={styles.monthPanel}>
+            <View style={styles.monthPanelTop}>
+              <TouchableOpacity style={styles.yearBtn} onPress={() => setShowYearPicker(true)} activeOpacity={0.7}>
+                <Text style={styles.yearText}>{selectedYear} 年</Text>
+                <MaterialCommunityIcons name="chevron-down" size={20} color={Tokens.color.accent} />
+              </TouchableOpacity>
+              <PawMark />
+            </View>
 
             <Modal visible={showYearPicker} transparent animationType="fade">
               <TouchableOpacity style={styles.yearOverlay} activeOpacity={1} onPress={() => setShowYearPicker(false)}>
@@ -180,7 +184,7 @@ export default function HubScreen() {
             </Modal>
 
             <MonthlyChart data={chartData} />
-          </>
+          </View>
         )}
 
         <View style={styles.sectionSpacing}>
@@ -301,13 +305,15 @@ const styles = StyleSheet.create({
   yearBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Tokens.color.surface,
+    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.10)',
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    marginTop: 20,
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
+    minHeight: 44,
     gap: 6,
   },
   yearText: { fontSize: 15, fontWeight: '600', color: Tokens.color.textPrimary },
@@ -317,6 +323,24 @@ const styles = StyleSheet.create({
   yearOptionActive: { backgroundColor: 'rgba(255,204,0,0.15)' },
   yearOptionText: { fontSize: 16, color: Tokens.color.textSecondary },
   yearOptionTextActive: { fontSize: 16, color: Tokens.color.accent, fontWeight: '700' },
+  monthPanel: {
+    marginHorizontal: Tokens.spacing.l,
+    marginTop: 14,
+    paddingTop: 16,
+    paddingHorizontal: 14,
+    paddingBottom: 18,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.09)',
+  },
+  monthPanelTop: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Tokens.spacing.m,
+  },
   sectionSpacing: {
     marginTop: Tokens.spacing.xl,
   },

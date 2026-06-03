@@ -10,6 +10,7 @@ import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
 import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
+import { toVisibleAlbumItems, VisibleAlbumItem } from '../src/utils/album-utils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GAP = 12;
@@ -17,18 +18,11 @@ const PADDING = 16;
 const COLUMN_COUNT = 2;
 const CARD_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
 
-interface AlbumItem {
-  id: string;
-  title: string;
-  assetCount: number;
-  coverUri: string | null;
-}
-
 export default function AlbumPickerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { setSelectedAlbum } = usePhotoContext();
-  const [albums, setAlbums] = useState<AlbumItem[]>([]);
+  const [albums, setAlbums] = useState<VisibleAlbumItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { dailyUsageLoaded } = useSubscriptionContext();
 
@@ -36,47 +30,46 @@ export default function AlbumPickerScreen() {
     (async () => {
       try {
         const albumList = await MediaLibrary.getAlbumsAsync();
-        const items: AlbumItem[] = [];
+        const validAlbums: VisibleAlbumItem[] = [];
 
-        const allCount = await MediaLibrary.getAssetsAsync({
+        const allPhotosPage = await MediaLibrary.getAssetsAsync({
           mediaType: ['photo'],
           first: 1,
         });
-        const allCover = allCount.assets[0]?.uri ?? null;
-        items.push({
-          id: '__all__',
-          title: '所有照片',
-          assetCount: allCount.totalCount,
-          coverUri: allCover,
-        });
 
         for (const album of albumList) {
-          const cover = await MediaLibrary.getAssetsAsync({
-            album: album.id,
-            mediaType: ['photo'],
-            first: 1,
-          });
-          items.push({
-            id: album.id,
-            title: album.title,
-            assetCount: album.assetCount,
-            coverUri: cover.assets[0]?.uri ?? null,
-          });
+          if (!album.id || !album.title || album.assetCount <= 0) continue;
+          try {
+            const cover = await MediaLibrary.getAssetsAsync({
+              album: album.id,
+              mediaType: ['photo'],
+              first: 1,
+            });
+            const coverUri = cover.assets[0]?.uri ?? null;
+            validAlbums.push({
+              id: album.id,
+              title: album.title,
+              assetCount: cover.totalCount || album.assetCount,
+              coverUri,
+            });
+          } catch {
+            // Skip albums that the system returns but the app cannot read.
+          }
         }
 
-        // Sort: "所有照片" first, rest by count descending
-        items.sort((a, b) => {
-          if (a.id === '__all__') return -1;
-          if (b.id === '__all__') return 1;
-          return b.assetCount - a.assetCount;
-        });
-        setAlbums(items);
+        setAlbums(toVisibleAlbumItems({
+          allPhotos: {
+            totalCount: allPhotosPage.totalCount,
+            coverUri: allPhotosPage.assets[0]?.uri ?? null,
+          },
+          albums: validAlbums,
+        }));
       } catch { /* ignore */ }
       finally { setLoading(false); }
     })();
   }, []);
 
-  const handlePickAlbum = (album: AlbumItem) => {
+  const handlePickAlbum = (album: VisibleAlbumItem) => {
     setSelectedAlbum({ id: album.id, title: album.title });
     router.back();
   };
