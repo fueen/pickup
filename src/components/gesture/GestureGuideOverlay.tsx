@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AlbumStackGlyph } from '../ui/PickupGlyphs';
 
 interface Props {
   visible: boolean;
@@ -31,12 +32,12 @@ export function GestureGuideOverlay({ visible, onDismiss }: Props) {
         <View style={styles.overlay}>
           {/* ── Top toolbar hints ── */}
           <View style={styles.toolbarHintLeft}>
-            <MaterialCommunityIcons name="sort-variant" size={14} color="rgba(255,255,255,0.6)" />
+            <MaterialCommunityIcons name="tune-variant" size={15} color="rgba(255,255,255,0.6)" />
             <Text style={styles.toolbarHintText}>排序</Text>
           </View>
 
           <View style={styles.toolbarHintRight}>
-            <MaterialCommunityIcons name="delete-outline" size={14} color="rgba(255,255,255,0.6)" />
+            <MaterialCommunityIcons name="delete" size={15} color="rgba(255,255,255,0.6)" />
             <View style={styles.miniBadge}>
               <Text style={styles.miniBadgeText}>3</Text>
             </View>
@@ -85,12 +86,12 @@ export function GestureGuideOverlay({ visible, onDismiss }: Props) {
 
           {/* ── Bottom toolbar hints ── */}
           <View style={styles.bottomHintLeft}>
-            <MaterialCommunityIcons name="layers" size={16} color="rgba(255,255,255,0.5)" />
+            <AlbumStackGlyph active size={18} />
             <Text style={styles.bottomHintText}>切换相册</Text>
           </View>
 
           <View style={styles.bottomHintRight}>
-            <MaterialCommunityIcons name="information-outline" size={16} color="rgba(255,255,255,0.5)" />
+            <MaterialCommunityIcons name="information" size={16} color="rgba(255,255,255,0.5)" />
             <Text style={styles.bottomHintText}>照片详情</Text>
           </View>
 

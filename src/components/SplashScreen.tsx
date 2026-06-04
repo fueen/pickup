@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 
 interface Props {
   onFinish: () => void;
@@ -15,8 +15,6 @@ export function SplashScreen({ onFinish }: Props) {
   const letterK = useRef(new Animated.Value(0)).current;
   const letterU = useRef(new Animated.Value(0)).current;
   const letterP2 = useRef(new Animated.Value(0)).current;
-  const sloganOpacity = useRef(new Animated.Value(0)).current;
-  const sloganTranslate = useRef(new Animated.Value(8)).current;
   const dotPulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -57,22 +55,6 @@ export function SplashScreen({ onFinish }: Props) {
             }),
           ),
         ),
-      ]),
-      Animated.sequence([
-        Animated.delay(1120),
-        Animated.parallel([
-          Animated.timing(sloganOpacity, {
-            toValue: 1,
-            duration: 520,
-            useNativeDriver: true,
-          }),
-          Animated.spring(sloganTranslate, {
-            toValue: 0,
-            tension: 42,
-            friction: 10,
-            useNativeDriver: true,
-          }),
-        ]),
       ]),
     ]).start();
 
@@ -146,17 +128,6 @@ export function SplashScreen({ onFinish }: Props) {
         ))}
       </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.sloganWrap,
-          {
-            opacity: sloganOpacity,
-            transform: [{ translateY: sloganTranslate }],
-          },
-        ]}
-      >
-        <Text style={styles.slogan}>整理你的生活</Text>
-      </Animated.View>
       <Animated.View
         style={[
           styles.dot,
@@ -258,17 +229,6 @@ const styles = StyleSheet.create({
     fontSize: 44,
     fontWeight: '900',
     color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  sloganWrap: {
-    marginTop: 20,
-  },
-  slogan: {
-    fontFamily: 'serif',
-    fontSize: 16,
-    fontWeight: '300',
-    color: '#8E8E93',
-    letterSpacing: 4,
     textAlign: 'center',
   },
   dot: {

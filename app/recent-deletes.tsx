@@ -77,7 +77,7 @@ export default function RecentDeletesScreen() {
 
       {records.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <MaterialCommunityIcons name="delete-outline" size={64} color={Tokens.color.textMuted} />
+          <MaterialCommunityIcons name="delete" size={64} color={Tokens.color.textMuted} />
           <Text style={styles.emptyTitle}>暂无删除记录</Text>
           <Text style={styles.emptySubtitle}>删除照片后会在这里显示</Text>
         </View>

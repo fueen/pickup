@@ -1,7 +1,9 @@
 import {
   generateGroup,
   generateRandomGroup,
+  getViewedStateForSortChange,
   shouldRefillViewedPool,
+  shouldReloadPhotosForSortChange,
   getRefillCandidates,
 } from '../../src/services/photo-service';
 import { PhotoAsset } from '../../src/types/photo';
@@ -75,6 +77,35 @@ describe('generateGroup', () => {
 
     expect(result.map((photo) => photo.id)).toEqual(['photo-7', 'photo-2', 'photo-3']);
     expect(result.some((photo) => excludedIds.has(photo.id))).toBe(false);
+  });
+});
+
+describe('sort change refresh policy', () => {
+  it('requires a media-library reload when switching to newest-first sorting', () => {
+    expect(shouldReloadPhotosForSortChange('random', 'timeNewest')).toBe(true);
+    expect(shouldReloadPhotosForSortChange('sizeDesc', 'timeNewest')).toBe(true);
+    expect(shouldReloadPhotosForSortChange('timeOldest', 'timeNewest')).toBe(true);
+    expect(shouldReloadPhotosForSortChange('timeNewest', 'timeNewest')).toBe(true);
+  });
+
+  it('resets viewed state when switching to newest-first sorting', () => {
+    const viewed = new Set(['old-photo-1', 'old-photo-2']);
+    const order = ['old-photo-2', 'old-photo-1'];
+
+    const result = getViewedStateForSortChange('random', 'timeNewest', viewed, order);
+
+    expect([...result.viewedPhotoIds]).toEqual([]);
+    expect(result.viewedOrder).toEqual([]);
+  });
+
+  it('keeps viewed state for non-newest sort changes', () => {
+    const viewed = new Set(['photo-1']);
+    const order = ['photo-1'];
+
+    const result = getViewedStateForSortChange('random', 'sizeDesc', viewed, order);
+
+    expect([...result.viewedPhotoIds]).toEqual(['photo-1']);
+    expect(result.viewedOrder).toEqual(['photo-1']);
   });
 });
 

@@ -17,10 +17,10 @@ interface SortOption {
 }
 
 const SORT_OPTIONS: SortOption[] = [
-  { key: 'random', label: '随机', icon: 'shuffle-variant' },
-  { key: 'sizeDesc', label: '面积从大到小', icon: 'aspect-ratio' },
-  { key: 'timeNewest', label: '时间从新到旧', icon: 'sort-clock-descending-outline' },
-  { key: 'timeOldest', label: '时间从旧到新', icon: 'sort-clock-ascending-outline' },
+  { key: 'random', label: '随机', icon: 'shuffle' },
+  { key: 'sizeDesc', label: '面积从大到小', icon: 'image-size-select-large' },
+  { key: 'timeNewest', label: '时间从新到旧', icon: 'clock-time-eight' },
+  { key: 'timeOldest', label: '时间从旧到新', icon: 'clock-time-four' },
 ];
 
 interface Props {
@@ -98,7 +98,7 @@ export function SortPickerSheet({ visible, selected, onSelect, onClose }: Props)
                   {opt.label}
                 </Text>
                 {isActive && (
-                  <MaterialCommunityIcons name="check" size={20} color={Tokens.color.accent} />
+                  <MaterialCommunityIcons name="check-circle" size={20} color={Tokens.color.accent} />
                 )}
               </TouchableOpacity>
             );
