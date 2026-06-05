@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   date: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '900',
     color: Tokens.color.textPrimary,
     letterSpacing: -0.3,
     textShadowColor: 'rgba(0,0,0,0.6)',
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    borderRadius: 24,
+    borderRadius: 30,
     backgroundColor: '#0a0a0a',
   },
 });

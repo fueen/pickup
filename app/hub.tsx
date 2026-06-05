@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { HubLoadingProgress } from '../src/components/hub/HubLoadingProgress';
 import { MonthlyChart } from '../src/components/hub/MonthlyChart';
 import { PawMark } from '../src/components/hub/PawMark';
+import { AchievementSummaryPanel } from '../src/components/hub/AchievementSummaryPanel';
 import { WeeklyReviewCard } from '../src/components/settings/WeeklyReviewCard';
-import { AchievementStrip } from '../src/components/settings/AchievementStrip';
+import { StatCard } from '../src/components/settings/StatCard';
 import { useStatsContext } from '../src/contexts/StatsContext';
+import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { getValidRecentDeletes } from '../src/services/stats-service';
+import { Toast } from '../src/components/ui/Toast';
 import { Tokens } from '../src/design-tokens';
 
 interface MonthData {
@@ -30,6 +34,7 @@ function formatBytes(bytes: number): string {
 export default function HubScreen() {
   const router = useRouter();
   const { totalViewed, totalDeleted, totalFreedBytes, streakDays, weeklyHistory } = useStatsContext();
+  const { setMonthScope } = usePhotoContext();
   const [chartData, setChartData] = useState<MonthData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -37,6 +42,7 @@ export default function HubScreen() {
 
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [showYearPicker, setShowYearPicker] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const yearlyDataRef = useRef<Record<number, Record<number, number>>>({});
   const availableYearsRef = useRef<number[]>([]);
@@ -123,75 +129,91 @@ export default function HubScreen() {
     setChartData(data);
   };
 
+  const handleMonthPress = (monthIndex: number, item: MonthData) => {
+    if (item.count <= 0) {
+      setToastMsg('这个月份还没有照片');
+      return;
+    }
+
+    const scope = {
+      year: selectedYear,
+      monthIndex,
+      label: `${selectedYear}年${monthIndex + 1}月`,
+    };
+    setMonthScope(scope);
+    router.push('/');
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <HubLoadingProgress />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>更多功能</Text>
-        <Text style={styles.subtitle}>把清理照片变成看得见的成果 · 共 {totalCount} 张照片</Text>
-
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{totalDeleted}</Text>
-            <Text style={styles.summaryLabel}>累计清理</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Tokens.color.safe }]}>{streakDays}</Text>
-            <Text style={styles.summaryLabel}>连续天数</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryValue, { color: Tokens.color.accent }]}>{formatBytes(totalFreedBytes)}</Text>
-            <Text style={styles.summaryLabel}>释放空间</Text>
-          </View>
-        </View>
-
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>月份分析</Text>
-          <Text style={styles.sectionSubtitle}>看看哪些月份占用了最多记忆空间</Text>
+          <Text style={styles.sectionSubtitle}>共 {totalCount} 张照片，点击月份直接整理那个月的记忆</Text>
         </View>
 
-        {loading ? (
-          <ActivityIndicator color={Tokens.color.accent} style={{ marginTop: 40 }} />
-        ) : (
-          <View style={styles.monthPanel}>
-            <View style={styles.monthPanelTop}>
-              <TouchableOpacity style={styles.yearBtn} onPress={() => setShowYearPicker(true)} activeOpacity={0.7}>
-                <Text style={styles.yearText}>{selectedYear} 年</Text>
-                <MaterialCommunityIcons name="chevron-down" size={20} color={Tokens.color.accent} />
-              </TouchableOpacity>
-              <PawMark />
-            </View>
-
-            <Modal visible={showYearPicker} transparent animationType="fade">
-              <TouchableOpacity style={styles.yearOverlay} activeOpacity={1} onPress={() => setShowYearPicker(false)}>
-                <View style={styles.yearList}>
-                  {availableYearsRef.current.map((year) => (
-                    <TouchableOpacity
-                      key={year}
-                      style={[styles.yearOption, year === selectedYear && styles.yearOptionActive]}
-                      onPress={() => handleYearChange(year)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.yearOptionText, year === selectedYear && styles.yearOptionTextActive]}>
-                        {year} 年
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </TouchableOpacity>
-            </Modal>
-
-            <MonthlyChart data={chartData} />
+        <View style={styles.monthPanel}>
+          <View style={styles.monthPanelTop}>
+            <TouchableOpacity style={styles.yearBtn} onPress={() => setShowYearPicker(true)} activeOpacity={0.7}>
+              <Text style={styles.yearText}>{selectedYear} 年</Text>
+              <MaterialCommunityIcons name="chevron-down" size={20} color={Tokens.color.accent} />
+            </TouchableOpacity>
+            <PawMark />
           </View>
-        )}
+
+          <Modal visible={showYearPicker} transparent animationType="fade">
+            <TouchableOpacity style={styles.yearOverlay} activeOpacity={1} onPress={() => setShowYearPicker(false)}>
+              <View style={styles.yearList}>
+                {availableYearsRef.current.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[styles.yearOption, year === selectedYear && styles.yearOptionActive]}
+                    onPress={() => handleYearChange(year)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.yearOptionText, year === selectedYear && styles.yearOptionTextActive]}>
+                      {year} 年
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
+          <MonthlyChart data={chartData} onMonthPress={handleMonthPress} />
+        </View>
+
+        <View style={styles.statsSection}>
+          <View style={styles.sectionHeaderCompact}>
+            <Text style={styles.sectionTitle}>统计概览</Text>
+            <Text style={styles.sectionSubtitle}>清理成果会在这里持续累积</Text>
+          </View>
+          <View style={styles.statsGrid}>
+            <StatCard label="已浏览" value={totalViewed} valueColor={Tokens.color.textPrimary} />
+            <StatCard label="最近删除" value={recentDeleteCount} valueColor={Tokens.color.danger} />
+          </View>
+          <View style={styles.statsGrid}>
+            <StatCard label="连续天数" value={streakDays} unit="天" valueColor={Tokens.color.safe} />
+            <StatCard label="释放空间" value={formatBytes(totalFreedBytes)} valueColor={Tokens.color.accent} />
+          </View>
+        </View>
 
         <View style={styles.sectionSpacing}>
           <WeeklyReviewCard weeklyHistory={weeklyHistory} streakDays={streakDays} />
         </View>
 
-        <AchievementStrip
+        <AchievementSummaryPanel
           totalViewed={totalViewed}
           totalDeleted={totalDeleted}
           totalFreedBytes={totalFreedBytes}
@@ -199,50 +221,22 @@ export default function HubScreen() {
           recentDeleteCount={recentDeleteCount}
         />
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>功能入口</Text>
-          <Text style={styles.sectionSubtitle}>更多清理工具会在这里逐步开放</Text>
-        </View>
-
-        <View style={styles.featureGrid}>
-          <TouchableOpacity
-            style={styles.featureTile}
-            onPress={() => router.push('/recent-deletes')}
-            activeOpacity={0.75}
-          >
-            <MaterialCommunityIcons name="delete-clock-outline" size={24} color={Tokens.color.danger} />
-            <Text style={styles.featureTitle}>最近删除</Text>
-            <Text style={styles.featureSubtitle}>{recentDeleteCount} 张记录</Text>
-          </TouchableOpacity>
-
-          <View style={styles.featureTile}>
-            <MaterialCommunityIcons name="image-filter-center-focus" size={24} color={Tokens.color.accent} />
-            <Text style={styles.featureTitle}>相册洞察</Text>
-            <Text style={styles.featureSubtitle}>即将开放</Text>
-          </View>
-
-          <View style={styles.featureTile}>
-            <MaterialCommunityIcons name="bell-outline" size={24} color={Tokens.color.safe} />
-            <Text style={styles.featureTitle}>清理提醒</Text>
-            <Text style={styles.featureSubtitle}>即将开放</Text>
-          </View>
-
-          <View style={styles.featureTile}>
-            <MaterialCommunityIcons name="file-chart-outline" size={24} color="#64D2FF" />
-            <Text style={styles.featureTitle}>导出报告</Text>
-            <Text style={styles.featureSubtitle}>即将开放</Text>
-          </View>
-        </View>
+        {/* v2.0: 功能入口卡片暂时隐藏，后续统一评估是否回到 Hub。 */}
 
         <View style={{ height: 96 }} />
       </ScrollView>
+      <Toast
+        visible={toastMsg !== null}
+        message={toastMsg ?? ''}
+        onDismiss={() => setToastMsg(null)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
-  scrollContent: { paddingTop: 60 },
+  scrollContent: { paddingTop: 72 },
   title: {
     ...Tokens.typography.headline,
     color: Tokens.color.textPrimary,
@@ -287,36 +281,42 @@ const styles = StyleSheet.create({
     color: Tokens.color.textSecondary,
   },
   sectionHeader: {
-    paddingHorizontal: Tokens.spacing.l,
+    paddingHorizontal: 32,
     marginTop: Tokens.spacing.s,
-    marginBottom: Tokens.spacing.m,
+    marginBottom: 18,
+  },
+  sectionHeaderCompact: {
+    paddingHorizontal: 32,
+    marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: '900',
     color: Tokens.color.textPrimary,
   },
   sectionSubtitle: {
-    marginTop: 5,
-    fontSize: 12,
-    lineHeight: 17,
-    color: Tokens.color.textSecondary,
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '900',
+    color: Tokens.color.textMuted,
   },
   yearBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.075)',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
     alignSelf: 'flex-start',
     minHeight: 44,
     gap: 6,
   },
-  yearText: { fontSize: 15, fontWeight: '600', color: Tokens.color.textPrimary },
+  yearText: { fontSize: 17, fontWeight: '900', color: Tokens.color.textPrimary },
   yearOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   yearList: { backgroundColor: Tokens.color.surface, borderRadius: 16, padding: 8, minWidth: 160 },
   yearOption: { paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, alignItems: 'center' },
@@ -324,15 +324,15 @@ const styles = StyleSheet.create({
   yearOptionText: { fontSize: 16, color: Tokens.color.textSecondary },
   yearOptionTextActive: { fontSize: 16, color: Tokens.color.accent, fontWeight: '700' },
   monthPanel: {
-    marginHorizontal: Tokens.spacing.l,
-    marginTop: 14,
-    paddingTop: 16,
-    paddingHorizontal: 14,
-    paddingBottom: 18,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.09)',
+    marginHorizontal: 16,
+    marginTop: 10,
+    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    borderRadius: 32,
+    backgroundColor: '#050505',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.10)',
   },
   monthPanelTop: {
     minHeight: 46,
@@ -343,6 +343,15 @@ const styles = StyleSheet.create({
   },
   sectionSpacing: {
     marginTop: Tokens.spacing.xl,
+  },
+  statsSection: {
+    marginTop: 34,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: Tokens.spacing.m,
+    paddingHorizontal: 16,
+    marginBottom: Tokens.spacing.m,
   },
   featureGrid: {
     flexDirection: 'row',

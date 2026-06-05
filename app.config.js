@@ -9,7 +9,7 @@ export default {
   expo: {
     name: APP_NAME,
     slug: 'pickup',
-    version: '1.3.4',
+    version: '2.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -29,6 +29,7 @@ export default {
       },
     },
     plugins: [
+      './plugins/with-android-single-task',
       'expo-font',
       [
         'expo-media-library',

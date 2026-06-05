@@ -15,6 +15,7 @@ import { ChangelogModal } from '../src/components/ui/ChangelogModal';
 import { PickupTabGlyph } from '../src/components/ui/PickupGlyphs';
 import { CURRENT_CHANGELOG } from '../src/constants/changelog';
 import { acknowledgeChangelog, shouldShowChangelog } from '../src/services/changelog-service';
+import { Tokens } from '../src/design-tokens';
 
 const TABS = [
   { name: 'index', size: 28 },
@@ -75,32 +76,32 @@ const tabStyles = StyleSheet.create({
     zIndex: 50,
   },
   capsule: {
-    minWidth: 196,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 28,
-    backgroundColor: 'rgba(10,10,10,0.72)',
+    minWidth: 208,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 34,
+    backgroundColor: 'rgba(18,18,19,0.92)',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.15)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.34,
-    shadowRadius: 18,
+    shadowOpacity: 0.42,
+    shadowRadius: 22,
     elevation: 10,
     overflow: 'hidden',
   },
   materialLayer: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
-    backgroundColor: 'rgba(10,10,10,0.78)',
+    borderRadius: 34,
+    backgroundColor: Tokens.color.surface,
   },
   innerStroke: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 34,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.13)',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.55)',
+    borderBottomColor: 'rgba(0,0,0,0.7)',
   },
   itemsLayer: {
     flexDirection: 'row',
@@ -110,16 +111,16 @@ const tabStyles = StyleSheet.create({
     elevation: 2,
   },
   item: {
-    width: 58,
-    height: 46,
+    width: 62,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
     elevation: 3,
   },
   iconSlot: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

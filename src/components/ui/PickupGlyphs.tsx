@@ -23,7 +23,7 @@ export function AlbumStackGlyph({ active = false, size = 28 }: GlyphProps) {
   const scale = size / 28;
   const frontColor = active ? '#FFFFFF' : 'rgba(255,255,255,0.86)';
   const accentColor = active ? Tokens.color.accent : 'rgba(255,255,255,0.36)';
-  const mutedColor = active ? 'rgba(255,204,0,0.34)' : 'rgba(255,255,255,0.14)';
+  const mutedColor = active ? 'rgba(233,255,63,0.28)' : 'rgba(255,255,255,0.14)';
 
   return (
     <View style={[styles.glyphBox, { width: size, height: size }]}>
@@ -37,7 +37,7 @@ export function AlbumStackGlyph({ active = false, size = 28 }: GlyphProps) {
             left: 2 * scale,
             top: 6 * scale,
             backgroundColor: mutedColor,
-            borderColor: active ? 'rgba(255,204,0,0.38)' : 'rgba(255,255,255,0.12)',
+            borderColor: active ? 'rgba(233,255,63,0.38)' : 'rgba(255,255,255,0.12)',
           },
         ]}
       />
@@ -99,7 +99,7 @@ export function AlbumStackGlyph({ active = false, size = 28 }: GlyphProps) {
 export function ProfileGlyph({ active = false, size = 30 }: GlyphProps) {
   const scale = size / 30;
   const color = active ? Tokens.color.accent : 'rgba(255,255,255,0.88)';
-  const fill = active ? 'rgba(255,204,0,0.16)' : 'rgba(255,255,255,0.08)';
+  const fill = active ? 'rgba(233,255,63,0.16)' : 'rgba(255,255,255,0.08)';
 
   return (
     <View style={[styles.glyphBox, { width: size, height: size }]}>
@@ -164,7 +164,7 @@ export function ProfileGlyph({ active = false, size = 30 }: GlyphProps) {
 function HubGlyph({ active = false, size = 28 }: GlyphProps) {
   const scale = size / 28;
   const color = active ? Tokens.color.accent : 'rgba(255,255,255,0.86)';
-  const faint = active ? 'rgba(255,204,0,0.20)' : 'rgba(255,255,255,0.10)';
+  const faint = active ? 'rgba(233,255,63,0.20)' : 'rgba(255,255,255,0.10)';
 
   return (
     <View style={[styles.hubBox, { width: size, height: size, gap: 4 * scale }]}>

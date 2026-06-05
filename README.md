@@ -4,7 +4,7 @@
 
 像刷短视频一样快速整理相册：上滑删除、下滑保留，每 10 张一组批量确认，安全可控。
 
-当前版本：**v1.3.4**
+当前版本：**v2.0.0**
 
 ## 功能
 
@@ -197,17 +197,20 @@ GestureHandlerRootView
 
 | Build Type | App 名 | Package ID | 体积 | 用途 |
 |-----------|--------|------------|------|------|
-| debug | 拾忆 | com.zackf.pickup.dev | ~192MB | 本地 dev-client 热更新 |
-| release | PickUp | com.zackf.pickup.preview | ~100MB | Android 内部分发测试 |
+| debug | 拾忆 | com.zackf.pickup.dev | 192.43MB | 本地 dev-client 热更新 |
+| release | PickUp | com.zackf.pickup.preview | 95.92MB | Android 内部分发测试 |
 | production | 拾遗 | com.zackf.pickup | — | 正式发布 |
 
 Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
 
-v1.3.4 本地 release 包输出：
+v2.0.0 本地构建输出：
 
 ```
-dist/pickup-v1.3.4-release.apk
+dist/pickup-v2.0.0-dev.apk
+dist/pickup-v2.0.0-release.apk
 ```
+
+Android 原生版本同步为 `versionName "2.0.0"` / `versionCode 4`。本地 release 构建时 R8 可能输出 Amazon Appstore SDK 的 stack map table warning，当前构建结果为 `BUILD SUCCESSFUL`。
 
 ## 开始开发
 

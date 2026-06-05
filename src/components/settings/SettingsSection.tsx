@@ -18,18 +18,21 @@ export function SettingsSection({ title, children }: SettingsSectionProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: Tokens.spacing.xl,
+    marginBottom: 30,
   },
   title: {
-    ...Tokens.typography.caption,
-    color: Tokens.color.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: Tokens.spacing.s,
-    marginLeft: Tokens.spacing.l,
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '900',
+    color: Tokens.color.textPrimary,
+    marginBottom: Tokens.spacing.l,
+    marginLeft: 2,
   },
   container: {
     backgroundColor: Tokens.color.surface,
-    borderRadius: Tokens.radius.card,
+    borderRadius: 28,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
   },
 });
