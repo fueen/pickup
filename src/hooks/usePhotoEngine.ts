@@ -2,13 +2,22 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoAsset, PermissionStatus } from '../types/photo';
-import { generateGroup } from '../services/photo-service';
+import {
+  generateGroup,
+  getViewedStateForSortChange,
+  shouldReloadPhotosForSortChange,
+} from '../services/photo-service';
 import { SortMode } from '../types/photo';
 import { Tokens } from '../design-tokens';
 
 const VIEWED_IDS_KEY = 'viewedPhotoIds';
 const VIEWED_ORDER_KEY = 'viewedPhotoOrder';
 const SORT_MODE_KEY = 'sortMode';
+
+interface LoadPhotosOptions {
+  sortModeOverride?: SortMode;
+  resetViewed?: boolean;
+}
 
 export function usePhotoEngine() {
   const [allPhotos, setAllPhotos] = useState<PhotoAsset[]>([]);
@@ -66,7 +75,7 @@ export function usePhotoEngine() {
     }
   }, []);
 
-  const loadPhotos = useCallback(async (albumId?: string) => {
+  const loadPhotos = useCallback(async (albumId?: string, options: LoadPhotosOptions = {}) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -116,9 +125,9 @@ export function usePhotoEngine() {
       const savedIds = await AsyncStorage.getItem(VIEWED_IDS_KEY);
       const savedOrder = await AsyncStorage.getItem(VIEWED_ORDER_KEY);
       const savedSortMode = await AsyncStorage.getItem(SORT_MODE_KEY);
-      const idSet: Set<string> = savedIds ? new Set(JSON.parse(savedIds)) : new Set();
-      const orderArr: string[] = savedOrder ? JSON.parse(savedOrder) : [];
-      const currentSortMode: SortMode = (savedSortMode as SortMode) || 'random';
+      const idSet: Set<string> = options.resetViewed || !savedIds ? new Set() : new Set(JSON.parse(savedIds));
+      const orderArr: string[] = options.resetViewed || !savedOrder ? [] : JSON.parse(savedOrder);
+      const currentSortMode: SortMode = options.sortModeOverride ?? ((savedSortMode as SortMode) || 'random');
       setViewedPhotoIds(idSet);
       viewedOrderRef.current = orderArr;
       setSortMode(currentSortMode);
@@ -214,13 +223,26 @@ export function usePhotoEngine() {
     });
   }, [allPhotos, viewedPhotoIds, markedForDelete, sortMode]);
 
-  const changeSortMode = useCallback(async (newMode: SortMode) => {
+  const changeSortMode = useCallback(async (newMode: SortMode, albumId?: string) => {
+    const previousMode = sortMode;
     setSortMode(newMode);
     await AsyncStorage.setItem(SORT_MODE_KEY, newMode);
+
+    if (shouldReloadPhotosForSortChange(previousMode, newMode)) {
+      await loadPhotos(albumId, { sortModeOverride: newMode, resetViewed: true });
+      return;
+    }
+
     try {
+      const viewedState = getViewedStateForSortChange(
+        previousMode,
+        newMode,
+        viewedPhotoIds,
+        viewedOrderRef.current,
+      );
       const group = generateGroup(
-        allPhotos, viewedPhotoIds, Tokens.photo.groupSize,
-        viewedOrderRef.current, newMode,
+        allPhotos, viewedState.viewedPhotoIds, Tokens.photo.groupSize,
+        viewedState.viewedOrder, newMode,
       );
       setCurrentGroup(group);
       setGroupIndex(0);
@@ -229,7 +251,7 @@ export function usePhotoEngine() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '排序切换失败');
     }
-  }, [allPhotos, viewedPhotoIds]);
+  }, [allPhotos, loadPhotos, sortMode, viewedPhotoIds]);
 
   return {
     allPhotos, currentGroup, groupIndex, setGroupIndex,

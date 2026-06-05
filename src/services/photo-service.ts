@@ -18,6 +18,26 @@ interface GenerateGroupOptions {
   excludedIds?: Set<string>;
 }
 
+export function shouldReloadPhotosForSortChange(previousMode: SortMode, nextMode: SortMode): boolean {
+  return nextMode === 'timeNewest';
+}
+
+export function getViewedStateForSortChange(
+  previousMode: SortMode,
+  nextMode: SortMode,
+  viewedPhotoIds: Set<string>,
+  viewedOrder: string[],
+): { viewedPhotoIds: Set<string>; viewedOrder: string[] } {
+  if (shouldReloadPhotosForSortChange(previousMode, nextMode)) {
+    return { viewedPhotoIds: new Set(), viewedOrder: [] };
+  }
+
+  return {
+    viewedPhotoIds: new Set(viewedPhotoIds),
+    viewedOrder: [...viewedOrder],
+  };
+}
+
 export function generateGroup(
   allPhotos: PhotoAsset[],
   viewedPhotoIds: Set<string>,

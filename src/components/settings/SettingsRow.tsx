@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tokens } from '../../design-tokens';
 
 interface SettingsRowProps {
@@ -21,7 +22,7 @@ export function SettingsRow({
       <View style={styles.right}>
         {rightContent}
         {showArrow && onPress ? (
-          <Text style={styles.arrow}>{'>'}</Text>
+          <MaterialCommunityIcons name="chevron-right" size={22} color={Tokens.color.textMuted} />
         ) : null}
       </View>
     </View>
@@ -62,10 +63,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Tokens.spacing.s,
-  },
-  arrow: {
-    color: Tokens.color.textMuted,
-    fontSize: 18,
-    fontWeight: '600',
   },
 });

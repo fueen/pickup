@@ -25,6 +25,7 @@ import { formatPhotoDate } from '../src/utils/date-utils';
 import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
 import { deletePhotos } from '../src/services/delete-service';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
+import { AlbumStackGlyph } from '../src/components/ui/PickupGlyphs';
 import { Tokens } from '../src/design-tokens';
 import {
   DeleteConfirmSource,
@@ -100,8 +101,8 @@ export default function BrowseScreen() {
 
   const handleSortSelect = useCallback((mode: typeof sortMode) => {
     setSortSheetVisible(false);
-    changeSortMode(mode);
-  }, [changeSortMode]);
+    changeSortMode(mode, albumIdStr);
+  }, [albumIdStr, changeSortMode]);
 
   const deleteIndices = useMemo(() => {
     const s = new Set<number>();
@@ -360,7 +361,7 @@ export default function BrowseScreen() {
       {/* Top toolbar — left: sort, right: quick-delete */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.pill} onPress={showSortPicker} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="sort-variant" size={16} color="#fff" />
+          <MaterialCommunityIcons name="tune-variant" size={17} color="#fff" />
           <Text style={styles.pillLabel}>排序</Text>
         </TouchableOpacity>
 
@@ -456,7 +457,7 @@ export default function BrowseScreen() {
               }}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons name="information-outline" size={24} color="#fff" />
+              <MaterialCommunityIcons name="information" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
@@ -473,8 +474,8 @@ export default function BrowseScreen() {
       {/* Album button — always visible (including empty albums) */}
       {permissionStatus !== 'denied' && (
         <View style={styles.albumBtnWrap}>
-          <TouchableOpacity style={styles.infoBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="layers" size={24} color="#fff" />
+          <TouchableOpacity style={styles.albumBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
+            <AlbumStackGlyph active size={28} />
           </TouchableOpacity>
         </View>
       )}
@@ -580,6 +581,21 @@ const styles = StyleSheet.create({
   albumBtnWrap: { position: 'absolute', bottom: 100, left: 16, zIndex: 20 },
   infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },
   infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  albumBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.58)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    elevation: 8,
+  },
   centered: { flex: 1, backgroundColor: Tokens.color.background, justifyContent: 'center', alignItems: 'center', padding: Tokens.spacing.xxl },
   errorText: { ...Tokens.typography.body, color: Tokens.color.danger, textAlign: 'center' },
 });

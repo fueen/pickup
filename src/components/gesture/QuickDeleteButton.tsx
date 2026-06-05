@@ -19,7 +19,7 @@ export function QuickDeleteButton({ count, onPress, loading }: Props) {
       activeOpacity={0.7}
       hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
     >
-      <MaterialCommunityIcons name="delete-outline" size={18} color="#fff" />
+      <MaterialCommunityIcons name="delete" size={19} color="#fff" />
       <View style={styles.badge}>
         <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
       </View>

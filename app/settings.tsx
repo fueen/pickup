@@ -241,9 +241,7 @@ export default function SettingsScreen() {
           style={styles.footerArea}
           activeOpacity={1}
           onPress={handleFooterTap}
-        >
-          <Text style={styles.footerText}>PickUp · 记忆由你选择</Text>
-        </TouchableOpacity>
+        />
 
         <View style={{ height: 60 }} />
       </ScrollView>
@@ -303,9 +301,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
     alignItems: 'center',
     paddingVertical: 20,
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#2C2C2E',
+    minHeight: 52,
   },
 });

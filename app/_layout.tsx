@@ -4,9 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
-import { Tokens } from '../src/design-tokens';
 import { SubscriptionProvider } from '../src/contexts/SubscriptionContext';
 import { StatsProvider } from '../src/contexts/StatsContext';
 import { PhotoProvider } from '../src/contexts/PhotoContext';
@@ -14,13 +12,14 @@ import { SessionProvider } from '../src/contexts/SessionContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { SplashScreen } from '../src/components/SplashScreen';
 import { ChangelogModal } from '../src/components/ui/ChangelogModal';
+import { PickupTabGlyph } from '../src/components/ui/PickupGlyphs';
 import { CURRENT_CHANGELOG } from '../src/constants/changelog';
 import { acknowledgeChangelog, shouldShowChangelog } from '../src/services/changelog-service';
 
 const TABS = [
-  { name: 'index', icon: 'image-multiple-outline', size: 24 },
-  { name: 'hub', icon: 'apps', size: 24 },
-  { name: 'settings', icon: 'account-outline', size: 26 },
+  { name: 'index', size: 28 },
+  { name: 'hub', size: 27 },
+  { name: 'settings', size: 30 },
 ] as const;
 
 function SimpleTabBar() {
@@ -28,7 +27,10 @@ function SimpleTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const currentRoute = pathname === '/' ? 'index' : pathname.replace(/^\//, '');
-  const isImmersiveRoute = currentRoute === 'recent-deletes' || currentRoute === 'review' || currentRoute === 'about';
+  const isImmersiveRoute = currentRoute === 'recent-deletes'
+    || currentRoute === 'review'
+    || currentRoute === 'about'
+    || currentRoute === 'albums';
 
   if (isImmersiveRoute) {
     return null;
@@ -52,20 +54,7 @@ function SimpleTabBar() {
                 style={tabStyles.item}
               >
                 <View style={tabStyles.iconSlot}>
-                  <MaterialCommunityIcons
-                    name={tab.icon as any}
-                    size={tab.size}
-                    color="#FFFFFF"
-                  />
-                  {isFocused && (
-                    <MaterialCommunityIcons
-                      pointerEvents="none"
-                      name={tab.icon as any}
-                      size={tab.size}
-                      color={Tokens.color.accent}
-                      style={tabStyles.activeIcon}
-                    />
-                  )}
+                  <PickupTabGlyph name={tab.name} active={isFocused} size={tab.size} />
                 </View>
               </Pressable>
             );
@@ -133,9 +122,6 @@ const tabStyles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  activeIcon: {
-    position: 'absolute',
   },
 });
 

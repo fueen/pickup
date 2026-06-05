@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const PARTICLE_COUNT = 14;
+const PARTICLE_COUNT = 8;
 const PARTICLE_COLORS = ['#FFCC00', '#FF7A90', '#5AD7FF', '#34C759', '#FFB84D'];
 const VARIANT_COUNT = 3;
 const CANNON_STREAMERS = [
@@ -43,6 +43,13 @@ export function CelebrationOverlay({ visible, count, onDone }: Props) {
   const cannonProgress = useRef(new Animated.Value(0)).current;
   const cardProgress = useRef(new Animated.Value(0)).current;
   const particles = useRef<Particle[]>([]);
+  const onDoneRef = useRef(onDone);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runningAnimationsRef = useRef<Animated.CompositeAnimation[]>([]);
+
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   // Init particles on first render
   if (particles.current.length === 0) {
@@ -65,7 +72,17 @@ export function CelebrationOverlay({ visible, count, onDone }: Props) {
   }, [variant]);
 
   useEffect(() => {
+    const stopRunningAnimations = () => {
+      runningAnimationsRef.current.forEach((animation) => animation.stop());
+      runningAnimationsRef.current = [];
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
+    };
+
     if (!visible) {
+      stopRunningAnimations();
       overlayOpacity.setValue(0);
       heroProgress.setValue(0);
       textOpacity.setValue(0);
@@ -75,66 +92,87 @@ export function CelebrationOverlay({ visible, count, onDone }: Props) {
       return;
     }
 
+    stopRunningAnimations();
     setVariant(Math.floor(Math.random() * VARIANT_COUNT));
+    overlayOpacity.setValue(0);
+    heroProgress.setValue(0);
+    textOpacity.setValue(0);
+    cannonProgress.setValue(0);
+    cardProgress.setValue(0);
+    particles.current.forEach((p) => { p.anim.setValue(0); p.rotate.setValue(0); });
 
-    Animated.parallel([
+    const mainAnimation = Animated.parallel([
       Animated.timing(overlayOpacity, {
         toValue: 1,
-        duration: 260,
+        duration: 160,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(heroProgress, {
         toValue: 1,
-        duration: 1080,
+        duration: 780,
         easing: Easing.bezier(0.22, 1, 0.36, 1),
         useNativeDriver: true,
       }),
       Animated.timing(textOpacity, {
         toValue: 1,
-        duration: 460,
-        delay: 240,
+        duration: 280,
+        delay: 140,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(cannonProgress, {
         toValue: 1,
-        duration: 1680,
-        delay: 120,
+        duration: 900,
+        delay: 80,
         easing: Easing.bezier(0.12, 0.82, 0.18, 1),
         useNativeDriver: true,
       }),
       Animated.timing(cardProgress, {
         toValue: 1,
-        duration: 1120,
-        delay: 130,
+        duration: 760,
+        delay: 80,
         easing: Easing.bezier(0.2, 0.8, 0.2, 1),
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    mainAnimation.start();
 
     const particleAnims = particles.current.map((p) => {
       return Animated.parallel([
         Animated.timing(p.anim, {
           toValue: 1,
-          duration: randomBetween(980, 1320),
+          duration: randomBetween(620, 860),
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(p.rotate, {
           toValue: randomBetween(-1, 1),
-          duration: randomBetween(980, 1320),
+          duration: randomBetween(620, 860),
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]);
     });
-    Animated.stagger(30, particleAnims).start();
+    const particleAnimation = Animated.stagger(18, particleAnims);
+    particleAnimation.start();
+    runningAnimationsRef.current = [mainAnimation, particleAnimation];
 
-    // Auto dismiss
-    const timer = setTimeout(onDone, 2850);
-    return () => clearTimeout(timer);
-  }, [visible, onDone, overlayOpacity, heroProgress, textOpacity, cannonProgress, cardProgress]);
+    dismissTimerRef.current = setTimeout(() => {
+      const fadeOut = Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      });
+      runningAnimationsRef.current = [fadeOut];
+      fadeOut.start(({ finished }) => {
+        if (finished) onDoneRef.current();
+      });
+    }, 980);
+
+    return stopRunningAnimations;
+  }, [visible, overlayOpacity, heroProgress, textOpacity, cannonProgress, cardProgress]);
 
   if (!visible) return null;
 

@@ -2,6 +2,56 @@
 
 ---
 
+## 2026-06-04 18:xx | v1.3.5 体验修复、图标优化与本地 release 构建
+
+### 一句话概述
+
+v1.3.5 体验修复已实现并完成本地 release 构建：移除冗余标语、优化删除成功庆祝动画、修复“时间从新到旧”排序刷新逻辑、重做个人中心/相册入口图标，并隐藏相册选择页底部 Tab。
+
+### 当前进度 / 关键结论
+
+- **文案精简**：`SplashScreen` 已去掉 `整理你的生活`；个人中心底部不再展示 `PickUp · 记忆由你选择`，但保留底部 5 次点击开发者模式热区。
+- **删除成功动画优化**：`CelebrationOverlay` 粒子数从 14 降到 8，整体动效时长和自动关闭等待缩短；使用 `onDoneRef`、timer 清理和动画 stop，避免连续删除时旧动画/旧回调堆积导致卡顿或延迟消失。
+- **最新排序刷新**：新增 `shouldReloadPhotosForSortChange()` 和 `getViewedStateForSortChange()`；只要选择 `timeNewest` 都会重新查询当前相册范围内照片，并重置浏览起点，确保新拍照片进入候选池。
+- **图标视觉优化**：新增 `src/components/ui/PickupGlyphs.tsx`，用 RN View 自绘圆润的相册叠卡、个人中心头像徽章和 Hub glyph；浏览页左下角相册入口与底部 Tab 改用新 glyph。
+- **相册选择页沉浸**：`app/_layout.tsx` 将 `albums` 加入隐藏自定义 Tab 的沉浸路由列表，相册选择页底部不再显示 Tab 栏。
+- **需求文档/计划**：`PRD-v1.3-趣味化与确认删除体验需求.md` 已追加 v1.3.5 需求；新增执行计划 `docs/superpowers/plans/2026-06-04-v1.3.5-polish-fixes-plan.md`。
+
+### 验证与构建
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过：13 个 test suites / 72 个 tests；仍有既有 `react-test-renderer is deprecated` warning。
+- 首次从仓库根目录运行 `android\gradlew.bat assembleRelease` 失败，原因是 Gradle root 不在仓库根目录；正确命令为在 `android/` 目录运行 `.\gradlew.bat assembleRelease`。
+- `android/gradlew.bat assembleRelease` 在 `android/` 目录下通过，仅输出 Expo `NODE_ENV` 未显式设置提示。
+- release APK 已复制到 `dist/pickup-v1.3.4-release.apk`，大小约 100.6 MB。
+
+### 关键文件
+
+| 新增 | 修改 |
+|------|------|
+| `src/components/ui/PickupGlyphs.tsx` | `app/_layout.tsx` |
+| `docs/superpowers/plans/2026-06-04-v1.3.5-polish-fixes-plan.md` | `app/index.tsx` |
+| | `app/settings.tsx` |
+| | `app/recent-deletes.tsx` |
+| | `src/components/SplashScreen.tsx` |
+| | `src/components/ui/CelebrationOverlay.tsx` |
+| | `src/hooks/usePhotoEngine.ts` |
+| | `src/services/photo-service.ts` |
+| | `src/components/gesture/GestureGuideOverlay.tsx` |
+| | `src/components/gesture/QuickDeleteButton.tsx` |
+| | `src/components/photo-card/SortPickerSheet.tsx` |
+| | `src/components/settings/SettingsRow.tsx` |
+| | `__tests__/unit/photo-service.test.ts` |
+| | `PRD-v1.3-趣味化与确认删除体验需求.md` |
+
+### 当前需注意
+
+- 当前版本号仍为 `1.3.4`，本轮只构建本地 release APK，未做正式版本号 bump、tag 或 GitHub Release。
+- 工作区存在若干非本轮历史/未跟踪文件（如 `.reasonix/`、旧 PRD/PDF/HTML、`REQUIREMENTS-v1.1.md` 删除状态等）；提交时只应 stage 本轮相关文件和 release APK。
+- Metro 服务日志位于 `.codex-logs/`，该目录为本地运行产物，不应提交。
+
+---
+
 ## 2026-06-03 22:xx | v1.3.4 开屏、关于页与更新日志发布构建
 
 ### 一句话概述
