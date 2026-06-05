@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PhotoAsset, PermissionStatus } from '../types/photo';
+import { MonthScope, PhotoAsset, PermissionStatus } from '../types/photo';
 import {
+  filterPhotosByMonthScope,
   generateGroup,
   getViewedStateForSortChange,
+  hasRemainingPhotosInMonthScope,
   shouldReloadPhotosForSortChange,
 } from '../services/photo-service';
 import { SortMode } from '../types/photo';
@@ -17,6 +19,7 @@ const SORT_MODE_KEY = 'sortMode';
 interface LoadPhotosOptions {
   sortModeOverride?: SortMode;
   resetViewed?: boolean;
+  monthScopeOverride?: MonthScope | null;
 }
 
 export function usePhotoEngine() {
@@ -30,6 +33,7 @@ export function usePhotoEngine() {
   const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>('undetermined');
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('random');
+  const [monthScope, setMonthScope] = useState<MonthScope | null>(null);
 
   const viewedOrderRef = useRef<string[]>([]);
 
@@ -101,7 +105,7 @@ export function usePhotoEngine() {
 
       console.log(`[pickup] Total photos found: ${allAssets.length}`);
 
-      const photos: PhotoAsset[] = allAssets.map((a) => ({
+      const loadedPhotos: PhotoAsset[] = allAssets.map((a) => ({
         id: a.id,
         uri: a.uri,
         width: a.width,
@@ -111,6 +115,11 @@ export function usePhotoEngine() {
         fileSize: 0,
         albumIds: a.albumId ? [a.albumId] : [],
       }));
+      const activeMonthScope = options.monthScopeOverride !== undefined
+        ? options.monthScopeOverride
+        : monthScope;
+      const photos = filterPhotosByMonthScope(loadedPhotos, activeMonthScope);
+      setMonthScope(activeMonthScope);
       setAllPhotos(photos);
       setGroupIndex(0);
       setMarkedForDelete(new Set());
@@ -152,7 +161,7 @@ export function usePhotoEngine() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [monthScope]);
 
   const loadNextGroup = useCallback(() => {
     try {
@@ -184,6 +193,10 @@ export function usePhotoEngine() {
     const remainingPhotos = allPhotos.filter((p) => !markedForDelete.has(p.id));
     setAllPhotos(remainingPhotos);
   }, [allPhotos, markedForDelete]);
+
+  const clearMonthScope = useCallback(() => {
+    setMonthScope(null);
+  }, []);
 
   // REQ-09: refill group after quick-delete to maintain group size
   const refillGroup = useCallback((deleteCount: number) => {
@@ -260,5 +273,7 @@ export function usePhotoEngine() {
     permissionStatus, error, requestPermissions,
     loadPhotos, loadNextGroup, clearMarkedPhotos, refillGroup,
     sortMode, changeSortMode,
+    monthScope, setMonthScope, clearMonthScope,
+    hasRemainingInMonthScope: (photos: PhotoAsset[] = allPhotos) => hasRemainingPhotosInMonthScope(photos, monthScope),
   };
 }

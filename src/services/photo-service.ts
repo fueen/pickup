@@ -1,4 +1,4 @@
-import { PhotoAsset, SortMode } from '../types/photo';
+import { MonthScope, PhotoAsset, SortMode } from '../types/photo';
 import { fisherYatesShuffle } from '../utils/fisher-yates';
 
 function getSortComparator(mode: SortMode): (a: PhotoAsset, b: PhotoAsset) => number {
@@ -16,6 +16,25 @@ function getSortComparator(mode: SortMode): (a: PhotoAsset, b: PhotoAsset) => nu
 
 interface GenerateGroupOptions {
   excludedIds?: Set<string>;
+}
+
+export function filterPhotosByMonthScope(
+  photos: PhotoAsset[],
+  scope: MonthScope | null,
+): PhotoAsset[] {
+  if (!scope) return photos;
+
+  return photos.filter((photo) => {
+    const date = new Date(photo.creationTime);
+    return date.getFullYear() === scope.year && date.getMonth() === scope.monthIndex;
+  });
+}
+
+export function hasRemainingPhotosInMonthScope(
+  photos: PhotoAsset[],
+  scope: MonthScope | null,
+): boolean {
+  return filterPhotosByMonthScope(photos, scope).length > 0;
 }
 
 export function shouldReloadPhotosForSortChange(previousMode: SortMode, nextMode: SortMode): boolean {

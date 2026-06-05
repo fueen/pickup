@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,24 +9,15 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSubscriptionContext } from '../src/contexts/SubscriptionContext';
-import { useStatsContext } from '../src/contexts/StatsContext';
-import { StatCard } from '../src/components/settings/StatCard';
 import { SettingsSection } from '../src/components/settings/SettingsSection';
 import { SettingsRow } from '../src/components/settings/SettingsRow';
 import { Toast } from '../src/components/ui/Toast';
+import { GuidePreviewModal } from '../src/components/ui/GuidePreviewModal';
 import { Tokens } from '../src/design-tokens';
-import { getValidRecentDeletes } from '../src/services/stats-service';
 import { APP_VERSION } from '../src/constants/app-info';
 // import { SwipeEffect, getSwipeEffect, setSwipeEffect as saveSwipeEffect } from '../src/services/preferences-service';
-
-function formatBytes(bytes: number): string {
-  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
-  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
-  if (bytes >= 1_000) return `${(bytes / 1_000).toFixed(1)} KB`;
-  return `${bytes} B`;
-}
 
 function subscriptionLabelFromType(type: string): string {
   switch (type) {
@@ -56,10 +47,8 @@ export default function SettingsScreen() {
     isPro, subscriptionType, devProEnabled, setDevPro,
     todayGroupCount,
   } = useSubscriptionContext();
-  const { totalViewed, totalFreedBytes, streakDays } = useStatsContext();
-
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [recentDeleteCount, setRecentDeleteCount] = useState(0);
+  const [guideVisible, setGuideVisible] = useState(false);
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -114,21 +103,6 @@ export default function SettingsScreen() {
     Linking.openURL('https://pickup.app/privacy').catch(() => Alert.alert('无法打开链接', '请稍后重试'));
   };
 
-  useFocusEffect(useCallback(() => {
-    let isActive = true;
-    getValidRecentDeletes()
-      .then((records) => {
-        if (isActive) setRecentDeleteCount(records.length);
-      })
-      .catch(() => {
-        if (isActive) setRecentDeleteCount(0);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []));
-
   const isProStyle = effectivePro;
 
   return (
@@ -162,7 +136,7 @@ export default function SettingsScreen() {
             rightContent={
               <Text style={styles.todayText}>
                 {effectivePro ? (
-                  <Text style={{ color: '#FFCC00', fontWeight: '700' }}>∞ 无限</Text>
+                  <Text style={{ color: Tokens.color.accent, fontWeight: '900' }}>∞ 无限</Text>
                 ) : (
                   <>
                     <Text style={{ color: todayGroupCount >= Tokens.photo.freeDailyLimit ? Tokens.color.danger : Tokens.color.textPrimary }}>
@@ -177,30 +151,7 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
-        {/* Statistics */}
-        <SettingsSection title="统计">
-          <View style={styles.statsGrid}>
-            <StatCard label="已浏览" value={totalViewed} valueColor={Tokens.color.textPrimary} />
-            <StatCard
-              label="最近删除"
-              value={recentDeleteCount}
-              valueColor={Tokens.color.danger}
-            />
-          </View>
-          <View style={styles.statsGrid}>
-            <StatCard
-              label="连续天数"
-              value={streakDays}
-              unit="天"
-              valueColor={Tokens.color.safe}
-            />
-            <StatCard
-              label="释放空间"
-              value={formatBytes(totalFreedBytes)}
-              valueColor={Tokens.color.accent}
-            />
-          </View>
-        </SettingsSection>
+        {/* v2.0: 统计卡片已迁移到 Hub 月份分析下方，个人中心先保持账户/帮助/关于。 */}
 
         {/* Swipe Effect — temporarily disabled */}
         {/* <SettingsSection title="滑动效果">
@@ -215,12 +166,7 @@ export default function SettingsScreen() {
         <SettingsSection title="帮助">
           <SettingsRow
             label="使用指南"
-            onPress={() =>
-              Alert.alert(
-                '使用指南',
-                '1. 浏览照片，上滑删除下滑保留\n2. 每10张一组，完成一组后确认删除\n3. Pro用户无限使用，免费用户每日3组',
-              )
-            }
+            onPress={() => setGuideVisible(true)}
           />
           <SettingsRow label="评分支持" onPress={handleRateApp} />
         </SettingsSection>
@@ -251,50 +197,57 @@ export default function SettingsScreen() {
         message={toastMsg ?? ''}
         onDismiss={() => setToastMsg(null)}
       />
+      <GuidePreviewModal
+        visible={guideVisible}
+        onClose={() => setGuideVisible(false)}
+        onStart={() => {
+          setGuideVisible(false);
+          router.push('/');
+        }}
+      />
     </View>
   );
 }
 
 function subscriptionLabelStyle(isPro: boolean) {
   return {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: isPro ? '#FFCC00' : Tokens.color.textSecondary,
+    fontSize: 15,
+    fontWeight: '900' as const,
+    color: isPro ? Tokens.color.accent : Tokens.color.textSecondary,
   };
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Tokens.color.background },
   heading: {
-    ...Tokens.typography.headline,
+    fontSize: 50,
+    lineHeight: 58,
+    fontWeight: '900',
     color: Tokens.color.textPrimary,
-    paddingTop: 60,
-    paddingHorizontal: Tokens.spacing.xl,
-    paddingBottom: Tokens.spacing.l,
-    letterSpacing: 4,
+    paddingTop: 82,
+    paddingHorizontal: 32,
+    paddingBottom: 28,
+    letterSpacing: 0,
   },
-  scrollContent: { paddingHorizontal: Tokens.spacing.xl },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Tokens.spacing.m,
-    padding: Tokens.spacing.l,
-  },
+  scrollContent: { paddingHorizontal: 16 },
   proBadge: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '900',
     color: '#000',
-    backgroundColor: '#FFCC00',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 14,
+    backgroundColor: Tokens.color.accent,
+    paddingHorizontal: 13,
+    paddingVertical: 6,
+    borderRadius: 999,
     overflow: 'hidden',
   },
   todayText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '900',
     color: Tokens.color.textSecondary,
   },
   secondaryText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '900',
     color: Tokens.color.textSecondary,
   },
   footerArea: {

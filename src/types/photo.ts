@@ -35,3 +35,9 @@ export interface DeletedPhotoRecord {
 }
 
 export type SortMode = 'random' | 'sizeDesc' | 'timeNewest' | 'timeOldest';
+
+export interface MonthScope {
+  year: number;
+  monthIndex: number;
+  label: string;
+}

@@ -2,6 +2,61 @@
 
 ---
 
+## 2026-06-05 21:5x | v2.0.0 全局 UI、月份清理体验与本地双包构建
+
+### 一句话概述
+
+v2.0.0 需求已完成并通过本地 dev/release 构建：月份分析可直达对应月份照片池，Hub 加载统一等待月份分析完成，个人中心与更多功能布局重排，全局 UI 更新为黑底高对比 iOS 小组件风格，并修复 Android 重开 App 时 linking 多实例提示的 native 配置兜底。
+
+### 当前进度 / 关键结论
+
+- **月份清理链路**：`MonthlyChart` 支持点击月份；Hub 设置 `monthScope` 后跳转首页，首页照片池按年月过滤；当前月份清理完后弹出“当前月份照片已经清理完成啦!”。
+- **性能体验**：月份柱状图跳转不再等待 `loadPhotos` 完成；Hub 首屏统一等待月份分析加载，加载期间展示灵动胶囊形进度条 `HubLoadingProgress`。
+- **UI 风格**：全局 `design-tokens` 改为黑底、超粗字体、荧光黄点缀、大圆角深灰模块；底部 Tab、个人中心、月份分析、统计卡、周回顾和成就面板均同步到参考 App 风格。
+- **个人中心/Hub 重排**：个人中心功能入口卡片和统计卡片已移除/迁移；统计概览放到 Hub 月份分析下方；更多功能页顶部“更多功能”标题去掉。
+- **使用指南**：个人中心使用指南由原生 Alert 替换为 `GuidePreviewModal` 截图式引导弹框。
+- **Android linking 兜底**：新增 `plugins/with-android-single-task.js`，通过 Expo config plugin 强制 MainActivity 使用 `android:launchMode="singleTask"`，避免预构建或云构建链路遗漏。
+- **版本号**：`package.json`、`package-lock.json`、`app.config.js`、`src/constants/app-info.ts` 和 `android/app/build.gradle` 已同步到 v2.0.0；Android `versionCode` 升到 4。
+
+### 验证与构建
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过：13 个 test suites / 74 个 tests；仍有既有 `react-test-renderer is deprecated` warning。
+- `npx.cmd expo config --type introspect --json` 验证 MainActivity `android:launchMode` 为 `singleTask`。
+- `android/gradlew.bat assembleDebug` 本地 dev 构建通过，仅输出 Expo `NODE_ENV` 未显式设置提示。
+- `android/gradlew.bat assembleRelease` 本地 release 构建通过；R8 对 Amazon Appstore SDK 输出 stack map table warning，但最终 `BUILD SUCCESSFUL`。
+- Dev APK 已复制到 `dist/pickup-v2.0.0-dev.apk`，大小 192.43 MB。
+- Release APK 已复制到 `dist/pickup-v2.0.0-release.apk`，大小 95.92 MB。
+
+### 关键文件
+
+| 新增 | 修改 |
+|------|------|
+| `PRD-v2.0-全局视觉升级与月份清理体验需求.md` | `app/index.tsx` |
+| `src/components/hub/AchievementSummaryPanel.tsx` | `app/hub.tsx` |
+| `src/components/hub/HubLoadingProgress.tsx` | `app/settings.tsx` |
+| `src/components/ui/GuidePreviewModal.tsx` | `app/_layout.tsx` |
+| `plugins/with-android-single-task.js` | `src/design-tokens.ts` |
+| | `src/hooks/usePhotoEngine.ts` |
+| | `src/services/photo-service.ts` |
+| | `src/types/photo.ts` |
+| | `src/components/hub/MonthlyChart.tsx` |
+| | `src/components/settings/SettingsSection.tsx` |
+| | `src/components/settings/SettingsRow.tsx` |
+| | `src/components/settings/StatCard.tsx` |
+| | `src/components/settings/WeeklyReviewCard.tsx` |
+| | `src/components/photo-card/PhotoCard.tsx` |
+| | `src/components/ui/PickupGlyphs.tsx` |
+| | `android/app/build.gradle` |
+| | `README.md` |
+
+### 当前需注意
+
+- 手机上已安装的旧 dev 包不会因为 JS 热更新获得 native `launchMode` 配置；需重新安装本次构建的 `dist/pickup-v2.0.0-dev.apk` 或 release 包。
+- 工作区仍存在历史未跟踪产物目录（如 `.reasonix/`、`.codex-logs/`、旧 PDF/HTML），提交时不要误 stage。
+
+---
+
 ## 2026-06-04 18:xx | v1.3.5 体验修复、图标优化与本地 release 构建
 
 ### 一句话概述

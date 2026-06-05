@@ -23,6 +23,7 @@ import { File } from 'expo-file-system';
 import { getAssetInfoAsync } from 'expo-media-library';
 import { formatPhotoDate } from '../src/utils/date-utils';
 import { CelebrationOverlay } from '../src/components/ui/CelebrationOverlay';
+import { Toast } from '../src/components/ui/Toast';
 import { deletePhotos } from '../src/services/delete-service';
 import { PhotoDetailSheet } from '../src/components/delete-review/PhotoDetailSheet';
 import { AlbumStackGlyph } from '../src/components/ui/PickupGlyphs';
@@ -50,6 +51,7 @@ export default function BrowseScreen() {
     requestPermissions, loadPhotos, loadNextGroup,
     clearMarkedPhotos, refillGroup,
     sortMode, changeSortMode,
+    monthScope, clearMonthScope, hasRemainingInMonthScope,
   } = usePhotoContext();
   const { state, dispatch } = useSessionContext();
   const { dailyUsageLoaded, canBrowseNextGroup, incrementGroupCount } = useSubscriptionContext();
@@ -68,6 +70,7 @@ export default function BrowseScreen() {
   const [celebrationCount, setCelebrationCount] = useState(0);
   const [guideVisible, setGuideVisible] = useState(false);
   const [photoLocation, setPhotoLocation] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const lastViewedGroupRef = useRef<string>('');
   const lastConsumedConfirmParamRef = useRef<string | null>(null);
   const triedLoadRef = useRef(false);
@@ -140,7 +143,7 @@ export default function BrowseScreen() {
   useEffect(() => {
     hasLoadedRef.current = false;
     triedLoadRef.current = false;
-  }, [albumIdStr]);
+  }, [albumIdStr, monthScope?.year, monthScope?.monthIndex]);
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
@@ -304,8 +307,17 @@ export default function BrowseScreen() {
       if (result.successCount > 0) {
         recordDeleted(result.successCount, result.freedBytes).catch(() => {});
         const postDeleteAction = getPostDeleteAction(deleteConfirmSource);
+        const remainingPhotos = allPhotos.filter((p) => !markedForDelete.has(p.id));
         setMarkedForDelete(new Set());
         clearMarkedPhotos();
+
+        if (monthScope && !hasRemainingInMonthScope(remainingPhotos)) {
+          await loadPhotos(albumIdStr, { resetViewed: true, monthScopeOverride: monthScope });
+          setToastMsg('当前月份照片已经清理完成啦!');
+          setCelebrationCount(result.successCount);
+          setShowCelebration(true);
+          return;
+        }
 
         if (postDeleteAction === 'load-next-group') {
           incrementGroupCount();
@@ -338,6 +350,11 @@ export default function BrowseScreen() {
     recordDeleted,
     incrementGroupCount,
     loadNextGroup,
+    allPhotos,
+    albumIdStr,
+    loadPhotos,
+    monthScope,
+    hasRemainingInMonthScope,
   ]);
 
   if (error) {
@@ -474,7 +491,14 @@ export default function BrowseScreen() {
       {/* Album button — always visible (including empty albums) */}
       {permissionStatus !== 'denied' && (
         <View style={styles.albumBtnWrap}>
-          <TouchableOpacity style={styles.albumBtn} onPress={() => router.push('/albums')} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.albumBtn}
+            onPress={() => {
+              clearMonthScope();
+              router.push('/albums');
+            }}
+            activeOpacity={0.7}
+          >
             <AlbumStackGlyph active size={28} />
           </TouchableOpacity>
         </View>
@@ -504,6 +528,11 @@ export default function BrowseScreen() {
         count={celebrationCount}
         onDone={() => setShowCelebration(false)}
       />
+      <Toast
+        visible={toastMsg !== null}
+        message={toastMsg ?? ''}
+        onDismiss={() => setToastMsg(null)}
+      />
     </View>
   );
 }
@@ -524,17 +553,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: 'rgba(18,18,19,0.82)',
     borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.16)',
   },
   pillLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: '900',
   },
   topCenter: {
     position: 'absolute',
@@ -551,16 +580,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   topDate: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '900',
     color: '#fff',
     letterSpacing: -0.3,
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 4,
   },
   topLocation: {
-    fontSize: 11,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '900',
     color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.5,
     marginTop: 3,
@@ -580,12 +609,12 @@ const styles = StyleSheet.create({
   },
   albumBtnWrap: { position: 'absolute', bottom: 100, left: 16, zIndex: 20 },
   infoBtnWrap: { position: 'absolute', bottom: 100, right: 16, zIndex: 20 },
-  infoBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  infoBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(18,18,19,0.84)', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
   albumBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.58)',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(18,18,19,0.84)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',

@@ -1,12 +1,14 @@
 import {
+  filterPhotosByMonthScope,
   generateGroup,
   generateRandomGroup,
   getViewedStateForSortChange,
+  hasRemainingPhotosInMonthScope,
   shouldRefillViewedPool,
   shouldReloadPhotosForSortChange,
   getRefillCandidates,
 } from '../../src/services/photo-service';
-import { PhotoAsset } from '../../src/types/photo';
+import { MonthScope, PhotoAsset } from '../../src/types/photo';
 
 function makePhoto(id: string): PhotoAsset {
   return {
@@ -23,6 +25,13 @@ function makePhoto(id: string): PhotoAsset {
 
 function makePhotos(count: number): PhotoAsset[] {
   return Array.from({ length: count }, (_, i) => makePhoto(`photo-${i}`));
+}
+
+function makePhotoAt(id: string, year: number, monthIndex: number, day: number): PhotoAsset {
+  return {
+    ...makePhoto(id),
+    creationTime: new Date(year, monthIndex, day).getTime(),
+  };
 }
 
 describe('generateRandomGroup', () => {
@@ -77,6 +86,35 @@ describe('generateGroup', () => {
 
     expect(result.map((photo) => photo.id)).toEqual(['photo-7', 'photo-2', 'photo-3']);
     expect(result.some((photo) => excludedIds.has(photo.id))).toBe(false);
+  });
+});
+
+describe('month scope helpers', () => {
+  const may2026: MonthScope = { year: 2026, monthIndex: 4, label: '2026年5月' };
+
+  it('filters photos to the selected year and month using creationTime', () => {
+    const photos = [
+      makePhotoAt('apr-last', 2026, 3, 30),
+      makePhotoAt('may-start', 2026, 4, 1),
+      makePhotoAt('may-mid', 2026, 4, 15),
+      makePhotoAt('jun-start', 2026, 5, 1),
+      makePhotoAt('may-other-year', 2025, 4, 10),
+    ];
+
+    const result = filterPhotosByMonthScope(photos, may2026);
+
+    expect(result.map((photo) => photo.id)).toEqual(['may-start', 'may-mid']);
+  });
+
+  it('reports whether a selected month still has remaining photos', () => {
+    const photos = [
+      makePhotoAt('may-1', 2026, 4, 2),
+      makePhotoAt('may-2', 2026, 4, 3),
+      makePhotoAt('june-1', 2026, 5, 2),
+    ];
+
+    expect(hasRemainingPhotosInMonthScope(photos, may2026)).toBe(true);
+    expect(hasRemainingPhotosInMonthScope(photos.filter((photo) => photo.id === 'june-1'), may2026)).toBe(false);
   });
 });
 
