@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PickUp Concept 02 - Liquid Glass Bright</title>
+    <link rel="stylesheet" href="./shared.css" />
+    <style>
+      :root {
+        --accent: #a8d46f;
+        --accent-deep: #5f783f;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 24% 10%, rgba(168, 212, 111, 0.18), transparent 26rem),
+          radial-gradient(circle at 78% 88%, rgba(168, 212, 111, 0.1), transparent 22rem),
+          #050505;
+      }
+
+      .glass-mark {
+        position: relative;
+        width: 268px;
+        height: 268px;
+        filter:
+          drop-shadow(0 28px 42px rgba(168, 212, 111, 0.18))
+          drop-shadow(0 0 24px rgba(168, 212, 111, 0.12));
+      }
+
+      .glass-shell {
+        position: absolute;
+        inset: 38px;
+        border-radius: 62px;
+        background:
+          radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.26), transparent 36%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(168, 212, 111, 0.14)),
+          rgba(168, 212, 111, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow:
+          inset 0 0 0 2px rgba(168, 212, 111, 0.46),
+          inset 0 -24px 42px rgba(0, 0, 0, 0.44),
+          0 0 0 1px rgba(168, 212, 111, 0.16);
+        animation: glass-pop 3400ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      }
+
+      .glass-card {
+        position: absolute;
+        width: 122px;
+        height: 160px;
+        border-radius: 36px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(16px);
+      }
+
+      .glass-card.one {
+        left: 42px;
+        top: 72px;
+        animation: glass-card-one 3400ms ease-in-out infinite;
+      }
+
+      .glass-card.two {
+        right: 42px;
+        top: 44px;
+        background: rgba(168, 212, 111, 0.08);
+        animation: glass-card-two 3400ms ease-in-out infinite;
+      }
+
+      .glass-dot {
+        position: absolute;
+        right: 84px;
+        top: 104px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 28%, #dff4b9, var(--accent) 48%, var(--accent-deep));
+        box-shadow: 0 0 30px rgba(168, 212, 111, 0.24);
+        animation: glass-dot 3400ms ease-in-out infinite;
+      }
+
+      .brand-name {
+        text-shadow: 0 0 24px rgba(168, 212, 111, 0.08);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .compare div {
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .compare strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .compare i {
+        display: block;
+        width: 100%;
+        height: 52px;
+        border-radius: 15px;
+      }
+
+      @keyframes glass-pop {
+        0% { opacity: 0; transform: scale(0.78); border-radius: 90px; }
+        28%, 80% { opacity: 1; transform: scale(1); border-radius: 62px; }
+        100% { opacity: 0; transform: scale(1.06); border-radius: 78px; }
+      }
+
+      @keyframes glass-card-one {
+        0% { opacity: 0; transform: translate(36px, 10px) rotate(0deg); }
+        30%, 80% { opacity: 0.58; transform: translate(-16px, 18px) rotate(-12deg); }
+        100% { opacity: 0; transform: translate(-28px, 10px) rotate(-16deg); }
+      }
+
+      @keyframes glass-card-two {
+        0% { opacity: 0; transform: translate(-30px, 14px) rotate(0deg); }
+        30%, 80% { opacity: 0.88; transform: translate(8px, -6px) rotate(8deg); }
+        100% { opacity: 0; transform: translate(22px, -12px) rotate(12deg); }
+      }
+
+      @keyframes glass-dot {
+        0%, 24% { opacity: 0; transform: scale(0.7); }
+        42%, 80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+
+      @media (max-width: 560px) {
+        .compare {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <header class="topline">
+        <div>
+          <h1>02 Liquid Glass<br />Bright Green</h1>
+          <p class="note">02 Liquid Glass 定稿色预览：主色 #A8D46F。整体保持 iOS 暗色玻璃质感，不回到刺眼荧光绿。</p>
+        </div>
+        <nav class="nav"><a href="./index.html">返回总览</a><a href="./concept-02-liquid-glass.html">原 02 对比</a></nav>
+      </header>
+      <section class="stage">
+        <div class="phone">
+          <div class="status"><span>13:26</span><span>5G 65</span></div>
+          <div class="splash">
+            <div class="glass-mark">
+              <div class="glass-card one"></div>
+              <div class="glass-card two"></div>
+              <div class="glass-shell"></div>
+              <div class="glass-dot"></div>
+            </div>
+            <div class="brand-name">PickUp</div>
+            <div class="brand-sub">照片整理，轻一点</div>
+          </div>
+        </div>
+        <aside class="spec">
+          <h2>亮色调整</h2>
+          <p>这版比上一轮灰绿更明确、更有品牌存在感，尤其在黑底上会更容易被看到。为了避免太“荧光”，颜色控制在黄绿色和鼠尾草绿之间。</p>
+          <div class="chips"><span class="chip">主色 #A8D46F</span><span class="chip">更亮</span><span class="chip">更浓</span><span class="chip">仍偏 iOS</span></div>
+          <div class="compare">
+            <div><strong>暗色界面对照</strong><i style="background:#171719"></i></div>
+            <div><strong>新预览 #A8D46F</strong><i style="background:#a8d46f"></i></div>
+          </div>
+          <ul>
+            <li>如果你想更高级稳重，可以把新色再压一点到 `#9FC56D`。</li>
+            <li>如果你想更亮更年轻，可以继续推到 `#B8E66F`。</li>
+            <li>我目前建议先以 `#A8D46F` 作为第二轮视觉基准。</li>
+          </ul>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

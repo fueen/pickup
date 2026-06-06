@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PickUp Accent Color Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070707;
+        --panel: #17171a;
+        --panel-2: #101012;
+        --stroke: #2b2b2e;
+        --muted: #6f7077;
+        --text: #f7f7f8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 8%, rgba(255, 255, 255, 0.08), transparent 22rem),
+          linear-gradient(180deg, #111 0%, #050505 44%, #000 100%);
+        color: var(--text);
+        font-family:
+          "Avenir Next", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      }
+
+      .page {
+        width: min(1480px, 100%);
+        margin: 0 auto;
+        padding: 40px 24px 56px;
+      }
+
+      .hero {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 5vw, 68px);
+        line-height: 0.95;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        max-width: 680px;
+        margin: 14px 0 0;
+        color: #a0a1a8;
+        font-size: 18px;
+        line-height: 1.6;
+        font-weight: 700;
+      }
+
+      .legend {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: max-content;
+        color: #b4b5bb;
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .legend-dot {
+        width: 18px;
+        height: 18px;
+        border: 4px solid #ff464f;
+        border-radius: 5px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(240px, 1fr));
+        gap: 18px;
+        align-items: start;
+      }
+
+      .option {
+        --accent: #c7dc28;
+        min-width: 0;
+      }
+
+      .code {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        padding: 0 4px;
+        color: #f6f6f7;
+        font-size: 18px;
+        font-weight: 950;
+      }
+
+      .swatch {
+        width: 36px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 22px color-mix(in srgb, var(--accent), transparent 56%);
+      }
+
+      .phone {
+        position: relative;
+        overflow: hidden;
+        min-height: 730px;
+        padding: 22px 18px 20px;
+        border: 1px solid #27272b;
+        border-radius: 34px;
+        background: #000;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.52);
+      }
+
+      .status {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 44px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .copy {
+        margin: 10px 0 26px;
+        color: #595a61;
+        font-size: 14px;
+        line-height: 1.35;
+        font-weight: 900;
+      }
+
+      .chart-card {
+        position: relative;
+        padding: 19px 18px 20px;
+        border: 2px solid var(--stroke);
+        border-radius: 30px;
+        background: #050505;
+      }
+
+      .year-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 999px;
+        background: #18181a;
+        font-size: 20px;
+        font-weight: 950;
+      }
+
+      .year-pill span {
+        color: var(--accent);
+      }
+
+      .petal {
+        position: absolute;
+        top: 24px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+      }
+
+      .petal i {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+      }
+
+      .petal i:nth-child(1) {
+        left: 2px;
+        top: 7px;
+        background: #ff6e98;
+      }
+
+      .petal i:nth-child(2) {
+        left: 18px;
+        top: 1px;
+        background: #ffe666;
+      }
+
+      .petal i:nth-child(3) {
+        left: 31px;
+        top: 12px;
+        background: #55c6ff;
+      }
+
+      .petal i:nth-child(4) {
+        left: 30px;
+        top: 29px;
+        background: #35c56e;
+      }
+
+      .petal i:nth-child(5) {
+        left: 12px;
+        top: 21px;
+        width: 24px;
+        height: 24px;
+        border: 3px solid #fff;
+        background: #ffe93f;
+      }
+
+      .bars {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+        align-items: end;
+        height: 236px;
+        margin-top: 20px;
+      }
+
+      .bar-wrap {
+        display: grid;
+        grid-template-rows: 22px 150px 22px;
+        justify-items: center;
+        gap: 8px;
+        color: #56575d;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .bar {
+        position: relative;
+        width: 38px;
+        height: 150px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #121214;
+      }
+
+      .bar::before {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: var(--h);
+        border-radius: 999px;
+        background: var(--accent);
+        opacity: var(--o, 0.94);
+        box-shadow: 0 -18px 36px color-mix(in srgb, var(--accent), transparent 72%);
+      }
+
+      .bar-wrap.active {
+        color: var(--accent);
+      }
+
+      .bar-wrap.active .bar::after {
+        content: "";
+        position: absolute;
+        inset: -12px;
+        border: 7px solid #ff464f;
+        border-radius: 10px;
+        pointer-events: none;
+      }
+
+      .section-title {
+        margin: 34px 0 0;
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .stat {
+        min-height: 100px;
+        padding: 18px 16px;
+        border-radius: 24px;
+        background: var(--panel);
+      }
+
+      .stat strong {
+        display: block;
+        color: #fff;
+        font-size: 33px;
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .stat .accent {
+        color: var(--accent);
+      }
+
+      .stat .danger {
+        color: #ff494f;
+      }
+
+      .stat small {
+        display: block;
+        margin-top: 9px;
+        color: #888890;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .tab {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 214px;
+        height: 66px;
+        transform: translateX(-50%);
+        place-items: center;
+        border-radius: 999px;
+        background: #151518;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.62);
+      }
+
+      .tab span {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        border: 3px solid #d8d8dc;
+        opacity: 0.82;
+      }
+
+      .tab .dots {
+        display: grid;
+        grid-template-columns: 10px 10px;
+        grid-template-rows: 10px 10px;
+        gap: 5px;
+        border: 0;
+        width: auto;
+        height: auto;
+        opacity: 1;
+      }
+
+      .tab .dots i {
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      @media (max-width: 1320px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(240px, 1fr));
+        }
+      }
+
+      @media (max-width: 840px) {
+        .hero {
+          display: block;
+        }
+
+        .legend {
+          margin-top: 18px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          max-width: 430px;
+          margin: 0 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <h1>PickUp 色彩替换预览</h1>
+          <p class="subtitle">红框里的月份柱状图主色、月份高亮、底部 Hub 图标和「96.8 MB」会同时替换，模拟当前 v2.0 黑底界面的实际观感。</p>
+        </div>
+        <div class="legend"><span class="legend-dot"></span> 红框标记截图里的目标区域</div>
+      </header>
+
+      <section class="grid" aria-label="Accent color options">
+        <article class="option" style="--accent: #BDC0BA">
+          <div class="code">1. #BDC0BA <span class="swatch"></span></div>
+          <div class="phone">
+            <div class="status"><span>13:26</span><span>VPN 5G 65</span></div>
+            <h2 class="title">月份分析</h2>
+            <p class="copy">共 8375 张照片，点击月份直接整理那个月的记忆</p>
+            <div class="chart-card">
+              <div class="year-pill">2026 年 <span>⌄</span></div>
+              <div class="petal"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars">
+                <div class="bar-wrap active"><b>113</b><div class="bar" style="--h: 94%"></div><b>1月</b></div>
+                <div class="bar-wrap"><b>68</b><div class="bar" style="--h: 55%; --o: .9"></div><b>2月</b></div>
+                <div class="bar-wrap"><b>78</b><div class="bar" style="--h: 64%; --o: .9"></div><b>3月</b></div>
+                <div class="bar-wrap"><b>64</b><div class="bar" style="--h: 51%; --o: .9"></div><b>4月</b></div>
+                <div class="bar-wrap"><b>81</b><div class="bar" style="--h: 67%; --o: .9"></div><b>5月</b></div>
+                <div class="bar-wrap"><b>10</b><div class="bar" style="--h: 10%; --o: .65"></div><b>6月</b></div>
+              </div>
+            </div>
+            <h2 class="section-title">统计概览</h2>
+            <p class="copy">清理成果会在这里持续累积</p>
+            <div class="stats">
+              <div class="stat"><strong>420</strong><small>已浏览</small></div>
+              <div class="stat"><strong class="danger">25</strong><small>最近删除</small></div>
+              <div class="stat"><strong class="accent">3<span style="font-size:18px"> 天</span></strong><small>连续天数</small></div>
+              <div class="stat"><strong class="accent">96.8 MB</strong><small>释放空间</small></div>
+            </div>
+            <div class="tab"><span></span><span class="dots"><i></i><i></i><i></i><i></i></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="option" style="--accent: #B5CAA0">
+          <div class="code">2. #B5CAA0 <span class="swatch"></span></div>
+          <div class="phone">
+            <div class="status"><span>13:26</span><span>VPN 5G 65</span></div>
+            <h2 class="title">月份分析</h2>
+            <p class="copy">共 8375 张照片，点击月份直接整理那个月的记忆</p>
+            <div class="chart-card">
+              <div class="year-pill">2026 年 <span>⌄</span></div>
+              <div class="petal"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars">
+                <div class="bar-wrap active"><b>113</b><div class="bar" style="--h: 94%"></div><b>1月</b></div>
+                <div class="bar-wrap"><b>68</b><div class="bar" style="--h: 55%; --o: .9"></div><b>2月</b></div>
+                <div class="bar-wrap"><b>78</b><div class="bar" style="--h: 64%; --o: .9"></div><b>3月</b></div>
+                <div class="bar-wrap"><b>64</b><div class="bar" style="--h: 51%; --o: .9"></div><b>4月</b></div>
+                <div class="bar-wrap"><b>81</b><div class="bar" style="--h: 67%; --o: .9"></div><b>5月</b></div>
+                <div class="bar-wrap"><b>10</b><div class="bar" style="--h: 10%; --o: .65"></div><b>6月</b></div>
+              </div>
+            </div>
+            <h2 class="section-title">统计概览</h2>
+            <p class="copy">清理成果会在这里持续累积</p>
+            <div class="stats">
+              <div class="stat"><strong>420</strong><small>已浏览</small></div>
+              <div class="stat"><strong class="danger">25</strong><small>最近删除</small></div>
+              <div class="stat"><strong class="accent">3<span style="font-size:18px"> 天</span></strong><small>连续天数</small></div>
+              <div class="stat"><strong class="accent">96.8 MB</strong><small>释放空间</small></div>
+            </div>
+            <div class="tab"><span></span><span class="dots"><i></i><i></i><i></i><i></i></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="option" style="--accent: #4D5139">
+          <div class="code">3. #4D5139 <span class="swatch"></span></div>
+          <div class="phone">
+            <div class="status"><span>13:26</span><span>VPN 5G 65</span></div>
+            <h2 class="title">月份分析</h2>
+            <p class="copy">共 8375 张照片，点击月份直接整理那个月的记忆</p>
+            <div class="chart-card">
+              <div class="year-pill">2026 年 <span>⌄</span></div>
+              <div class="petal"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars">
+                <div class="bar-wrap active"><b>113</b><div class="bar" style="--h: 94%"></div><b>1月</b></div>
+                <div class="bar-wrap"><b>68</b><div class="bar" style="--h: 55%; --o: .9"></div><b>2月</b></div>
+                <div class="bar-wrap"><b>78</b><div class="bar" style="--h: 64%; --o: .9"></div><b>3月</b></div>
+                <div class="bar-wrap"><b>64</b><div class="bar" style="--h: 51%; --o: .9"></div><b>4月</b></div>
+                <div class="bar-wrap"><b>81</b><div class="bar" style="--h: 67%; --o: .9"></div><b>5月</b></div>
+                <div class="bar-wrap"><b>10</b><div class="bar" style="--h: 10%; --o: .65"></div><b>6月</b></div>
+              </div>
+            </div>
+            <h2 class="section-title">统计概览</h2>
+            <p class="copy">清理成果会在这里持续累积</p>
+            <div class="stats">
+              <div class="stat"><strong>420</strong><small>已浏览</small></div>
+              <div class="stat"><strong class="danger">25</strong><small>最近删除</small></div>
+              <div class="stat"><strong class="accent">3<span style="font-size:18px"> 天</span></strong><small>连续天数</small></div>
+              <div class="stat"><strong class="accent">96.8 MB</strong><small>释放空间</small></div>
+            </div>
+            <div class="tab"><span></span><span class="dots"><i></i><i></i><i></i><i></i></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="option" style="--accent: #08192D">
+          <div class="code">4. #08192D <span class="swatch"></span></div>
+          <div class="phone">
+            <div class="status"><span>13:26</span><span>VPN 5G 65</span></div>
+            <h2 class="title">月份分析</h2>
+            <p class="copy">共 8375 张照片，点击月份直接整理那个月的记忆</p>
+            <div class="chart-card">
+              <div class="year-pill">2026 年 <span>⌄</span></div>
+              <div class="petal"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars">
+                <div class="bar-wrap active"><b>113</b><div class="bar" style="--h: 94%"></div><b>1月</b></div>
+                <div class="bar-wrap"><b>68</b><div class="bar" style="--h: 55%; --o: .9"></div><b>2月</b></div>
+                <div class="bar-wrap"><b>78</b><div class="bar" style="--h: 64%; --o: .9"></div><b>3月</b></div>
+                <div class="bar-wrap"><b>64</b><div class="bar" style="--h: 51%; --o: .9"></div><b>4月</b></div>
+                <div class="bar-wrap"><b>81</b><div class="bar" style="--h: 67%; --o: .9"></div><b>5月</b></div>
+                <div class="bar-wrap"><b>10</b><div class="bar" style="--h: 10%; --o: .65"></div><b>6月</b></div>
+              </div>
+            </div>
+            <h2 class="section-title">统计概览</h2>
+            <p class="copy">清理成果会在这里持续累积</p>
+            <div class="stats">
+              <div class="stat"><strong>420</strong><small>已浏览</small></div>
+              <div class="stat"><strong class="danger">25</strong><small>最近删除</small></div>
+              <div class="stat"><strong class="accent">3<span style="font-size:18px"> 天</span></strong><small>连续天数</small></div>
+              <div class="stat"><strong class="accent">96.8 MB</strong><small>释放空间</small></div>
+            </div>
+            <div class="tab"><span></span><span class="dots"><i></i><i></i><i></i><i></i></span><span></span></div>
+          </div>
+        </article>
+
+        <article class="option" style="--accent: #211E55">
+          <div class="code">5. #211E55 <span class="swatch"></span></div>
+          <div class="phone">
+            <div class="status"><span>13:26</span><span>VPN 5G 65</span></div>
+            <h2 class="title">月份分析</h2>
+            <p class="copy">共 8375 张照片，点击月份直接整理那个月的记忆</p>
+            <div class="chart-card">
+              <div class="year-pill">2026 年 <span>⌄</span></div>
+              <div class="petal"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars">
+                <div class="bar-wrap active"><b>113</b><div class="bar" style="--h: 94%"></div><b>1月</b></div>
+                <div class="bar-wrap"><b>68</b><div class="bar" style="--h: 55%; --o: .9"></div><b>2月</b></div>
+                <div class="bar-wrap"><b>78</b><div class="bar" style="--h: 64%; --o: .9"></div><b>3月</b></div>
+                <div class="bar-wrap"><b>64</b><div class="bar" style="--h: 51%; --o: .9"></div><b>4月</b></div>
+                <div class="bar-wrap"><b>81</b><div class="bar" style="--h: 67%; --o: .9"></div><b>5月</b></div>
+                <div class="bar-wrap"><b>10</b><div class="bar" style="--h: 10%; --o: .65"></div><b>6月</b></div>
+              </div>
+            </div>
+            <h2 class="section-title">统计概览</h2>
+            <p class="copy">清理成果会在这里持续累积</p>
+            <div class="stats">
+              <div class="stat"><strong>420</strong><small>已浏览</small></div>
+              <div class="stat"><strong class="danger">25</strong><small>最近删除</small></div>
+              <div class="stat"><strong class="accent">3<span style="font-size:18px"> 天</span></strong><small>连续天数</small></div>
+              <div class="stat"><strong class="accent">96.8 MB</strong><small>释放空间</small></div>
+            </div>
+            <div class="tab"><span></span><span class="dots"><i></i><i></i><i></i><i></i></span><span></span></div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

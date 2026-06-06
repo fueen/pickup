@@ -96,9 +96,9 @@ const styles = StyleSheet.create({
   medal: {
     width: 86,
     borderRadius: 28,
-    backgroundColor: 'rgba(233,255,63,0.12)',
+    backgroundColor: 'rgba(168,212,111,0.12)',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(233,255,63,0.30)',
+    borderColor: 'rgba(168,212,111,0.30)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(233,255,63,0.16)',
+    backgroundColor: 'rgba(168,212,111,0.16)',
   },
   medalNumber: {
     fontSize: 24,

@@ -2,6 +2,48 @@
 
 ---
 
+## 2026-06-06 17:0x | v2.0.0 品牌主色与删除确认页打磨、本地双包构建
+
+### 一句话概述
+
+本轮在 v2.0.0 基础上完成品牌主色统一、开屏动画回退、删除确认页视觉微调，并重新完成本地 dev/release 双包构建。
+
+### 当前进度 / 关键结论
+
+- **主色统一**：全局重点色从原先偏荧光黄绿统一为 `#A8D46F`，覆盖设计 token、月份分析柱状图、统计强调色、Hub/设置相关 glyph 和部分应用图标资产。
+- **开屏动画**：放弃 Liquid Glass 新方案，恢复今天修改前的原始三张卡片错峰漂入 + `PICKUP` 字母出现 + 小点脉冲动画；仅将原始黄色 `#FFCC00` 替换为 `Tokens.color.accent`。
+- **删除确认页**：标题从“准备收工了吗？”改为“决定好去留了吗？”；照片缩略图和“点击照片再次确认”整体下移；背景改为使用第一张待删除照片作为全屏取色来源，叠加 `blurRadius={42}`、`SafeBlurView` 和暗色遮罩形成高斯模糊氛围。
+- **测试保护**：新增/更新 `theme-colors.test.ts` 与 `delete-confirm-utils.test.ts`，防止旧黄色、旧 Liquid Glass 开屏残留和删除确认页背景能力回退。
+
+### 验证与构建
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过：14 个 test suites / 79 个 tests；仍有既有 `react-test-renderer is deprecated` warning。
+- `android/gradlew.bat assembleDebug` 本地 dev 构建通过，仅输出 Expo `NODE_ENV` 未显式设置提示。
+- `android/gradlew.bat assembleRelease` 本地 release 构建通过；最终 `BUILD SUCCESSFUL`，同时输出 Gradle deprecated features 提示和 Expo `NODE_ENV` 提示。
+- Dev APK 已复制到 `dist/pickup-v2.0.0-dev.apk`，大小 192.43 MB。
+- Release APK 已复制到 `dist/pickup-v2.0.0-release.apk`，大小 95.92 MB。
+
+### 关键文件
+
+| 新增/更新 | 说明 |
+|------|------|
+| `src/design-tokens.ts` | 统一主色 `#A8D46F` |
+| `src/components/SplashScreen.tsx` | 恢复原始开屏动画并替换强调色 |
+| `src/components/delete-review/DeleteConfirmSheet.tsx` | 删除确认页模糊照片背景、文案与位置微调 |
+| `src/utils/delete-confirm-utils.ts` | 删除确认页标题文案更新 |
+| `__tests__/unit/theme-colors.test.ts` | 主色和开屏结构保护 |
+| `__tests__/unit/delete-confirm-utils.test.ts` | 删除确认文案和模糊背景保护 |
+| `PRD-v2.0-全局视觉升级与月份清理体验需求.md` | 追加本轮 v2.0 细节打磨需求 |
+
+### 当前需注意
+
+- 删除确认页背景使用当前待删除列表的第一张照片 URI，真实取色/模糊效果需在 Android dev-client 或 release 包中做最终目测回归。
+- `assets/icon.png` / `assets/adaptive-icon.png` / `assets/favicon.png` 仍包含本轮 logo 实验后的新资产；`assets/splash-icon.png` 已恢复到修改前版本。
+- 工作区仍有历史未跟踪产物目录（如 `.reasonix/`、`.codex-logs/`、旧 PDF/HTML 等），提交时只 stage 本轮相关文件和构建产物。
+
+---
+
 ## 2026-06-05 21:5x | v2.0.0 全局 UI、月份清理体验与本地双包构建
 
 ### 一句话概述

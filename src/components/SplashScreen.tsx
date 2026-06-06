@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
+import { Tokens } from '../design-tokens';
 
 interface Props {
   onFinish: () => void;
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     height: 118,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: '#FFCC00',
+    borderColor: Tokens.color.accent,
     backgroundColor: '#151515',
   },
   cardOne: {
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#FFCC00',
+    backgroundColor: Tokens.color.accent,
     opacity: 0.5,
   },
 });

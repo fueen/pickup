@@ -1,0 +1,57 @@
+
+> pickup@1.3.4 start
+> expo start --dev-client --host lan
+
+Starting project at D:\workspace\vibe coding\pickup
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.1% (452/640)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.6% (1240/1350)
+Android Bundled 10458ms node_modules\expo-router\entry.js (1663 modules)
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.zackf.pickup'. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  RevenueCat API key not configured, skipping initialization
+ WARN  RevenueCat 加载失败: [Error: There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk]
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ LOG  [pickup] Total photos found: 8395
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ LOG  VirtualizedList: You have a large list that is slow to update - make sure your renderItem function renders components that follow React performance best practices like PureComponent, shouldComponentUpdate, etc. {"contentLength": 6373, "dt": 3963, "prevDt": 2042}
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ LOG  [pickup] Total photos found: 8395
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ LOG  [pickup] Total photos found: 8395
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 221ms node_modules\expo-router\entry.js (1 module)
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.zackf.pickup'. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  It looks like you might be using shared value's .value inside reanimated inline style. If you want a component to update when shared value changes you should use the shared value directly instead of its current state represented by `.value`. See documentation here: https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling
+ WARN  RevenueCat API key not configured, skipping initialization
+ WARN  RevenueCat 加载失败: [Error: There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk]
+ LOG  [pickup] Total photos found: 8394
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"
+ WARN  "sparkles" is not a valid icon name for family "material-community"

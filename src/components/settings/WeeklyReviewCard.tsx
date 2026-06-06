@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(233,255,63,0.13)',
+    backgroundColor: 'rgba(168,212,111,0.13)',
   },
   metricsRow: {
     flexDirection: 'row',
