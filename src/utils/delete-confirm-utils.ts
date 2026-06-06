@@ -75,7 +75,7 @@ export function buildDeleteConfirmCopy(photos: PhotoAsset[]) {
   const totalBytes = getDeleteTotalBytes(photos);
 
   return {
-    title: '准备收工了吗？',
+    title: '决定好去留了吗？',
     subtitle: `删除你刚归档的 ${count} 张照片。`,
     primaryLabel: `Delete ${formatDeleteBytes(totalBytes)}`,
     helper: '删除的照片会被移到系统“最近删除”，你可以在限定时间内恢复。',

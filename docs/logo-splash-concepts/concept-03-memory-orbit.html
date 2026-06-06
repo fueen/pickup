@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PickUp Concept 03 - Memory Orbit</title>
+    <link rel="stylesheet" href="./shared.css" />
+    <style>
+      .orbit-mark {
+        position: relative;
+        width: 284px;
+        height: 284px;
+      }
+
+      .orbit-ring {
+        position: absolute;
+        inset: 18px;
+        border: 1px solid rgba(168, 212, 111, 0.34);
+        border-radius: 50%;
+        animation: orbit-ring 3600ms ease-in-out infinite;
+      }
+
+      .orbit-ring::before,
+      .orbit-ring::after {
+        content: "";
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      .orbit-ring::before {
+        left: 22px;
+        top: 44px;
+      }
+
+      .orbit-ring::after {
+        right: 34px;
+        bottom: 28px;
+        opacity: 0.5;
+      }
+
+      .orbit-card {
+        position: absolute;
+        left: 74px;
+        top: 54px;
+        width: 136px;
+        height: 176px;
+        border-radius: 38px;
+        background: #222226;
+        animation: orbit-card 3600ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      }
+
+      .orbit-frame {
+        position: absolute;
+        left: 48px;
+        top: 48px;
+        width: 188px;
+        height: 188px;
+        border: 15px solid var(--accent);
+        border-radius: 58px;
+        animation: orbit-frame 3600ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      }
+
+      .month-dot {
+        position: absolute;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent-deep);
+        left: 154px;
+        top: 112px;
+        animation: month-dot 3600ms ease-in-out infinite;
+      }
+
+      @keyframes orbit-ring {
+        0% { opacity: 0; transform: scale(0.7) rotate(-40deg); }
+        30%, 78% { opacity: 1; transform: scale(1) rotate(0deg); }
+        100% { opacity: 0; transform: scale(1.06) rotate(32deg); }
+      }
+
+      @keyframes orbit-card {
+        0% { opacity: 0; transform: translateY(16px) rotate(0deg) scale(0.9); }
+        28%, 78% { opacity: 0.9; transform: translateY(0) rotate(4deg) scale(1); }
+        100% { opacity: 0; transform: translateY(-10px) rotate(8deg) scale(0.98); }
+      }
+
+      @keyframes orbit-frame {
+        0% { opacity: 0; transform: scale(0.76) rotate(-8deg); }
+        34%, 78% { opacity: 1; transform: scale(1) rotate(0deg); }
+        100% { opacity: 0; transform: scale(1.04) rotate(3deg); }
+      }
+
+      @keyframes month-dot {
+        0%, 28% { opacity: 0; transform: scale(0.5); }
+        44%, 78% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.7); }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <header class="topline">
+        <div>
+          <h1>03 Memory Orbit</h1>
+          <p class="note">把“月份分析”的产品能力注入 LOGO：照片卡片外有记忆轨道，开屏时像在定位某个月份。</p>
+        </div>
+        <nav class="nav"><a href="./index.html">返回总览</a><a href="./concept-04-pickup-mark.html">下一个</a></nav>
+      </header>
+      <section class="stage">
+        <div class="phone">
+          <div class="status"><span>13:26</span><span>5G 65</span></div>
+          <div class="splash">
+            <div class="orbit-mark">
+              <div class="orbit-ring"></div>
+              <div class="orbit-card"></div>
+              <div class="orbit-frame"></div>
+              <div class="month-dot"></div>
+            </div>
+            <div class="brand-name">PickUp</div>
+            <div class="brand-sub">找到那个月的记忆</div>
+          </div>
+        </div>
+        <aside class="spec">
+          <h2>方向说明</h2>
+          <p>这版最能呼应现在 v2.0 的月份分析功能。轨道让 LOGO 更有“时间/记忆整理”的含义，但 app icon 里需要控制线条数量，避免小尺寸发糊。</p>
+          <div class="chips"><span class="chip">功能表达强</span><span class="chip">月份分析</span><span class="chip">更有故事</span></div>
+          <ul>
+            <li>适合把 splash 做成“定位月份 -> 收拢成 LOGO”的过程。</li>
+            <li>如果做应用图标，建议保留一条轨道和两个点即可。</li>
+            <li>字体可更温和一点，中文副标语增强记忆感。</li>
+          </ul>
+          <div class="swatches"><i style="background:#a8d46f"></i><i style="background:#5f783f"></i><i style="background:#222226"></i><i style="background:#050505"></i></div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

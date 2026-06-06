@@ -48,7 +48,7 @@ export function MonthlyChart({ data, onMonthPress }: Props) {
                     styles.bar,
                     {
                       height: barHeight,
-                      backgroundColor: item.isCurrent ? Tokens.color.accent : 'rgba(233,255,63,0.78)',
+                      backgroundColor: item.isCurrent ? Tokens.color.accent : 'rgba(168,212,111,0.78)',
                       opacity: item.count > 0 ? 1 : 0.16,
                     },
                   ]}
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     right: -5,
     height: 58,
     borderRadius: 999,
-    backgroundColor: 'rgba(233,255,63,0.10)',
+    backgroundColor: 'rgba(168,212,111,0.10)',
   },
   bar: { width: BAR_WIDTH, borderTopLeftRadius: 999, borderTopRightRadius: 999 },
   month: {

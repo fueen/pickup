@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PickUp Concept 02 - Liquid Glass</title>
+    <link rel="stylesheet" href="./shared.css" />
+    <style>
+      .glass-mark {
+        position: relative;
+        width: 268px;
+        height: 268px;
+        filter: drop-shadow(0 28px 42px rgba(168, 212, 111, 0.18));
+      }
+
+      .glass-shell {
+        position: absolute;
+        inset: 38px;
+        border-radius: 62px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(168, 212, 111, 0.12)),
+          rgba(168, 212, 111, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow:
+          inset 0 0 0 2px rgba(168, 212, 111, 0.46),
+          inset 0 -24px 42px rgba(0, 0, 0, 0.42);
+        animation: glass-pop 3400ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      }
+
+      .glass-card {
+        position: absolute;
+        width: 122px;
+        height: 160px;
+        border-radius: 36px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(16px);
+      }
+
+      .glass-card.one {
+        left: 42px;
+        top: 72px;
+        animation: glass-card-one 3400ms ease-in-out infinite;
+      }
+
+      .glass-card.two {
+        right: 42px;
+        top: 44px;
+        animation: glass-card-two 3400ms ease-in-out infinite;
+      }
+
+      .glass-dot {
+        position: absolute;
+        right: 84px;
+        top: 104px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 28%, #dff4b9, var(--accent) 48%, var(--accent-deep));
+        animation: glass-dot 3400ms ease-in-out infinite;
+      }
+
+      @keyframes glass-pop {
+        0% { opacity: 0; transform: scale(0.78); border-radius: 90px; }
+        28%, 80% { opacity: 1; transform: scale(1); border-radius: 62px; }
+        100% { opacity: 0; transform: scale(1.06); border-radius: 78px; }
+      }
+
+      @keyframes glass-card-one {
+        0% { opacity: 0; transform: translate(36px, 10px) rotate(0deg); }
+        30%, 80% { opacity: 0.58; transform: translate(-16px, 18px) rotate(-12deg); }
+        100% { opacity: 0; transform: translate(-28px, 10px) rotate(-16deg); }
+      }
+
+      @keyframes glass-card-two {
+        0% { opacity: 0; transform: translate(-30px, 14px) rotate(0deg); }
+        30%, 80% { opacity: 0.82; transform: translate(8px, -6px) rotate(8deg); }
+        100% { opacity: 0; transform: translate(22px, -12px) rotate(12deg); }
+      }
+
+      @keyframes glass-dot {
+        0%, 24% { opacity: 0; transform: scale(0.7); }
+        42%, 80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <header class="topline">
+        <div>
+          <h1>02 Liquid Glass</h1>
+          <p class="note">更 Dribbble、更 iOS 视觉趋势的一版。保持卡片符号，但让前景变成柔软玻璃形态。</p>
+        </div>
+        <nav class="nav"><a href="./index.html">返回总览</a><a href="./concept-03-memory-orbit.html">下一个</a></nav>
+      </header>
+      <section class="stage">
+        <div class="phone">
+          <div class="status"><span>13:26</span><span>5G 65</span></div>
+          <div class="splash">
+            <div class="glass-mark">
+              <div class="glass-card one"></div>
+              <div class="glass-card two"></div>
+              <div class="glass-shell"></div>
+              <div class="glass-dot"></div>
+            </div>
+            <div class="brand-name">PickUp</div>
+            <div class="brand-sub">照片整理，轻一点</div>
+          </div>
+        </div>
+        <aside class="spec">
+          <h2>方向说明</h2>
+          <p>这版更有“高级 App”感，适合你后面继续做 v2.x 全局视觉升级。它的风险是 native 端如果要完全复刻玻璃，需要用渐变/模糊近似，不能依赖真实 backdrop blur。</p>
+          <div class="chips"><span class="chip">高级感</span><span class="chip">Liquid Glass</span><span class="chip">动效更柔</span></div>
+          <ul>
+            <li>适合用于开屏动画和宣传图，但正式 app icon 要简化玻璃层次。</li>
+            <li>动画节奏：先玻璃浮起，再卡片错位，最后圆点呼吸。</li>
+            <li>字体建议标题用圆润粗体，副文案用中粗，保持 iOS 干净感。</li>
+          </ul>
+          <div class="swatches"><i style="background:#dff4b9"></i><i style="background:#a8d46f"></i><i style="background:#5f783f"></i><i style="background:#111"></i></div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Tokens } from '../../design-tokens';
 import { PhotoAsset } from '../../types/photo';
 import { buildDeleteConfirmCopy, getDeletePreviewPhotos } from '../../utils/delete-confirm-utils';
+import { SafeBlurView } from '../ui/SafeBlurView';
 
 interface Props {
   visible: boolean;
@@ -43,6 +44,7 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
   const prevVisible = useRef(false);
 
   const previewPhotos = getDeletePreviewPhotos(photos);
+  const backdropPhoto = previewPhotos[0];
   const copy = buildDeleteConfirmCopy(photos.length > 0 ? photos : []);
   const subtitle = photos.length > 0 ? copy.subtitle : `删除你刚归档的 ${count} 张照片。`;
   const primaryLabel = photos.length > 0 ? copy.primaryLabel : `Delete ${count} 张`;
@@ -92,10 +94,24 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
   return (
     <Modal visible transparent animationType="none" onRequestClose={onCancel}>
       <Animated.View style={[styles.overlay, overlayStyle]}>
+        {backdropPhoto ? (
+          <>
+            <Image
+              source={{ uri: backdropPhoto.uri }}
+              style={styles.backdropPhoto}
+              blurRadius={42}
+              resizeMode="cover"
+            />
+            <SafeBlurView
+              style={styles.backdropBlur}
+              intensity={44}
+              tint="dark"
+              fallbackBackground="rgba(12,12,12,0.70)"
+            />
+          </>
+        ) : null}
+        <View style={styles.backdropShade} pointerEvents="none" />
         <View style={styles.backdropPanel} pointerEvents="none" />
-        <View style={styles.warmGlow} pointerEvents="none" />
-        <View style={styles.coolGlow} pointerEvents="none" />
-        <View style={styles.lineGlowTop} pointerEvents="none" />
 
         <Animated.View style={[styles.content, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 22 }, contentStyle]}>
           <TouchableOpacity
@@ -196,7 +212,19 @@ export function DeleteConfirmSheet({ visible, count, loading, photos = [], onCon
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: '#10100F',
+    backgroundColor: '#050505',
+  },
+  backdropPhoto: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.62,
+    transform: [{ scale: 1.08 }],
+  },
+  backdropBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  backdropShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.66)',
   },
   backdropPanel: {
     position: 'absolute',
@@ -208,32 +236,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.07)',
-  },
-  warmGlow: {
-    position: 'absolute',
-    left: -110,
-    right: 40,
-    top: 110,
-    height: 360,
-    borderRadius: 220,
-    backgroundColor: 'rgba(255,204,0,0.09)',
-  },
-  coolGlow: {
-    position: 'absolute',
-    left: 90,
-    right: -160,
-    bottom: 150,
-    height: 340,
-    borderRadius: 180,
-    backgroundColor: 'rgba(80,92,112,0.16)',
-  },
-  lineGlowTop: {
-    position: 'absolute',
-    left: 36,
-    right: 36,
-    top: 88,
-    height: 1,
-    backgroundColor: 'rgba(255,204,0,0.22)',
   },
   content: {
     flex: 1,
@@ -276,8 +278,9 @@ const styles = StyleSheet.create({
   previewArea: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 204,
-    marginBottom: 16,
+    height: 220,
+    marginTop: 30,
+    marginBottom: 24,
   },
   stackFrame: {
     width: 202,
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   doubleCheckRow: {
-    marginTop: 14,
+    marginTop: 34,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

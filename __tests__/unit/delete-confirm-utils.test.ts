@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   buildDeleteConfirmCopy,
   formatDeleteBytes,
@@ -29,7 +31,7 @@ describe('delete confirm utils', () => {
   it('uses selected photos to build count and delete button copy', () => {
     const copy = buildDeleteConfirmCopy([makePhoto('a', 10), makePhoto('b', 20)]);
 
-    expect(copy.title).toBe('准备收工了吗？');
+    expect(copy.title).toBe('决定好去留了吗？');
     expect(copy.subtitle).toBe('删除你刚归档的 2 张照片。');
     expect(copy.primaryLabel).toBe('Delete 30 B');
   });
@@ -67,5 +69,16 @@ describe('delete confirm utils', () => {
   it('uses different post-delete actions for completed groups and mid-group deletes', () => {
     expect(getPostDeleteAction('group-complete')).toBe('load-next-group');
     expect(getPostDeleteAction('manual')).toBe('refill-current-group');
+  });
+
+  it('uses the first pending photo as a blurred color backdrop in the confirm sheet', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/components/delete-review/DeleteConfirmSheet.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('backdropPhoto');
+    expect(source).toContain('blurRadius={42}');
+    expect(source).toContain('SafeBlurView');
   });
 });

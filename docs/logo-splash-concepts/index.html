@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PickUp Logo Splash Concepts</title>
+    <link rel="stylesheet" href="./shared.css" />
+    <style>
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .tile {
+        min-height: 300px;
+        padding: 18px;
+        border: 1px solid var(--stroke);
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.055);
+        text-decoration: none;
+        color: var(--ink);
+      }
+
+      .mini {
+        position: relative;
+        height: 180px;
+        border-radius: 26px;
+        background: #000;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      .mini .logo-frame {
+        width: 92px;
+        height: 92px;
+        border-width: 8px;
+        border-radius: 28px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .mini .card {
+        width: 70px;
+        height: 92px;
+        border-radius: 20px;
+        left: calc(50% - 35px);
+        top: calc(50% - 46px);
+      }
+
+      .mini .logo-dot {
+        width: 24px;
+        height: 24px;
+        left: calc(50% + 8px);
+        top: calc(50% - 12px);
+      }
+
+      .tile h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+
+      .tile p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 13px;
+        line-height: 1.6;
+        font-weight: 750;
+      }
+
+      @media (max-width: 980px) {
+        .gallery { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+      }
+
+      @media (max-width: 560px) {
+        .gallery { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <header class="topline">
+        <div>
+          <h1>PickUp Logo<br />Splash Concepts</h1>
+          <p class="note">四组方向都基于照片卡片堆叠、iOS 暗色质感和新主色 #A8D46F。每个页面都是独立 HTML，可打开后看循环开屏动效。</p>
+        </div>
+        <div class="chips">
+          <span class="chip">iOS Dark</span>
+          <span class="chip">#A8D46F</span>
+          <span class="chip">Card Stack</span>
+          <span class="chip">Motion Logo</span>
+        </div>
+      </header>
+      <section class="gallery">
+        <a class="tile" href="./concept-01-card-bloom.html">
+          <div class="mini"><div class="card" style="transform: translate(-24px, 18px) rotate(-13deg)"></div><div class="card" style="transform: translate(18px, -10px) rotate(8deg)"></div><div class="logo-frame"></div><div class="logo-dot"></div></div>
+          <h2>01 Card Bloom</h2>
+          <p>最接近当前 LOGO 的延展版。照片卡片从背后展开，前景圆角框收拢成品牌图形。</p>
+        </a>
+        <a class="tile" href="./concept-02-liquid-glass.html">
+          <div class="mini"><div class="logo-frame" style="filter: blur(.2px); border-radius: 42px"></div><div class="logo-dot" style="background:#a8d46f"></div></div>
+          <h2>02 Liquid Glass</h2>
+          <p>偏 iOS 26 液态玻璃感。LOGO 像一层柔软玻璃浮出，适合更高级的视觉升级。</p>
+        </a>
+        <a class="tile" href="./concept-02-liquid-glass-bright.html">
+          <div class="mini" style="--accent:#a8d46f;--accent-deep:#5f783f"><div class="logo-frame" style="filter: blur(.2px); border-radius: 42px"></div><div class="logo-dot" style="background:#a8d46f;box-shadow:0 0 24px rgba(168,212,111,.25)"></div></div>
+          <h2>02B Bright Glass</h2>
+          <p>把主色调到更浓更亮的 #A8D46F，保留 Liquid Glass 质感，但在黑底上更醒目。</p>
+        </a>
+        <a class="tile" href="./concept-03-memory-orbit.html">
+          <div class="mini"><div class="logo-frame"></div><div class="logo-dot"></div><i style="position:absolute;inset:42px;border:1px solid rgba(168,212,111,.35);border-radius:50%"></i></div>
+          <h2>03 Memory Orbit</h2>
+          <p>用月份轨道表达“整理记忆”。比原 LOGO 更有功能感，适合强调月份分析。</p>
+        </a>
+        <a class="tile" href="./concept-04-pickup-mark.html">
+          <div class="mini"><div class="logo-frame"></div><b style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:54px;color:#000;font-weight:950">P</b></div>
+          <h2>04 Pickup Mark</h2>
+          <p>更品牌化的 P 字母标。适合应用商店识别，但比照片堆叠概念抽象一点。</p>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>
