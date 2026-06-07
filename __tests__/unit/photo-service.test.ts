@@ -4,6 +4,7 @@ import {
   generateRandomGroup,
   getViewedStateForSortChange,
   hasRemainingPhotosInMonthScope,
+  shouldResetViewedForInitialLoad,
   shouldRefillViewedPool,
   shouldReloadPhotosForSortChange,
   getRefillCandidates,
@@ -119,6 +120,20 @@ describe('month scope helpers', () => {
 });
 
 describe('sort change refresh policy', () => {
+  it('resets viewed state on app load when newest-first sorting is persisted', () => {
+    expect(shouldResetViewedForInitialLoad('timeNewest', false)).toBe(true);
+  });
+
+  it('keeps viewed state on app load for other persisted sort modes', () => {
+    expect(shouldResetViewedForInitialLoad('random', false)).toBe(false);
+    expect(shouldResetViewedForInitialLoad('sizeDesc', false)).toBe(false);
+    expect(shouldResetViewedForInitialLoad('timeOldest', false)).toBe(false);
+  });
+
+  it('respects explicit reset requests for any persisted sort mode', () => {
+    expect(shouldResetViewedForInitialLoad('random', true)).toBe(true);
+  });
+
   it('requires a media-library reload when switching to newest-first sorting', () => {
     expect(shouldReloadPhotosForSortChange('random', 'timeNewest')).toBe(true);
     expect(shouldReloadPhotosForSortChange('sizeDesc', 'timeNewest')).toBe(true);

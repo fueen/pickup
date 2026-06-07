@@ -12,9 +12,9 @@ export const CURRENT_CHANGELOG: ChangelogEntry = {
   title: 'PickUp 已更新',
   subtitle: '看看这次有什么新变化',
   highlights: [
-    '月份分析现在可以直接进入指定月份清理。',
-    '全局界面升级为更精致的 v2.0 视觉风格。',
-    '统计概览迁移到更多功能页，个人中心更清爽。',
-    '使用指南升级为手势预览弹框。',
+    '修复 Live Photo 预览播放不生效的问题。',
+    '时间从新到旧排序在重新打开 App 后会重新加载最新照片。',
+    '相册选择页升级为拼贴式照片墙。',
+    'App 图标升级为 Picked Cards 品牌图标。',
   ],
 };

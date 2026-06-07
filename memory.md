@@ -2,6 +2,45 @@
 
 ---
 
+## 2026-06-07 15:1x | v2.0.1 Live Photo 与最新排序修复、release 构建与推送
+
+### 一句话概述
+
+v2.0.1 已完成版本号升级、更新日志/README/memory 同步，并针对两个关键反馈修复：Live Photo 全屏预览播放不生效，以及“时间从新到旧”排序重开 App 后没有重新从最新照片开始。
+
+### 当前进度 / 关键结论
+
+- **版本号升级**：`package.json`、`package-lock.json`、`app.config.js`、`src/constants/app-info.ts` 和 `android/app/build.gradle` 已同步到 `2.0.1`；Android `versionCode` 升到 5。
+- **Live Photo 修复**：`PhotoZoomModal` 点击 LIVE 时会按需调用 `MediaLibrary.getAssetInfoAsync(..., { shouldDownloadFromNetwork: true })` 补抓 paired video URI，再交给 `expo-video` 播放；资源不可用时展示稳定降级提示。
+- **最新排序修复**：新增 `shouldResetViewedForInitialLoad()`，当持久化排序为 `timeNewest` 时，启动加载会重置 viewed 状态，避免旧浏览记录导致第一张不是最新照片。
+- **v2.0 追加能力同步**：相册选择页已是 mosaic 拼贴 UI；Live Photo 徽章、App Picked Cards 图标、相关测试和文档已纳入本次发布收口。
+
+### 验证与构建
+
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过：17 个 test suites / 91 个 tests；仍有既有 `react-test-renderer is deprecated` warning。
+- `android/gradlew.bat assembleRelease` 在 `android/` 目录下通过，最终 `BUILD SUCCESSFUL`；仍有 Amazon Appstore SDK 的 R8 stack map table warning 和 Gradle deprecated features warning。
+- Release APK 已复制到 `dist/pickup-v2.0.1-release.apk`，大小 97.56 MB（102,297,530 bytes）。
+
+### 关键文件
+
+| 更新 | 说明 |
+|------|------|
+| `src/components/delete-review/PhotoZoomModal.tsx` | Live Photo 播放 URI 按需补抓和播放降级 |
+| `src/utils/photo-asset-utils.ts` | 新增 `resolvePlayableLivePhotoUri()` |
+| `src/services/photo-service.ts` | 新增最新排序启动重置策略 |
+| `src/hooks/usePhotoEngine.ts` | 加载照片时应用最新排序重置 viewed 状态 |
+| `src/constants/changelog.ts` | App 内 v2.0.1 更新日志 |
+| `CHANGELOG.md` / `README.md` / `memory.md` | 发布文档同步 |
+| `android/app/build.gradle` / `app.config.js` / `package*.json` / `src/constants/app-info.ts` | 版本号同步 |
+
+### 当前需注意
+
+- Live Photo 真实播放依赖包含 `expo-video` native 模块的新安装包；旧 dev-client 仅 JS 热更新不一定能验证播放能力。
+- `dist/` 被 `.gitignore` 忽略，APK 产物只保留在本地，不会随 Git push 上传。
+
+---
+
 ## 2026-06-06 17:0x | v2.0.0 品牌主色与删除确认页打磨、本地双包构建
 
 ### 一句话概述

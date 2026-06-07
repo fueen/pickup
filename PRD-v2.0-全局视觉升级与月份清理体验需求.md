@@ -772,3 +772,321 @@ dist/pickup-v2.0.0-release.apk
 - [x] 开屏动画源码不再包含旧黄色 `#FFCC00`。
 - [x] 本地 dev APK 构建通过并复制到 `dist/pickup-v2.0.0-dev.apk`。
 - [x] 本地 release APK 构建通过并复制到 `dist/pickup-v2.0.0-release.apk`。
+
+---
+
+## 2026-06-07 追加需求：Live Photo 预览、相册选择拼贴 UI 与 App 图标升级
+
+### 背景
+
+基于 v2.0.0 已完成版本与新一轮视觉方案评审，本轮继续补齐三个产品体验点：
+
+1. 照片 review / 预览链路需要支持 Live Photo。用户看到 Live Photo 时，应能通过熟悉的 iOS Live 图标识别，并点击播放动态内容。
+2. 相册选择页需要采用评审页 `A. Gallery Mosaic` 的照片拼贴视觉方向，但业务分组仍保持当前系统相册列表逻辑，不按月份重新分组。
+3. App Logo / Icon 采用评审页 `1. Picked Cards` 方向，以照片卡片堆叠和当前主色 `#A8D46F` 强化 PickUp 的品牌记忆。
+
+参考设计稿：
+
+- `designs/album-logo-concepts.html`
+- 相册页方向：`A. Gallery Mosaic`
+- Logo 方向：`1. Picked Cards`
+
+### 需求清单
+
+| 编号 | 需求名称 | 优先级 | 类型 |
+|---|---|---:|---|
+| REQ-11 | 照片 review / 预览链路支持 Live Photo 识别与播放 | P0 | 媒体 / 交互 |
+| REQ-12 | 相册选择页升级为照片拼贴式 UI，但保持现有相册分组逻辑 | P0 | UI / 信息架构 |
+| REQ-13 | App Logo / Icon 升级为 Picked Cards 品牌图标 | P1 | 品牌 / 视觉资产 |
+
+---
+
+### REQ-11：照片 review / 预览链路支持 Live Photo 识别与播放
+
+#### 背景
+
+当前 `PhotoAsset.mediaType` 已包含 `livePhoto` 类型，首页照片卡片也已有基础 `LIVE` 文本徽章。但在 review / 全屏预览链路中，Live Photo 仍缺少更符合 iOS 认知的图标化提示和点击播放能力。用户无法确认该照片是否包含动态片段，也无法在删除前查看动态内容。
+
+#### 目标
+
+当 App 识别到照片为 Live Photo 时，在照片左上角展示 iOS 风格 Live 图标。用户点击该图标后，可以播放 Live Photo 的动态片段；播放结束后回到静态照片预览状态。
+
+#### 适用范围
+
+| 页面 / 组件 | 目标行为 |
+|---|---|
+| 首页照片浏览卡片 | 保留或升级 Live 标识，建议统一为图标 + `LIVE` |
+| 删除确认页照片预览入口 | 若预览图对应 Live Photo，应展示 Live 标识 |
+| 待删除列表全屏预览 `PhotoZoomModal` | 左上角展示可点击 Live 图标，并支持播放 |
+| 照片详情 sheet | 可展示媒体类型为 `Live Photo` |
+
+说明：本需求中的“照片 review 界面”优先覆盖删除确认后的全屏预览和待删除照片查看链路；首页浏览卡片同步升级为同一视觉语言，避免同一媒体类型在不同页面表现不一致。
+
+#### Live Photo 识别规则
+
+| 识别来源 | 规则 |
+|---|---|
+| `PhotoAsset.mediaType` | 值为 `livePhoto` 时判定为 Live Photo |
+| Expo MediaLibrary 原始资产 | 如 SDK 返回 `mediaSubtypes` 或等价字段，应映射到 `PhotoAsset.mediaType = 'livePhoto'` |
+| 无法读取动态资源 | 仍展示 Live 标识，但点击后给出轻提示，不应崩溃 |
+
+#### Live 图标视觉规则
+
+- 图标位置：照片内容区域左上角，距离照片边缘建议 `12-16px`。
+- 图标样式：参考 iOS Photos 的 Live Photo 图标心智，使用同心圆 / 多圆环 / 放射圆点组合，旁边可附带短文本 `LIVE`。
+- 容器样式：半透明深色胶囊或玻璃背景，保证在亮图、暗图上都可读。
+- 最小触控区域：不小于 `44x44`。
+- 播放中状态：图标可出现轻微脉冲或进度反馈，避免用户重复点击无反馈。
+- 非 Live Photo：不展示该图标，不占位。
+
+#### 播放交互规则
+
+| 操作 | 行为 |
+|---|---|
+| 点击 Live 图标 | 播放 Live Photo 动态片段 |
+| 播放中再次点击 | 可暂停或重新播放，具体实现以稳定性优先 |
+| 播放结束 | 自动回到静态照片 |
+| 动态资源加载失败 | 展示轻提示：`Live Photo 暂时无法播放` |
+| 用户关闭预览 | 停止播放并释放播放资源 |
+| 用户缩放/拖动照片 | 播放能力不应破坏现有缩放、拖动体验 |
+
+#### 技术实现要求
+
+- 优先使用项目已安装 Expo SDK 54 和现有媒体能力；只有确认 Expo 当前 API 行为时才查官方文档。
+- 如 Expo MediaLibrary 只能稳定返回静态图 URI，需要通过 `getAssetInfoAsync` 或平台支持字段获取 Live Photo 的 paired video / paired resource。
+- 若 Android 不支持真实 Live Photo 播放，应保留静态识别和友好降级提示，不阻塞 Android 主流程。
+- 若 iOS 支持 paired video 播放，可在全屏预览中临时切换为视频播放器或原生可播放视图。
+- 播放逻辑应封装为独立组件，例如 `LivePhotoBadge` / `LivePhotoPlayerOverlay`，避免散落在多个页面。
+- 不因播放 Live Photo 引入云端服务或上传照片。
+
+#### 可能修改文件
+
+| 文件 | 说明 |
+|---|---|
+| `src/types/photo.ts` | 补充 Live Photo 动态资源字段，如 `pairedVideoUri` / `livePhotoVideoUri` |
+| `src/hooks/usePhotoEngine.ts` | 映射 Live Photo 类型与必要资源 |
+| `src/services/photo-service.ts` | 分组与排序时保留 Live Photo 元数据 |
+| `src/components/photo-card/PhotoCard.tsx` | 首页 Live 图标升级 |
+| `src/components/delete-review/PhotoZoomModal.tsx` | 全屏预览 Live 播放入口 |
+| `src/components/delete-review/PhotoDetailSheet.tsx` | 媒体类型展示 |
+| `src/components/ui/*` | 可新增 Live 图标 / 播放控件组件 |
+
+#### 验收标准
+
+- [ ] Live Photo 能被识别为 `mediaType = 'livePhoto'`。
+- [ ] Live Photo 左上角展示 iOS 风格 Live 图标。
+- [ ] 非 Live Photo 不展示 Live 图标。
+- [ ] 点击 Live 图标可播放动态内容，播放结束后回到静态预览。
+- [ ] 动态资源不可用时展示轻提示，不崩溃、不黑屏。
+- [ ] 关闭全屏预览时停止播放并释放资源。
+- [ ] Live 播放不破坏现有双指缩放、拖动和关闭交互。
+- [ ] Android 不支持真实播放时有清晰降级，不影响删除流程。
+- [ ] `npx.cmd tsc --noEmit` 通过。
+- [ ] `npx.cmd jest --runInBand` 通过。
+- [ ] iOS 真机或模拟器完成至少 1 张 Live Photo 播放回归。
+
+---
+
+### REQ-12：相册选择页升级为照片拼贴式 UI，但保持现有相册分组逻辑
+
+#### 背景
+
+当前相册选择页使用 2 列方形封面卡片，功能清晰但视觉普通，与 v2.0 的精致化目标和本轮评审的拼贴设计方向不一致。用户已选择效果图中的 `A. Gallery Mosaic` 方向，希望相册选择页呈现更接近 iOS gallery / Dribbble photo mosaic 的照片墙质感。
+
+同时，用户明确要求：**只改变 UI，不改变现有相册分组逻辑**。也就是说，相册列表仍然按当前逻辑展示“所有照片 + 系统相册”，不按月份重新分组。
+
+#### 目标
+
+将 `app/albums.tsx` 从 2 列相册卡片升级为拼贴式相册列表。每个相册项使用多张缩略图组成 mosaic / bento 封面，并展示相册名称与照片数量；点击任一相册后，仍按当前 `setSelectedAlbum({ id, title })` 逻辑返回首页整理。
+
+#### 信息架构规则
+
+| 项目 | 规则 |
+|---|---|
+| 分组逻辑 | 保持当前 `toVisibleAlbumItems` 输出，不按月份分组 |
+| 排序逻辑 | 保持当前按照片数量降序 |
+| 特殊入口 | `__all__` / 所有照片仍放在列表首位 |
+| 点击行为 | 保持当前选择相册并 `router.back()` |
+| 数据来源 | 继续使用 `MediaLibrary.getAlbumsAsync()` 与 `MediaLibrary.getAssetsAsync()` |
+
+#### UI 方向
+
+采用评审页 `A. Gallery Mosaic` 的视觉语言，但将“月份标题”替换为“相册项”：
+
+- 页面顶部：返回按钮 + 标题 `相册` 或 `选择相册` + 可选搜索 / 筛选图标。
+- 每个相册：一个横向或纵向的拼贴模块。
+- 拼贴模块：使用 4-8 张相册内照片缩略图，大小错落排列。
+- 右下角：照片数量胶囊，例如 `+248` 或 `248 张`。
+- 标题：相册名称放在拼贴上方或下方，确保可读。
+- 当前主色 `#A8D46F` 用于选中、数量 badge 或关键入口，不大面积铺色。
+
+#### 相册封面资源规则
+
+| 场景 | 行为 |
+|---|---|
+| 相册照片数 >= 4 | 拉取多张缩略图组成 mosaic |
+| 相册照片数 2-3 | 使用已有照片重复布局或降级为小拼贴 |
+| 相册照片数 = 1 | 单图大封面 + 数量 badge |
+| 无法读取缩略图 | 展示深色占位拼贴，不隐藏相册项 |
+| `所有照片` | 优先使用全量照片池前若干张作为拼贴来源 |
+
+#### 性能约束
+
+- 不一次性为所有相册拉取大量照片。
+- 每个相册建议最多拉取 `4-8` 张缩略图。
+- 首屏优先加载相册基础信息，缩略图可分批或并行加载。
+- `FlatList` 应保留虚拟滚动能力，避免大相册数量时卡顿。
+- 图片圆角、阴影和模糊效果要控制复杂度，优先保证 Android 真机流畅。
+
+#### 技术实现建议
+
+建议将相册项从单封面扩展为多封面：
+
+```ts
+interface VisibleAlbumItem {
+  id: string;
+  title: string;
+  assetCount: number;
+  coverUri: string | null;
+  coverUris?: string[];
+}
+```
+
+可新增组件：
+
+- `src/components/albums/AlbumMosaicCard.tsx`
+- `src/components/albums/AlbumMosaicPreview.tsx`
+
+#### 可能修改文件
+
+| 文件 | 说明 |
+|---|---|
+| `app/albums.tsx` | 页面布局、数据拉取数量、渲染结构 |
+| `src/utils/album-utils.ts` | `VisibleAlbumItem` 支持多张封面 |
+| `src/components/albums/*` | 新增拼贴相册组件 |
+| `src/design-tokens.ts` | 如需补充 tile / badge 样式 token |
+
+#### 非目标范围
+
+- 不把相册页改成月份页。
+- 不新增真实搜索功能，除非后续单独立项。
+- 不改变相册选择后的照片池逻辑。
+- 不改变免费用户每日限制。
+- 不引入远程图片或上传照片。
+
+#### 验收标准
+
+- [ ] 相册选择页视觉升级为拼贴式 mosaic / bento 布局。
+- [ ] 每个相册仍代表一个系统相册或 `所有照片`，不按月份分组。
+- [ ] 相册顺序与当前逻辑一致：`所有照片` 优先，其余按照片数量降序。
+- [ ] 点击相册后仍能正确设置 `selectedAlbum` 并返回首页。
+- [ ] 相册照片数量显示清晰。
+- [ ] 单图、少图、缩略图读取失败场景均有稳定降级 UI。
+- [ ] 大量相册时页面滚动流畅，无明显卡顿。
+- [ ] 小屏设备上拼贴、标题和数量 badge 不重叠。
+- [ ] `npx.cmd tsc --noEmit` 通过。
+- [ ] `npx.cmd jest --runInBand` 通过。
+
+---
+
+### REQ-13：App Logo / Icon 升级为 Picked Cards 品牌图标
+
+#### 背景
+
+当前 App 已完成 v2.0 主色统一，但 Logo / Icon 仍需要进一步贴合产品核心交互与新视觉语言。用户已选择评审页 `1. Picked Cards` 方向：用多张照片卡片堆叠表现“滑动整理照片”，用主色卡片和完成圆点表达“清理完成”。
+
+#### 目标
+
+将 App Logo / Icon 升级为 Picked Cards 方向，并同步到应用图标相关资源，使启动器图标、应用内品牌露出和构建配置保持一致。
+
+#### 视觉方向
+
+Logo 应包含以下核心元素：
+
+- 深色圆角背景，贴合当前 App 暗色体系。
+- 3 张错落堆叠的圆角照片卡片，呼应首页滑动整理。
+- 中间或主卡片使用主色 `#A8D46F`。
+- 右下角或视觉焦点处使用小圆点 / 完成标记，暗示整理完成。
+- 可少量使用粉紫 `#F0A6FF` 作为高光，但不能抢过主色。
+- 图标在小尺寸下仍能识别为“卡片堆叠”，不要依赖细小文字。
+
+#### 资产范围
+
+| 资源 | 要求 |
+|---|---|
+| `assets/icon.png` | 1024x1024 主图标 |
+| `assets/adaptive-icon.png` | Android adaptive icon 前景资源 |
+| `assets/favicon.png` | Web / fallback 图标，可由主图标降采样 |
+| `assets/splash-icon.png` | 若当前 native splash 仍使用图标，应同步或确认是否保持旧图 |
+| App 内品牌图形 | 如关于页或开屏动画使用静态 logo，应保持视觉一致 |
+
+#### Android / iOS 适配规则
+
+- Android adaptive icon 需要考虑安全区，关键卡片不要贴边。
+- iOS 图标不要内置过大圆角遮罩，系统会自动裁切。
+- 图标背景不能透明。
+- 小尺寸预览下，主卡片和完成圆点仍可辨认。
+- 不在图标中放置 `PickUp` 或其他文字。
+
+#### 技术实现要求
+
+- 可先使用 HTML / SVG / Canvas 生成高分辨率 PNG，再落到 `assets/`。
+- 输出资源需避免压缩导致边缘锯齿。
+- `app.config.js` 中图标路径应继续指向正确资源。
+- 如替换 native 资源，需要重新构建 Android 包验证启动器图标。
+
+#### 可能修改文件
+
+| 文件 | 说明 |
+|---|---|
+| `assets/icon.png` | 主图标 |
+| `assets/adaptive-icon.png` | Android adaptive icon |
+| `assets/favicon.png` | Web / fallback 图标 |
+| `assets/splash-icon.png` | 视最终策略决定是否同步 |
+| `app.config.js` | 确认图标路径配置 |
+| `README.md` | 如文档展示当前 logo，可同步更新 |
+
+#### 验收标准
+
+- [ ] App 图标采用 Picked Cards 方向。
+- [ ] 主色使用 `#A8D46F`，并与当前 v2.0 视觉体系一致。
+- [ ] 图标在 1024px、180px、48px 尺寸下均清晰可辨。
+- [ ] Android adaptive icon 关键图形未被系统裁切。
+- [ ] App 启动器图标、构建配置和资源文件一致。
+- [ ] 不出现旧 Logo 资源误用。
+- [ ] 本地 Android dev 或 release 构建后能看到新图标。
+
+---
+
+### 本轮追加需求影响范围
+
+| 文件 | REQ-11 | REQ-12 | REQ-13 |
+|---|---:|---:|---:|
+| `app/albums.tsx` | | ✓ | |
+| `src/utils/album-utils.ts` | | ✓ | |
+| `src/components/albums/*` | | ✓ | |
+| `src/types/photo.ts` | ✓ | | |
+| `src/hooks/usePhotoEngine.ts` | ✓ | | |
+| `src/services/photo-service.ts` | ✓ | | |
+| `src/components/photo-card/PhotoCard.tsx` | ✓ | | |
+| `src/components/delete-review/PhotoZoomModal.tsx` | ✓ | | |
+| `src/components/delete-review/PhotoDetailSheet.tsx` | ✓ | | |
+| `src/components/ui/*` | ✓ | | |
+| `assets/icon.png` | | | ✓ |
+| `assets/adaptive-icon.png` | | | ✓ |
+| `assets/favicon.png` | | | ✓ |
+| `assets/splash-icon.png` | | | ✓ |
+| `app.config.js` | | | ✓ |
+
+### 本轮追加需求验收总清单
+
+- [ ] Live Photo 可识别、展示 iOS 风格 Live 图标并点击播放。
+- [ ] Live Photo 动态资源不可用时有稳定降级提示。
+- [ ] 相册选择页采用拼贴式 UI。
+- [ ] 相册选择页仍按当前系统相册逻辑展示，不按月份分组。
+- [ ] 选择相册后的整理流程与当前版本一致。
+- [ ] App Logo / Icon 采用 Picked Cards 方向并同步到图标资源。
+- [ ] Android 真机完成相册选择、Live Photo 降级/播放、启动器图标回归。
+- [ ] iOS 环境完成 Live Photo 播放回归。
+- [ ] `npx.cmd tsc --noEmit` 通过。
+- [ ] `npx.cmd jest --runInBand` 通过。

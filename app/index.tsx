@@ -61,7 +61,7 @@ export default function BrowseScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmSource, setDeleteConfirmSource] = useState<DeleteConfirmSource>('manual');
   const [detailPhoto, setDetailPhoto] = useState<{
-    creationTime: number; width: number; height: number; fileSize?: number; filename?: string;
+    creationTime: number; width: number; height: number; fileSize?: number; filename?: string; mediaType?: 'photo' | 'video' | 'livePhoto';
   } | null>(null);
 
   const [limitModalVisible, setLimitModalVisible] = useState(false);
@@ -470,6 +470,7 @@ export default function BrowseScreen() {
                   height: p.height,
                   fileSize: fileSize && fileSize > 0 ? fileSize : undefined,
                   filename: (p as any).filename,
+                  mediaType: p.mediaType,
                 });
               }}
               activeOpacity={0.7}

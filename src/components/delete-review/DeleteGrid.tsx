@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import { Tokens } from '../../design-tokens';
 import { PhotoAsset } from '../../types/photo';
+import { LivePhotoBadge } from '../ui/LivePhotoBadge';
 
 const GRID_PADDING = 18;
 const GAP = 9;
@@ -30,6 +31,11 @@ export function DeleteGrid({ photos, onTap, selectedIds, onPhotoPreview }: Props
             activeOpacity={0.8}
           >
             <Image source={{ uri: photo.uri }} style={styles.image} />
+            {photo.mediaType === 'livePhoto' && (
+              <View style={styles.liveBadgeWrap}>
+                <LivePhotoBadge disabled />
+              </View>
+            )}
             {isSelected && (
               <>
                 <View style={styles.selectedWash} />
@@ -72,6 +78,13 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 16,
     backgroundColor: Tokens.color.surface,
+  },
+  liveBadgeWrap: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    transform: [{ scale: 0.72 }],
+    transformOrigin: 'top left',
   },
   selectedWash: {
     ...StyleSheet.absoluteFillObject,
