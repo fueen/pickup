@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions,
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as MediaLibrary from 'expo-media-library';
@@ -11,12 +11,25 @@ import { usePhotoContext } from '../src/contexts/PhotoContext';
 import { LoadingGate } from '../src/components/photo-card/LoadingGate';
 import { Tokens } from '../src/design-tokens';
 import { toVisibleAlbumItems, VisibleAlbumItem } from '../src/utils/album-utils';
+import { AlbumMosaicCard } from '../src/components/albums/AlbumMosaicCard';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GAP = 12;
-const PADDING = 16;
-const COLUMN_COUNT = 2;
-const CARD_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
+const COVER_COUNT = 6;
+
+async function getAlbumPreview(albumId?: string): Promise<{ totalCount: number; coverUri: string | null; coverUris: string[] }> {
+  const page = await MediaLibrary.getAssetsAsync({
+    album: albumId,
+    mediaType: ['photo'],
+    first: COVER_COUNT,
+  });
+
+  const coverUris = page.assets.map((asset) => asset.uri).filter(Boolean);
+
+  return {
+    totalCount: page.totalCount,
+    coverUri: coverUris[0] ?? null,
+    coverUris,
+  };
+}
 
 export default function AlbumPickerScreen() {
   const router = useRouter();
@@ -27,46 +40,50 @@ export default function AlbumPickerScreen() {
   const { dailyUsageLoaded } = useSubscriptionContext();
 
   useEffect(() => {
+    let isActive = true;
+
     (async () => {
       try {
         const albumList = await MediaLibrary.getAlbumsAsync();
         const validAlbums: VisibleAlbumItem[] = [];
-
-        const allPhotosPage = await MediaLibrary.getAssetsAsync({
-          mediaType: ['photo'],
-          first: 1,
-        });
+        const allPhotosPreview = await getAlbumPreview();
 
         for (const album of albumList) {
           if (!album.id || !album.title || album.assetCount <= 0) continue;
+
           try {
-            const cover = await MediaLibrary.getAssetsAsync({
-              album: album.id,
-              mediaType: ['photo'],
-              first: 1,
-            });
-            const coverUri = cover.assets[0]?.uri ?? null;
+            const preview = await getAlbumPreview(album.id);
             validAlbums.push({
               id: album.id,
               title: album.title,
-              assetCount: cover.totalCount || album.assetCount,
-              coverUri,
+              assetCount: preview.totalCount || album.assetCount,
+              coverUri: preview.coverUri,
+              coverUris: preview.coverUris,
             });
           } catch {
             // Skip albums that the system returns but the app cannot read.
           }
         }
 
+        if (!isActive) return;
         setAlbums(toVisibleAlbumItems({
           allPhotos: {
-            totalCount: allPhotosPage.totalCount,
-            coverUri: allPhotosPage.assets[0]?.uri ?? null,
+            totalCount: allPhotosPreview.totalCount,
+            coverUri: allPhotosPreview.coverUri,
+            coverUris: allPhotosPreview.coverUris,
           },
           albums: validAlbums,
         }));
-      } catch { /* ignore */ }
-      finally { setLoading(false); }
+      } catch {
+        if (isActive) setAlbums([]);
+      } finally {
+        if (isActive) setLoading(false);
+      }
     })();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handlePickAlbum = (album: VisibleAlbumItem) => {
@@ -78,31 +95,43 @@ export default function AlbumPickerScreen() {
   if (loading) return <LoadingGate />;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
-      <View style={[styles.backBtn, { top: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="chevron-left" size={28} color="#fff" />
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+      <View style={styles.topGlow} pointerEvents="none" />
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => router.back()}
+          activeOpacity={0.72}
+          accessibilityRole="button"
+          accessibilityLabel="返回"
+        >
+          <MaterialCommunityIcons name="chevron-left" size={28} color={Tokens.color.textPrimary} />
         </TouchableOpacity>
+        <View style={styles.headerCopy}>
+          <Text style={styles.title}>相册</Text>
+          <Text style={styles.subtitle}>选择一个相册开始整理</Text>
+        </View>
+        <View style={styles.navButton}>
+          <MaterialCommunityIcons name="image-multiple-outline" size={22} color={Tokens.color.accent} />
+        </View>
       </View>
-      <Text style={styles.title}>相册</Text>
+
       <FlatList
         data={albums}
-        numColumns={COLUMN_COUNT}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: PADDING, paddingBottom: 100 }}
-        columnWrapperStyle={{ gap: GAP, marginBottom: 12 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom + 42 },
+        ]}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => handlePickAlbum(item)} activeOpacity={0.7}>
-            <View style={styles.coverWrap}>
-              {item.coverUri ? (
-                <Image source={{ uri: item.coverUri }} style={styles.cover} />
-              ) : (
-                <MaterialCommunityIcons name="image-outline" size={48} color={Tokens.color.textMuted} />
-              )}
-            </View>
-            <Text style={styles.albumName} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.albumCount}>{item.assetCount}</Text>
-          </TouchableOpacity>
+          <AlbumMosaicCard album={item} onPress={handlePickAlbum} />
+        )}
+        ListEmptyComponent={(
+          <View style={styles.empty}>
+            <MaterialCommunityIcons name="image-off-outline" size={38} color={Tokens.color.textMuted} />
+            <Text style={styles.emptyText}>还没有可选择的相册</Text>
+          </View>
         )}
       />
     </View>
@@ -110,25 +139,65 @@ export default function AlbumPickerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Tokens.color.background },
-  backBtn: { position: 'absolute', left: 16, zIndex: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: Tokens.color.background,
+  },
+  topGlow: {
+    position: 'absolute',
+    top: -90,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(168,212,111,0.16)',
+  },
+  header: {
+    paddingHorizontal: 18,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  navButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Tokens.color.surfaceGlass,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Tokens.color.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerCopy: {
+    flex: 1,
+  },
   title: {
-    ...Tokens.typography.headline,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '900',
     color: Tokens.color.textPrimary,
-    textAlign: 'center',
-    marginBottom: 20,
-    letterSpacing: 4,
+    letterSpacing: 0,
   },
-  card: { width: CARD_WIDTH, alignItems: 'center' },
-  coverWrap: {
-    width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 16,
-    backgroundColor: Tokens.color.surface, overflow: 'hidden',
-    alignItems: 'center', justifyContent: 'center',
+  subtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '800',
+    color: Tokens.color.textSecondary,
   },
-  cover: { width: '100%', height: '100%', resizeMode: 'cover' },
-  albumName: {
-    ...Tokens.typography.caption, color: Tokens.color.textPrimary,
-    marginTop: 8, maxWidth: CARD_WIDTH,
+  listContent: {
+    paddingHorizontal: 18,
   },
-  albumCount: { fontSize: 11, color: Tokens.color.textMuted, marginTop: 2 },
+  empty: {
+    minHeight: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: Tokens.color.textSecondary,
+  },
 });

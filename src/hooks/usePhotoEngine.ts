@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MonthScope, PhotoAsset, PermissionStatus } from '../types/photo';
@@ -7,10 +8,12 @@ import {
   generateGroup,
   getViewedStateForSortChange,
   hasRemainingPhotosInMonthScope,
+  shouldResetViewedForInitialLoad,
   shouldReloadPhotosForSortChange,
 } from '../services/photo-service';
 import { SortMode } from '../types/photo';
 import { Tokens } from '../design-tokens';
+import { toPhotoAsset } from '../utils/photo-asset-utils';
 
 const VIEWED_IDS_KEY = 'viewedPhotoIds';
 const VIEWED_ORDER_KEY = 'viewedPhotoOrder';
@@ -20,6 +23,40 @@ interface LoadPhotosOptions {
   sortModeOverride?: SortMode;
   resetViewed?: boolean;
   monthScopeOverride?: MonthScope | null;
+}
+
+async function loadLivePhotoInfoById(albumId?: string): Promise<Map<string, any>> {
+  const liveInfoById = new Map<string, any>();
+  if (Platform.OS !== 'ios') return liveInfoById;
+
+  let cursor: string | undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const options: MediaLibrary.AssetsOptions = {
+      mediaType: ['photo'],
+      mediaSubtypes: ['livePhoto'],
+      first: 500,
+      after: cursor,
+    };
+    if (albumId && albumId !== '__all__') {
+      options.album = albumId;
+    }
+
+    const page = await MediaLibrary.getAssetsAsync(options);
+    for (const asset of page.assets) {
+      try {
+        const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+        liveInfoById.set(asset.id, assetInfo);
+      } catch {
+        liveInfoById.set(asset.id, asset);
+      }
+    }
+    hasMore = page.hasNextPage;
+    cursor = page.endCursor;
+  }
+
+  return liveInfoById;
 }
 
 export function usePhotoEngine() {
@@ -105,15 +142,27 @@ export function usePhotoEngine() {
 
       console.log(`[pickup] Total photos found: ${allAssets.length}`);
 
-      const loadedPhotos: PhotoAsset[] = allAssets.map((a) => ({
-        id: a.id,
-        uri: a.uri,
-        width: a.width,
-        height: a.height,
-        mediaType: (a.mediaType as PhotoAsset['mediaType']) || 'photo',
-        creationTime: a.creationTime,
-        fileSize: 0,
-        albumIds: a.albumId ? [a.albumId] : [],
+      const liveInfoById = await loadLivePhotoInfoById(albumId);
+
+      const loadedPhotos: PhotoAsset[] = await Promise.all(allAssets.map(async (asset) => {
+        const knownLiveInfo = liveInfoById.get(asset.id);
+        if (knownLiveInfo) {
+          return toPhotoAsset(asset as any, knownLiveInfo);
+        }
+
+        const subtypes = (asset as any).mediaSubtypes as string[] | undefined;
+        const looksLikeLivePhoto = String(asset.mediaType) === 'livePhoto' || subtypes?.includes('livePhoto');
+
+        if (!looksLikeLivePhoto) {
+          return toPhotoAsset(asset as any);
+        }
+
+        try {
+          const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+          return toPhotoAsset({ ...(asset as any), ...(assetInfo as any) });
+        } catch {
+          return toPhotoAsset(asset as any);
+        }
       }));
       const activeMonthScope = options.monthScopeOverride !== undefined
         ? options.monthScopeOverride
@@ -134,9 +183,10 @@ export function usePhotoEngine() {
       const savedIds = await AsyncStorage.getItem(VIEWED_IDS_KEY);
       const savedOrder = await AsyncStorage.getItem(VIEWED_ORDER_KEY);
       const savedSortMode = await AsyncStorage.getItem(SORT_MODE_KEY);
-      const idSet: Set<string> = options.resetViewed || !savedIds ? new Set() : new Set(JSON.parse(savedIds));
-      const orderArr: string[] = options.resetViewed || !savedOrder ? [] : JSON.parse(savedOrder);
       const currentSortMode: SortMode = options.sortModeOverride ?? ((savedSortMode as SortMode) || 'random');
+      const resetViewed = shouldResetViewedForInitialLoad(currentSortMode, options.resetViewed);
+      const idSet: Set<string> = resetViewed || !savedIds ? new Set() : new Set(JSON.parse(savedIds));
+      const orderArr: string[] = resetViewed || !savedOrder ? [] : JSON.parse(savedOrder);
       setViewedPhotoIds(idSet);
       viewedOrderRef.current = orderArr;
       setSortMode(currentSortMode);

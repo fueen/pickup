@@ -6,6 +6,7 @@ describe('album-utils', () => {
       allPhotos: {
         totalCount: 12,
         coverUri: 'file://all.jpg',
+        coverUris: ['file://all-1.jpg', 'file://all-2.jpg'],
       },
       albums: [
         {
@@ -13,6 +14,7 @@ describe('album-utils', () => {
           title: 'Camera',
           assetCount: 6,
           coverUri: 'file://camera.jpg',
+          coverUris: ['file://camera-1.jpg', 'file://camera-2.jpg'],
         },
       ],
     });
@@ -23,12 +25,14 @@ describe('album-utils', () => {
         title: '所有照片',
         assetCount: 12,
         coverUri: 'file://all.jpg',
+        coverUris: ['file://all-1.jpg', 'file://all-2.jpg'],
       },
       {
         id: 'album-1',
         title: 'Camera',
         assetCount: 6,
         coverUri: 'file://camera.jpg',
+        coverUris: ['file://camera-1.jpg', 'file://camera-2.jpg'],
       },
     ]);
   });
@@ -38,6 +42,7 @@ describe('album-utils', () => {
       allPhotos: {
         totalCount: 5,
         coverUri: 'file://all.jpg',
+        coverUris: ['file://all.jpg'],
       },
       albums: [
         {
@@ -45,18 +50,21 @@ describe('album-utils', () => {
           title: 'Empty',
           assetCount: 0,
           coverUri: 'file://empty.jpg',
+          coverUris: ['file://empty.jpg'],
         },
         {
           id: 'coverless',
           title: 'Coverless',
           assetCount: 3,
           coverUri: null,
+          coverUris: [],
         },
         {
           id: 'valid',
           title: 'Valid',
           assetCount: 2,
           coverUri: 'file://valid.jpg',
+          coverUris: ['file://valid.jpg'],
         },
       ],
     });
@@ -69,6 +77,7 @@ describe('album-utils', () => {
       allPhotos: {
         totalCount: 5,
         coverUri: null,
+        coverUris: [],
       },
       albums: [],
     });
@@ -79,6 +88,7 @@ describe('album-utils', () => {
         title: '所有照片',
         assetCount: 5,
         coverUri: null,
+        coverUris: [],
       },
     ]);
   });
@@ -88,6 +98,7 @@ describe('album-utils', () => {
       allPhotos: {
         totalCount: 20,
         coverUri: 'file://all.jpg',
+        coverUris: ['file://all.jpg'],
       },
       albums: [
         {
@@ -95,16 +106,48 @@ describe('album-utils', () => {
           title: 'Small',
           assetCount: 2,
           coverUri: 'file://small.jpg',
+          coverUris: ['file://small.jpg'],
         },
         {
           id: 'large',
           title: 'Large',
           assetCount: 9,
           coverUri: 'file://large.jpg',
+          coverUris: ['file://large.jpg'],
         },
       ],
     });
 
     expect(items.map((item) => item.id)).toEqual(['__all__', 'large', 'small']);
+  });
+
+  it('preserves multiple cover uris for mosaic cards without introducing month grouping', () => {
+    const items = toVisibleAlbumItems({
+      allPhotos: {
+        totalCount: 40,
+        coverUri: 'file://all.jpg',
+        coverUris: ['file://all-a.jpg', 'file://all-b.jpg', 'file://all-c.jpg'],
+      },
+      albums: [
+        {
+          id: 'screenshots',
+          title: 'Screenshots',
+          assetCount: 10,
+          coverUri: 'file://screenshots.jpg',
+          coverUris: ['file://screen-a.jpg', 'file://screen-b.jpg'],
+        },
+        {
+          id: 'camera',
+          title: 'Camera',
+          assetCount: 30,
+          coverUri: 'file://camera.jpg',
+          coverUris: ['file://camera-a.jpg', 'file://camera-b.jpg', 'file://camera-c.jpg'],
+        },
+      ],
+    });
+
+    expect(items.map((item) => item.id)).toEqual(['__all__', 'camera', 'screenshots']);
+    expect(items[0].coverUris).toEqual(['file://all-a.jpg', 'file://all-b.jpg', 'file://all-c.jpg']);
+    expect(items[1].coverUris).toEqual(['file://camera-a.jpg', 'file://camera-b.jpg', 'file://camera-c.jpg']);
   });
 });

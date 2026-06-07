@@ -3,6 +3,7 @@ import { View, Image, Text, StyleSheet, Dimensions } from 'react-native';
 import { Tokens } from '../../design-tokens';
 import { PhotoAsset } from '../../types/photo';
 import { formatPhotoDate } from '../../utils/date-utils';
+import { LivePhotoBadge } from '../ui/LivePhotoBadge';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -32,11 +33,6 @@ export function PhotoHeader({ photo }: { photo: PhotoAsset }) {
   return (
     <View style={styles.header}>
       <Text style={styles.date} numberOfLines={1} ellipsizeMode="tail">{formatPhotoDate(photo.creationTime)}</Text>
-      {photo.mediaType === 'livePhoto' && (
-        <View style={styles.liveBadge}>
-          <Text style={styles.liveText}>LIVE</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -49,11 +45,18 @@ export function PhotoCard({ photo, hideHeader }: Props) {
       {!hideHeader && <PhotoHeader photo={photo} />}
 
       <View style={styles.card}>
+        <View style={[styles.imageWrap, { width: displaySize.width, height: displaySize.height }]}>
         <Image
           source={{ uri: photo.uri }}
-          style={[styles.image, { width: displaySize.width, height: displaySize.height }]}
+          style={styles.image}
           resizeMode="cover"
         />
+        {photo.mediaType === 'livePhoto' && (
+          <View style={styles.liveBadgeWrap}>
+            <LivePhotoBadge disabled />
+          </View>
+        )}
+        </View>
       </View>
     </View>
   );
@@ -86,17 +89,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: '80%',
   },
-  liveBadge: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: Tokens.spacing.s,
-    paddingVertical: 2,
-    borderRadius: Tokens.radius.button,
-  },
-  liveText: {
-    ...Tokens.typography.caption,
-    color: Tokens.color.textPrimary,
-    fontWeight: '700',
-  },
   card: {
     position: 'absolute',
     top: CARD_TOP,
@@ -107,7 +99,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
+    width: '100%',
+    height: '100%',
     borderRadius: 30,
     backgroundColor: '#0a0a0a',
+  },
+  imageWrap: {
+    position: 'relative',
+  },
+  liveBadgeWrap: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
   },
 });

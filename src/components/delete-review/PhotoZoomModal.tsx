@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as MediaLibrary from 'expo-media-library';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -16,8 +17,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Tokens } from '../../design-tokens';
 import { PhotoAsset } from '../../types/photo';
+import { resolvePlayableLivePhotoUri } from '../../utils/photo-asset-utils';
+import { LivePhotoBadge } from '../ui/LivePhotoBadge';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -29,6 +33,17 @@ interface Props {
 
 export function PhotoZoomModal({ visible, photo, onClose }: Props) {
   const [displayScale, setDisplayScale] = useState(1);
+  const [livePlaying, setLivePlaying] = useState(false);
+  const [liveFallbackVisible, setLiveFallbackVisible] = useState(false);
+  const [playbackUri, setPlaybackUri] = useState<string | null>(photo?.pairedVideoUri ?? null);
+  const videoSource = useMemo(
+    () => (playbackUri ? { uri: playbackUri } : null),
+    [playbackUri],
+  );
+  const player = useVideoPlayer(videoSource, (nextPlayer) => {
+    nextPlayer.loop = false;
+    nextPlayer.muted = false;
+  });
   const scale = useSharedValue(1);
   const startScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -45,10 +60,45 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       startX.value = 0;
       startY.value = 0;
       setDisplayScale(1);
+      setLivePlaying(false);
+      setLiveFallbackVisible(false);
+      setPlaybackUri(photo?.pairedVideoUri ?? null);
+      try { player.pause(); } catch { /* ignore native player cleanup issues */ }
     }
-  }, [photo?.id, visible]);
+  }, [photo?.id, player, scale, startScale, startX, startY, translateX, translateY, visible]);
 
-  // Calculate display size matching the natural aspect ratio
+  useEffect(() => {
+    if (!visible) {
+      setLivePlaying(false);
+      try { player.pause(); } catch { /* ignore */ }
+    }
+  }, [player, visible]);
+
+  useEffect(() => {
+    if (!livePlaying) return undefined;
+
+    const durationMs = Math.max(1800, Math.min(5000, (player.duration || 3) * 1000));
+    const timer = setTimeout(() => {
+      setLivePlaying(false);
+      try { player.pause(); } catch { /* ignore */ }
+    }, durationMs);
+
+    return () => clearTimeout(timer);
+  }, [livePlaying, player]);
+
+  useEffect(() => {
+    if (!livePlaying || !playbackUri) return;
+
+    try {
+      player.replay();
+      player.play();
+    } catch {
+      setLivePlaying(false);
+      setLiveFallbackVisible(true);
+      setTimeout(() => setLiveFallbackVisible(false), 1600);
+    }
+  }, [livePlaying, playbackUri, player]);
+
   const imageAspect = photo && photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1;
   let displayWidth = SCREEN_WIDTH;
   let displayHeight = displayWidth / imageAspect;
@@ -63,6 +113,22 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
     const max = Math.max(0, (imageSize * currentScale - viewportSize) / 2);
     return Math.min(max, Math.max(-max, value));
   };
+
+  const handleLivePress = useCallback(async () => {
+    if (!photo || photo.mediaType !== 'livePhoto') return;
+
+    const uri = await resolvePlayableLivePhotoUri(photo, MediaLibrary.getAssetInfoAsync);
+
+    if (!uri) {
+      setLiveFallbackVisible(true);
+      setTimeout(() => setLiveFallbackVisible(false), 1600);
+      return;
+    }
+
+    setPlaybackUri(uri);
+    setLiveFallbackVisible(false);
+    setLivePlaying(true);
+  }, [photo]);
 
   const pinchGesture = Gesture.Pinch()
     .onBegin(() => {
@@ -114,9 +180,18 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       translateY.value = withTiming(0, { duration: 180 });
     });
 
+  const liveTapGesture = Gesture.Tap()
+    .numberOfTaps(1)
+    .maxDuration(240)
+    .onEnd(() => {
+      if (photo?.mediaType === 'livePhoto') {
+        runOnJS(handleLivePress)();
+      }
+    });
+
   const composedGesture = Gesture.Simultaneous(
     Gesture.Simultaneous(pinchGesture, panGesture),
-    doubleTapGesture,
+    Gesture.Exclusive(doubleTapGesture, liveTapGesture),
   );
 
   const imageStyle = useAnimatedStyle(() => ({
@@ -147,40 +222,54 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       statusBarTranslucent
     >
       <GestureHandlerRootView style={styles.modalRoot}>
-      <View style={styles.backdrop}>
-        {/* Close button — top right */}
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="close" size={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.backdrop}>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        {/* Zoom level badge */}
-        {displayScale > 1.05 && (
-          <View style={styles.zoomBadge}>
-            <MaterialCommunityIcons name="magnify-plus" size={14} color="#000" />
-            <Text style={styles.zoomBadgeText}>{displayScale.toFixed(1)}×</Text>
+          {photo.mediaType === 'livePhoto' && (
+            <View style={styles.liveBadgeWrap}>
+              <LivePhotoBadge onPress={handleLivePress} playing={livePlaying} />
+            </View>
+          )}
+
+          {displayScale > 1.05 && (
+            <View style={[styles.zoomBadge, photo.mediaType === 'livePhoto' && styles.zoomBadgeWithLive]}>
+              <MaterialCommunityIcons name="magnify-plus" size={14} color="#000" />
+              <Text style={styles.zoomBadgeText}>{displayScale.toFixed(1)}x</Text>
+            </View>
+          )}
+
+          <GestureDetector gesture={composedGesture}>
+            <Animated.View key={photo.id} style={styles.zoomStage}>
+              <Animated.Image
+                source={{ uri: photo.uri }}
+                style={[{ width: displayWidth, height: displayHeight }, imageStyle]}
+                resizeMode="contain"
+              />
+              {photo.mediaType === 'livePhoto' && playbackUri && livePlaying && (
+                <VideoView
+                  player={player}
+                  style={[styles.liveVideo, { width: displayWidth, height: displayHeight }]}
+                  contentFit="contain"
+                  nativeControls={false}
+                />
+              )}
+            </Animated.View>
+          </GestureDetector>
+
+          {liveFallbackVisible && (
+            <View style={styles.liveFallback}>
+              <Text style={styles.liveFallbackText}>Live Photo 暂时无法播放</Text>
+            </View>
+          )}
+
+          <View style={styles.hintBar} pointerEvents="none">
+            <Text style={styles.hintText}>
+              {displayScale < 1.05 ? '双击 / 双指捏合缩放' : '拖动查看细节 · 双击还原'}
+            </Text>
           </View>
-        )}
-
-        <GestureDetector gesture={composedGesture}>
-          <Animated.View
-            key={photo.id}
-            style={styles.zoomStage}
-          >
-            <Animated.Image
-              source={{ uri: photo.uri }}
-              style={[{ width: displayWidth, height: displayHeight }, imageStyle]}
-              resizeMode="contain"
-            />
-          </Animated.View>
-        </GestureDetector>
-
-        {/* Hint */}
-        <View style={styles.hintBar} pointerEvents="none">
-          <Text style={styles.hintText}>
-            {displayScale < 1.05 ? '双击 / 双指捏合缩放' : '拖动查看细节 · 双击还原'}
-          </Text>
         </View>
-      </View>
       </GestureHandlerRootView>
     </Modal>
   );
@@ -208,6 +297,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
+  liveBadgeWrap: {
+    position: 'absolute',
+    top: 54,
+    left: 16,
+    zIndex: 10,
+  },
   zoomBadge: {
     position: 'absolute',
     top: 54,
@@ -215,11 +310,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFCC00',
+    backgroundColor: Tokens.color.accent,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     zIndex: 10,
+  },
+  zoomBadgeWithLive: {
+    top: 106,
   },
   zoomBadgeText: {
     fontSize: 12,
@@ -231,6 +329,26 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  liveVideo: {
+    position: 'absolute',
+  },
+  liveFallback: {
+    position: 'absolute',
+    top: 106,
+    left: 16,
+    minHeight: 34,
+    paddingHorizontal: 12,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  liveFallbackText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Tokens.color.textPrimary,
   },
   hintBar: {
     position: 'absolute',

@@ -7,6 +7,7 @@ export interface PhotoAsset {
   creationTime: number;
   fileSize: number;
   albumIds: string[];
+  pairedVideoUri?: string | null;
 }
 
 export type PermissionStatus =
@@ -32,6 +33,7 @@ export interface DeletedPhotoRecord {
   fileSize: number;
   deletedAt: number;
   mediaType: 'photo' | 'video' | 'livePhoto';
+  pairedVideoUri?: string | null;
 }
 
 export type SortMode = 'random' | 'sizeDesc' | 'timeNewest' | 'timeOldest';

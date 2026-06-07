@@ -9,7 +9,7 @@ export default {
   expo: {
     name: APP_NAME,
     slug: 'pickup',
-    version: '2.0.0',
+    version: '2.0.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -39,6 +39,7 @@ export default {
           savePhotosPermission: '拾遗需要保存照片到你的照片库。',
         },
       ],
+      'expo-video',
     ],
     android: {
       package: BASE_PACKAGE + PACKAGE_SUFFIX,

@@ -10,6 +10,7 @@ interface PhotoDetail {
   height: number;
   fileSize?: number;
   filename?: string;
+  mediaType?: 'photo' | 'video' | 'livePhoto';
 }
 
 interface Props {
@@ -25,6 +26,12 @@ function formatBytes(bytes: number | undefined): string {
   return `${bytes} B`;
 }
 
+function formatMediaType(mediaType: PhotoDetail['mediaType']): string {
+  if (mediaType === 'livePhoto') return 'Live Photo';
+  if (mediaType === 'video') return '视频';
+  return '照片';
+}
+
 export function PhotoDetailSheet({ visible, photo, onClose }: Props) {
   if (!photo) return null;
 
@@ -37,7 +44,8 @@ export function PhotoDetailSheet({ visible, photo, onClose }: Props) {
           <Text style={styles.title}>照片详情</Text>
           <ScrollView style={styles.body}>
             <DetailRow icon="clock-outline" label="拍摄时间" value={formatPhotoDate(photo.creationTime)} />
-            <DetailRow icon="expand-all" label="尺寸" value={`${photo.width} × ${photo.height}`} />
+            <DetailRow icon="image-multiple-outline" label="媒体类型" value={formatMediaType(photo.mediaType)} />
+            <DetailRow icon="expand-all" label="尺寸" value={`${photo.width} x ${photo.height}`} />
             <DetailRow icon="harddisk" label="文件大小" value={formatBytes(photo.fileSize)} />
             {photo.filename && (
               <DetailRow icon="file-outline" label="文件名" value={photo.filename} />
@@ -65,16 +73,30 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: 'rgba(28,28,30,0.95)',
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 40,
     maxHeight: SCREEN_HEIGHT * 0.5,
   },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Tokens.color.textMuted, alignSelf: 'center', marginBottom: 16 },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Tokens.color.textMuted,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
   title: { ...Tokens.typography.title, color: Tokens.color.textPrimary, marginBottom: 16 },
   body: { flexGrow: 0 },
   row: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255,255,255,0.08)', gap: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+    gap: 12,
   },
   label: { ...Tokens.typography.body, color: Tokens.color.textSecondary },
   value: { ...Tokens.typography.body, color: Tokens.color.textPrimary, flex: 1, textAlign: 'right' },

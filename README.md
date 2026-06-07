@@ -4,7 +4,7 @@
 
 像刷短视频一样快速整理相册：上滑删除、下滑保留，每 10 张一组批量确认，安全可控。
 
-当前版本：**v2.0.0**
+当前版本：**v2.0.1**
 
 ## 功能
 
@@ -19,7 +19,7 @@
 ### 照片信息
 - **相对日期**：显示为"年月日 · X天前/昨天/今天"，日期严格水平居中
 - **地理位置**：自动读取照片 EXIF GPS 坐标，显示拍摄城市名（如 📍 上海市）
-- **LIVE 标识**：Live Photo 显示 LIVE 徽章
+- **LIVE 标识**：Live Photo 显示 iOS 风格 LIVE 徽章，预览页支持播放动态片段，资源不可用时稳定降级
 
 ### 会员与限制
 - **免费用户**：每日 3 组（30 张），可浏览但受限制
@@ -58,7 +58,8 @@
 | 路由 | expo-router 6 (file-based, Tab 导航) |
 | 手势 | react-native-gesture-handler + react-native-reanimated 4 |
 | 触觉 | expo-haptics |
-| 媒体 | expo-media-library (相册读写 + 原生删除) |
+| 媒体 | expo-media-library (相册读写 + 原生删除 + Live Photo 元数据) |
+| 视频 | expo-video (Live Photo 动态片段预览) |
 | 文件 | expo-file-system (获取文件大小) |
 | 支付 | RevenueCat (react-native-purchases) |
 | 存储 | @react-native-async-storage/async-storage |
@@ -75,7 +76,7 @@ app/                          # 页面 (expo-router file-based routing)
   settings.tsx                # 设置页：会员状态、统计数据、开发者模式入口
   paywall.tsx                 # Pro 订阅页：定价卡片、购买/恢复
   recent-deletes.tsx          # 最近删除页：3 列网格，已删照片缩略图回溯
-  albums.tsx                  # 相册选择页：2 列缩略图，按数量降序
+  albums.tsx                  # 相册选择页：照片拼贴式 mosaic 列表，所有照片优先，其余按数量降序
   hub.tsx                     # 更多功能页：概览、月份分析、每周回顾、成就、功能入口
   about.tsx                   # PickUp 信息页：App 信息、作者和联系方式
 
@@ -90,8 +91,10 @@ src/
     delete-review/            # 删除确认
       DeleteGrid.tsx          # 待删除缩略图网格，点击多选 + 长按预览
       DeleteConfirmSheet.tsx  # 全屏删除确认页，最多展示 3 张预览图
-      PhotoZoomModal.tsx      # 全屏缩放预览（捏合/双指点击/拖动）
+      PhotoZoomModal.tsx      # 全屏缩放预览（捏合/双指点击/拖动 + Live Photo 播放）
       EmptyReviewPlaceholder.tsx # 无待删照片的卡通占位图
+    albums/                   # 相册选择
+      AlbumMosaicCard.tsx     # 拼贴式相册卡片，展示多张封面、数量和降级占位
     settings/                 # 设置页组件
       AchievementStrip.tsx    # 成就徽章横向列表
       WeeklyReviewCard.tsx    # 每周清理回顾卡片
@@ -111,6 +114,7 @@ src/
     ui/                       # 通用 UI
       Modal.tsx               # 通用模态框
       Toast.tsx               # Toast 提示
+      LivePhotoBadge.tsx      # iOS 风格 Live Photo 徽章/播放控件
       CelebrationOverlay.tsx  # 删除完成庆祝动画（✓ + 粒子爆散）
       ChangelogModal.tsx      # 新版本首次打开更新日志弹框
     ErrorBoundary.tsx         # 全局错误边界
@@ -142,6 +146,7 @@ src/
     date-utils.ts             # 日期格式化（相对日期 + 今日键）
     achievement-utils.ts      # 成就系统派生规则
     delete-confirm-utils.ts   # 删除确认文案、空间估算、流程决策
+    photo-asset-utils.ts      # MediaLibrary 资源标准化与 Live Photo 播放 URI 解析
 
   design-tokens.ts            # 全局设计令牌：颜色、间距、圆角、动画参数、排版
   constants/
@@ -203,14 +208,13 @@ GestureHandlerRootView
 
 Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
 
-v2.0.0 本地构建输出：
+v2.0.1 本地构建输出：
 
 ```
-dist/pickup-v2.0.0-dev.apk
-dist/pickup-v2.0.0-release.apk
+dist/pickup-v2.0.1-release.apk
 ```
 
-Android 原生版本同步为 `versionName "2.0.0"` / `versionCode 4`。本地 release 构建时 R8 可能输出 Amazon Appstore SDK 的 stack map table warning，当前构建结果为 `BUILD SUCCESSFUL`。
+Android 原生版本同步为 `versionName "2.0.1"` / `versionCode 5`。本地 release 构建时 R8 可能输出 Amazon Appstore SDK 的 stack map table warning，当前构建结果为 `BUILD SUCCESSFUL`。
 
 ## 开始开发
 

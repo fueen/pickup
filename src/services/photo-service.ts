@@ -41,6 +41,10 @@ export function shouldReloadPhotosForSortChange(previousMode: SortMode, nextMode
   return nextMode === 'timeNewest';
 }
 
+export function shouldResetViewedForInitialLoad(sortMode: SortMode, explicitReset = false): boolean {
+  return explicitReset || sortMode === 'timeNewest';
+}
+
 export function getViewedStateForSortChange(
   previousMode: SortMode,
   nextMode: SortMode,

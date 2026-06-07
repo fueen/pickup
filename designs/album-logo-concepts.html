@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PickUp Album & Logo Concepts</title>
+  <style>
+    :root {
+      --ink: #f8f8f4;
+      --paper: #050506;
+      --muted: #9a9aa2;
+      --soft: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.14);
+      --accent: #a8d46f;
+      --pink: #f0a6ff;
+      --blue: #75b7ff;
+      --danger: #ff5050;
+      --tile: #191a1c;
+      --shadow: 0 30px 80px rgba(0,0,0,.48);
+      font-family: ui-rounded, "SF Pro Rounded", "SF Pro Display", "Avenir Next", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 10%, rgba(168,212,111,.18), transparent 28rem),
+        radial-gradient(circle at 82% 8%, rgba(240,166,255,.13), transparent 24rem),
+        linear-gradient(180deg, #101112 0%, #050506 46%);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1480px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 44px 0 70px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 7vw, 96px);
+      line-height: .88;
+      letter-spacing: 0;
+      max-width: 820px;
+    }
+
+    .brief {
+      color: #cbccd0;
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 48px 0 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .phone-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .concept {
+      display: grid;
+      gap: 12px;
+    }
+
+    .caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 44px;
+    }
+
+    .caption strong {
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .caption span {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      line-height: 1.35;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 330px;
+      aspect-ratio: 390 / 844;
+      margin: 0 auto;
+      border: 10px solid #080809;
+      border-radius: 44px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      transform: translateX(-50%);
+      width: 112px;
+      height: 30px;
+      border-radius: 18px;
+      background: #050506;
+      z-index: 10;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      padding: 54px 20px 24px;
+      overflow: hidden;
+    }
+
+    .screen.dark {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), transparent 21%),
+        #030304;
+    }
+
+    .screen.light {
+      color: #08090a;
+      background: #fbfbf8;
+    }
+
+    .screen.cream {
+      color: #11120f;
+      background: #f5f7ef;
+    }
+
+    .screen.blueprint {
+      background:
+        linear-gradient(180deg, rgba(168,212,111,.16), transparent 24%),
+        #0a0b0d;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 34px;
+      margin-bottom: 18px;
+      font-weight: 900;
+    }
+
+    .nav .grow { flex: 1; }
+    .icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 17px;
+    }
+
+    .glass-icon {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(20px);
+    }
+
+    .light .glass-icon, .cream .glass-icon {
+      background: rgba(10,11,12,.05);
+      border-color: rgba(0,0,0,.08);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.11);
+      margin: -2px 0 18px;
+    }
+
+    .toolbar button {
+      flex: 1;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      border-radius: 999px;
+      height: 30px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .toolbar .active {
+      background: var(--accent);
+      color: #101405;
+    }
+
+    .month {
+      margin-bottom: 19px;
+    }
+
+    .month-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .month h3 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .month-head small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .mosaic {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-auto-rows: 45px;
+      gap: 6px;
+    }
+
+    .tile {
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--tile);
+      position: relative;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .tile.big { grid-column: span 2; grid-row: span 2; }
+    .tile.tall { grid-row: span 2; }
+    .tile.wide { grid-column: span 2; }
+    .tile.more {
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 950;
+      background:
+        linear-gradient(135deg, rgba(168,212,111,.9), rgba(70,92,255,.88)),
+        var(--img);
+      background-size: cover;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
+    }
+
+    .skeleton .tile {
+      background: linear-gradient(135deg, #d3dae0, #bfc9d2);
+    }
+
+    .album-card {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 13px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 10px;
+    }
+
+    .light .album-card, .cream .album-card {
+      background: white;
+      border-color: rgba(0,0,0,.06);
+      box-shadow: 0 14px 28px rgba(22,27,31,.08);
+    }
+
+    .mini-mosaic {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3px;
+      width: 80px;
+      height: 80px;
+      border-radius: 17px;
+      overflow: hidden;
+    }
+
+    .mini-mosaic .tile { border-radius: 0; }
+    .album-card b { display: block; font-size: 15px; margin-bottom: 3px; }
+    .album-card small { color: var(--muted); font-size: 11px; font-weight: 800; }
+
+    .count-pill {
+      min-width: 43px;
+      height: 30px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(168,212,111,.16);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .hero-stack {
+      position: relative;
+      height: 176px;
+      margin: 2px 0 20px;
+    }
+
+    .hero-photo {
+      position: absolute;
+      border-radius: 30px;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 18px 46px rgba(0,0,0,.32);
+    }
+
+    .hero-photo:nth-child(1) { inset: 6px 62px 12px 0; transform: rotate(-3deg); }
+    .hero-photo:nth-child(2) { inset: 20px 0 0 124px; transform: rotate(4deg); }
+    .hero-photo:nth-child(3) { width: 86px; height: 86px; right: 16px; bottom: -7px; border: 4px solid #f5f7ef; }
+
+    .section-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #11130c;
+      background: var(--accent);
+      font-size: 11px;
+      font-weight: 950;
+      margin-bottom: 10px;
+    }
+
+    .collection-row {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .collection-card {
+      min-height: 112px;
+      border-radius: 24px;
+      padding: 12px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .collection-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 32%, rgba(0,0,0,.66));
+    }
+
+    .collection-card b, .collection-card small { position: relative; z-index: 1; }
+    .collection-card b { font-size: 14px; }
+    .collection-card small { color: rgba(255,255,255,.76); font-size: 10px; font-weight: 800; margin-top: 2px; }
+
+    .bottom-tabs {
+      position: absolute;
+      left: 72px;
+      right: 72px;
+      bottom: 18px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border-radius: 999px;
+      background: rgba(12,12,14,.86);
+      border: 1px solid rgba(255,255,255,.13);
+      backdrop-filter: blur(20px);
+      color: #696a70;
+      font-size: 17px;
+    }
+
+    .bottom-tabs .on { color: var(--accent); }
+
+    .logo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 22px;
+    }
+
+    .logo-card {
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
+        #101113;
+      padding: 22px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.28);
+    }
+
+    .logo-stage {
+      height: 220px;
+      display: grid;
+      place-items: center;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(168,212,111,.22), transparent 8rem),
+        #060607;
+      margin-bottom: 18px;
+    }
+
+    .app-icon {
+      width: 128px;
+      height: 128px;
+      border-radius: 30px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 26px 52px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+
+    .logo-card h3 {
+      margin: 0 0 7px;
+      font-size: 18px;
+    }
+
+    .logo-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .icon-a {
+      background:
+        radial-gradient(circle at 76% 18%, rgba(240,166,255,.7), transparent 2rem),
+        linear-gradient(145deg, #151719, #050606);
+    }
+    .icon-a .card {
+      position: absolute;
+      width: 65px;
+      height: 82px;
+      border-radius: 18px;
+      background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 18px 34px rgba(0,0,0,.35);
+    }
+    .icon-a .card:nth-child(1) { left: 24px; top: 31px; transform: rotate(-13deg); }
+    .icon-a .card:nth-child(2) { left: 42px; top: 23px; transform: rotate(5deg); background: linear-gradient(160deg, #a8d46f, #4b702e); }
+    .icon-a .card:nth-child(3) { left: 31px; top: 47px; transform: rotate(15deg); }
+    .icon-a::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      right: 27px;
+      bottom: 27px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 8px rgba(168,212,111,.16);
+    }
+
+    .icon-b {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.12), transparent),
+        #111215;
+    }
+    .icon-b .grid {
+      position: absolute;
+      inset: 21px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1.2fr .8fr 1fr;
+      gap: 5px;
+    }
+    .icon-b span {
+      border-radius: 12px;
+      background-size: cover;
+      background-position: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+    }
+    .icon-b span:nth-child(1) { grid-column: span 2; background-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=300&q=80"); }
+    .icon-b span:nth-child(2) { background: var(--accent); }
+    .icon-b span:nth-child(3) { background-image: url("https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=300&q=80"); }
+    .icon-b span:nth-child(4) { grid-column: span 2; background-image: url("https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=300&q=80"); }
+    .icon-b span:nth-child(5) { background: linear-gradient(135deg, var(--pink), #5d6bff); }
+
+    .icon-c {
+      background:
+        radial-gradient(circle at 38% 28%, #d7f3a1, #a8d46f 26%, #31431e 58%, #070806 100%);
+    }
+    .icon-c::before {
+      content: "";
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      left: 26px;
+      top: 25px;
+      border-radius: 24px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.27);
+      transform: rotate(-8deg);
+      backdrop-filter: blur(16px);
+    }
+    .icon-c::after {
+      content: "✓";
+      position: absolute;
+      left: 36px;
+      top: 28px;
+      font-size: 72px;
+      font-weight: 950;
+      color: #11170a;
+      text-shadow: 0 2px 0 rgba(255,255,255,.18);
+    }
+
+    .icon-d {
+      background:
+        linear-gradient(145deg, #f8fbf1, #b7dc82);
+    }
+    .icon-d .p {
+      position: absolute;
+      width: 76px;
+      height: 94px;
+      left: 26px;
+      top: 18px;
+      border-radius: 23px;
+      background: #111214;
+      transform: rotate(-6deg);
+      box-shadow: 0 18px 28px rgba(52,73,28,.25);
+    }
+    .icon-d .p::before {
+      content: "";
+      position: absolute;
+      inset: 14px 13px;
+      border-radius: 16px;
+      background:
+        linear-gradient(90deg, transparent 43%, #111214 43% 57%, transparent 57%),
+        linear-gradient(#a8d46f 0 0) 0 0 / 100% 48% no-repeat,
+        #f0a6ff;
+    }
+    .icon-d::after {
+      content: "";
+      position: absolute;
+      right: 24px;
+      bottom: 22px;
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: #111214;
+      box-shadow: inset 0 0 0 8px var(--accent);
+    }
+
+    @media (max-width: 1180px) {
+      .phone-grid, .logo-grid { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+      header { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .page { width: min(100vw - 24px, 390px); padding-top: 28px; }
+      .phone-grid, .logo-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 48px; }
+      .section-title { align-items: flex-start; flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <div class="kicker">PickUp visual exploration</div>
+        <h1>相册选择 & App 图标概念稿</h1>
+      </div>
+      <p class="brief">
+        方向参考：iOS collection view 的清晰层级、你给的月份拼贴图片、Dribbble 上常见的 bento photo grid。主色沿用当前 PickUp 的 <b>#A8D46F</b>，辅以少量粉紫和蓝色作为照片整理产品的轻快感。
+      </p>
+    </header>
+
+    <section>
+      <div class="section-title">
+        <h2>相册选择界面</h2>
+        <span class="note">4 个方向：月份拼贴、专辑列表、故事封面、混合收藏</span>
+      </div>
+
+      <div class="phone-grid">
+        <article class="concept">
+          <div class="caption">
+            <strong>A. Gallery Mosaic</strong>
+            <span>最接近参考图<br />适合按月份清理</span>
+          </div>
+          <div class="phone">
+            <div class="screen light">
+              <div class="nav"><span class="icon">‹</span><span>Gallery</span><span class="grow"></span><span class="icon">≋</span><span class="icon">⌕</span></div>
+              <div class="month">
+                <div class="month-head"><h3>March</h3><small>132 photos</small></div>
+                <div class="mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile tall" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile wide" style="background-image:url('https://images.unsplash.com/photo-1470114716159-e389f8712fda?auto=format&fit=crop&w=300&q=80')"></div>
+                  <div class="tile big" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=320&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile more">+32</div>
+                </div>
+              </div>
+              <div class="month">
+                <div class="month-head"><h3>February</h3><small>86 photos</small></div>
+                <div class="mosaic">
+                  <div class="tile tall" style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile tall" style="background-image:url('https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile big" style="background-image:url('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=320&q=80')"></div>
+                  <div class="tile more">+20</div>
+                </div>
+              </div>
+              <div class="month skeleton">
+                <div class="month-head"><h3>January</h3><small>148 photos</small></div>
+                <div class="mosaic">
+                  <div class="tile"></div><div class="tile"></div><div class="tile big"></div><div class="tile"></div><div class="tile big"></div><div class="tile"></div><div class="tile more">+48</div>
+                </div>
+              </div>
+              <div class="bottom-tabs"><span class="on">▣</span><span>▧</span><span>✦</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="concept">
+          <div class="caption">
+            <strong>B. Album Bento List</strong>
+            <span>更像真实相册选择<br />点击目标更明确</span>
+          </div>
+          <div class="phone">
+            <div class="screen dark">
+              <div class="nav"><span class="icon glass-icon">‹</span><span>相册</span><span class="grow"></span><span class="icon glass-icon">⌕</span></div>
+              <div class="toolbar"><button class="active">全部</button><button>系统</button><button>月份</button></div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>所有照片</b><small>最近整理从这里开始</small></div>
+                <div class="count-pill">2.4k</div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1470114716159-e389f8712fda?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>旅行</b><small>城市、道路和周末</small></div>
+                <div class="count-pill">482</div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>人物</b><small>朋友、自拍和聚会</small></div>
+                <div class="count-pill">326</div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>屏幕截图</b><small>建议优先清理</small></div>
+                <div class="count-pill">218</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="concept">
+          <div class="caption">
+            <strong>C. Memory Stack</strong>
+            <span>更 Dribbble<br />情绪化首屏</span>
+          </div>
+          <div class="phone">
+            <div class="screen cream">
+              <div class="nav"><span class="icon glass-icon">‹</span><span>选择相册</span><span class="grow"></span><span class="icon glass-icon">⌕</span></div>
+              <div class="section-chip">本月建议 · 132 张可清理</div>
+              <div class="hero-stack">
+                <div class="hero-photo" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=500&q=80')"></div>
+                <div class="hero-photo" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=80')"></div>
+                <div class="hero-photo" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=240&q=80')"></div>
+              </div>
+              <div class="collection-row">
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=420&q=80')"><b>所有照片</b><small>2,431 photos</small></div>
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=320&q=80')"><b>最近</b><small>318 photos</small></div>
+              </div>
+              <div class="collection-row">
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=420&q=80')"><b>人物</b><small>326 photos</small></div>
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=320&q=80')"><b>截图</b><small>218 photos</small></div>
+              </div>
+              <div class="collection-row">
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1470114716159-e389f8712fda?auto=format&fit=crop&w=420&q=80')"><b>旅行</b><small>482 photos</small></div>
+                <div class="collection-card" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=320&q=80')"><b>收藏</b><small>71 photos</small></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="concept">
+          <div class="caption">
+            <strong>D. Dark Collections</strong>
+            <span>最贴近当前 App<br />低改造成本</span>
+          </div>
+          <div class="phone">
+            <div class="screen blueprint">
+              <div class="nav"><span class="icon glass-icon">‹</span><span>相册</span><span class="grow"></span><span class="icon glass-icon">⌕</span></div>
+              <div class="month">
+                <div class="month-head"><h3 style="font-size:18px">继续清理</h3><small>按照片数量排序</small></div>
+                <div class="mosaic" style="grid-auto-rows:54px">
+                  <div class="tile big" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=320&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile tall" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=240&q=80')"></div>
+                  <div class="tile more">全部<br />2.4k</div>
+                </div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1470114716159-e389f8712fda?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>旅行</b><small>建议从旧照片开始</small></div>
+                <div class="count-pill">482</div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>人物</b><small>回忆很多，慢慢筛</small></div>
+                <div class="count-pill">326</div>
+              </div>
+              <div class="album-card">
+                <div class="mini-mosaic">
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=160&q=80')"></div>
+                  <div class="tile" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=160&q=80')"></div>
+                </div>
+                <div><b>屏幕截图</b><small>高收益清理</small></div>
+                <div class="count-pill">218</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Logo / App Icon</h2>
+        <span class="note">4 个方向：卡片堆叠、照片拼贴、确认清理、字母 P</span>
+      </div>
+
+      <div class="logo-grid">
+        <article class="logo-card">
+          <div class="logo-stage">
+            <div class="app-icon icon-a"><span class="card"></span><span class="card"></span><span class="card"></span></div>
+          </div>
+          <h3>1. Picked Cards</h3>
+          <p>沿用 PickUp 的「照片卡片滑动」记忆点，主色做中间卡片，右下角圆点表示完成清理。</p>
+        </article>
+
+        <article class="logo-card">
+          <div class="logo-stage">
+            <div class="app-icon icon-b"><div class="grid"><span></span><span></span><span></span><span></span><span></span></div></div>
+          </div>
+          <h3>2. Gallery Bento</h3>
+          <p>更贴近新相册页方向，图标自身就是一个精简拼贴墙，App Store 上识别度高。</p>
+        </article>
+
+        <article class="logo-card">
+          <div class="logo-stage">
+            <div class="app-icon icon-c"></div>
+          </div>
+          <h3>3. Clean Check</h3>
+          <p>强调「清理完成」的轻松感，绿黄色光心和玻璃卡片结合，视觉更强但抽象一些。</p>
+        </article>
+
+        <article class="logo-card">
+          <div class="logo-stage">
+            <div class="app-icon icon-d"><span class="p"></span></div>
+          </div>
+          <h3>4. Soft P Mark</h3>
+          <p>把字母 P 和照片卡片融合，品牌化更强，适合后续做启动页、Tab glyph 和周边图形。</p>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
