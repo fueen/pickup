@@ -19,7 +19,7 @@
 ### 照片信息
 - **相对日期**：显示为"年月日 · X天前/昨天/今天"，日期严格水平居中
 - **地理位置**：自动读取照片 EXIF GPS 坐标，显示拍摄城市名（如 📍 上海市）
-- **LIVE 标识**：Live Photo 显示 iOS 风格 LIVE 徽章，预览页支持播放动态片段，资源不可用时稳定降级
+- **LIVE 标识**：Live Photo 显示 iOS 风格 LIVE 徽章，预览页支持播放动态片段；Android `MVIMG_*.jpg` Motion Photo 会尝试从 XMP 元数据中提取内嵌 MP4 播放，资源不可用时稳定降级
 
 ### 会员与限制
 - **免费用户**：每日 3 组（30 张），可浏览但受限制
@@ -91,7 +91,7 @@ src/
     delete-review/            # 删除确认
       DeleteGrid.tsx          # 待删除缩略图网格，点击多选 + 长按预览
       DeleteConfirmSheet.tsx  # 全屏删除确认页，最多展示 3 张预览图
-      PhotoZoomModal.tsx      # 全屏缩放预览（捏合/双指点击/拖动 + Live Photo 播放）
+      PhotoZoomModal.tsx      # 全屏缩放预览（JS 双击缩放 + Live Photo / Motion Photo 播放）
       EmptyReviewPlaceholder.tsx # 无待删照片的卡通占位图
     albums/                   # 相册选择
       AlbumMosaicCard.tsx     # 拼贴式相册卡片，展示多张封面、数量和降级占位
@@ -146,7 +146,7 @@ src/
     date-utils.ts             # 日期格式化（相对日期 + 今日键）
     achievement-utils.ts      # 成就系统派生规则
     delete-confirm-utils.ts   # 删除确认文案、空间估算、流程决策
-    photo-asset-utils.ts      # MediaLibrary 资源标准化与 Live Photo 播放 URI 解析
+    photo-asset-utils.ts      # MediaLibrary 资源标准化、Live Photo URI 解析与 Motion Photo 内嵌视频提取
 
   design-tokens.ts            # 全局设计令牌：颜色、间距、圆角、动画参数、排版
   constants/
@@ -206,7 +206,7 @@ GestureHandlerRootView
 | release | PickUp | com.zackf.pickup.preview | 95.92MB | Android 内部分发测试 |
 | production | 拾遗 | com.zackf.pickup | — | 正式发布 |
 
-Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。
+Release 构建启用 R8 代码混淆 + 资源压缩 + ABI 过滤（arm64-v8a / armeabi-v7a）。Metro 打包通过 `pure_funcs` 去掉 `console.log/info/debug`。本地 release 包通过 `android/gradlew.bat assembleRelease` 生成，再复制到 `dist/`。
 
 v2.0.1 本地构建输出：
 

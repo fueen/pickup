@@ -828,6 +828,8 @@ dist/pickup-v2.0.0-release.apk
 |---|---|
 | `PhotoAsset.mediaType` | 值为 `livePhoto` 时判定为 Live Photo |
 | Expo MediaLibrary 原始资产 | 如 SDK 返回 `mediaSubtypes` 或等价字段，应映射到 `PhotoAsset.mediaType = 'livePhoto'` |
+| Android Motion Photo 文件名 | 对 `MVIMG_*.jpg/jpeg` 作为可播放动态照片候选处理，但不依赖 Android `mediaSubtypes` 过滤 |
+| Android Motion Photo XMP | 若 JPEG 头部存在 `GCamera:MotionPhoto="1"` 且 `Container:Item Item:Mime="video/mp4"` 声明长度，可从文件尾部提取内嵌 MP4 到缓存后播放 |
 | 无法读取动态资源 | 仍展示 Live 标识，但点击后给出轻提示，不应崩溃 |
 
 #### Live 图标视觉规则
@@ -855,6 +857,8 @@ dist/pickup-v2.0.0-release.apk
 - 优先使用项目已安装 Expo SDK 54 和现有媒体能力；只有确认 Expo 当前 API 行为时才查官方文档。
 - 如 Expo MediaLibrary 只能稳定返回静态图 URI，需要通过 `getAssetInfoAsync` 或平台支持字段获取 Live Photo 的 paired video / paired resource。
 - 若 Android 不支持真实 Live Photo 播放，应保留静态识别和友好降级提示，不阻塞 Android 主流程。
+- Android Motion Photo 不使用 `mediaSubtypes: ['livePhoto']` 做查询过滤；该参数在 Android 上可能被静默忽略并返回全部照片，容易造成额外 `getAssetInfoAsync` 扫描和卡顿。
+- Android Motion Photo 播放优先使用本地文件解析：读取 JPEG/XMP 中的 Motion Photo 标记和 `video/mp4` item 长度，提取内嵌 MP4 到 `expo-file-system` cache 后交给 `expo-video` 播放。
 - 若 iOS 支持 paired video 播放，可在全屏预览中临时切换为视频播放器或原生可播放视图。
 - 播放逻辑应封装为独立组件，例如 `LivePhotoBadge` / `LivePhotoPlayerOverlay`，避免散落在多个页面。
 - 不因播放 Live Photo 引入云端服务或上传照片。
@@ -874,12 +878,14 @@ dist/pickup-v2.0.0-release.apk
 #### 验收标准
 
 - [ ] Live Photo 能被识别为 `mediaType = 'livePhoto'`。
+- [ ] Android `MVIMG_*.jpg/jpeg` 能作为 Motion Photo 候选识别为可播放动态照片。
+- [ ] 包含 `GCamera:MotionPhoto="1"` 和 `video/mp4` item 长度的 Motion Photo 能提取内嵌 MP4 到缓存并播放。
 - [ ] Live Photo 左上角展示 iOS 风格 Live 图标。
 - [ ] 非 Live Photo 不展示 Live 图标。
 - [ ] 点击 Live 图标可播放动态内容，播放结束后回到静态预览。
 - [ ] 动态资源不可用时展示轻提示，不崩溃、不黑屏。
 - [ ] 关闭全屏预览时停止播放并释放资源。
-- [ ] Live 播放不破坏现有双指缩放、拖动和关闭交互。
+- [ ] Live 播放不破坏现有双击缩放和关闭交互；预览图点击区域不误触发动态照片播放。
 - [ ] Android 不支持真实播放时有清晰降级，不影响删除流程。
 - [ ] `npx.cmd tsc --noEmit` 通过。
 - [ ] `npx.cmd jest --runInBand` 通过。
@@ -1081,6 +1087,7 @@ Logo 应包含以下核心元素：
 ### 本轮追加需求验收总清单
 
 - [ ] Live Photo 可识别、展示 iOS 风格 Live 图标并点击播放。
+- [ ] Android Motion Photo 候选识别、内嵌 MP4 提取和播放降级都有测试覆盖。
 - [ ] Live Photo 动态资源不可用时有稳定降级提示。
 - [ ] 相册选择页采用拼贴式 UI。
 - [ ] 相册选择页仍按当前系统相册逻辑展示，不按月份分组。
