@@ -379,7 +379,6 @@ export default function BrowseScreen() {
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.pill} onPress={showSortPicker} activeOpacity={0.7}>
           <MaterialCommunityIcons name="tune-variant" size={17} color="#fff" />
-          <Text style={styles.pillLabel}>排序</Text>
         </TouchableOpacity>
 
         <QuickDeleteButton

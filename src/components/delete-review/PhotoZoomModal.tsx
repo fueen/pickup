@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,11 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
+  Pressable,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
-  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -24,6 +22,7 @@ import { resolvePlayableLivePhotoUri } from '../../utils/photo-asset-utils';
 import { LivePhotoBadge } from '../ui/LivePhotoBadge';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const DOUBLE_TAP_DELAY_MS = 280;
 
 interface Props {
   visible: boolean;
@@ -36,36 +35,28 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
   const [livePlaying, setLivePlaying] = useState(false);
   const [liveFallbackVisible, setLiveFallbackVisible] = useState(false);
   const [playbackUri, setPlaybackUri] = useState<string | null>(photo?.pairedVideoUri ?? null);
-  const videoSource = useMemo(
-    () => (playbackUri ? { uri: playbackUri } : null),
-    [playbackUri],
-  );
-  const player = useVideoPlayer(videoSource, (nextPlayer) => {
+  const player = useVideoPlayer(null, (nextPlayer) => {
     nextPlayer.loop = false;
     nextPlayer.muted = false;
   });
   const scale = useSharedValue(1);
-  const startScale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
+  const lastTapAtRef = useRef(0);
 
   useEffect(() => {
     if (visible) {
       scale.value = 1;
-      startScale.value = 1;
       translateX.value = 0;
       translateY.value = 0;
-      startX.value = 0;
-      startY.value = 0;
       setDisplayScale(1);
       setLivePlaying(false);
       setLiveFallbackVisible(false);
       setPlaybackUri(photo?.pairedVideoUri ?? null);
+      lastTapAtRef.current = 0;
       try { player.pause(); } catch { /* ignore native player cleanup issues */ }
     }
-  }, [photo?.id, player, scale, startScale, startX, startY, translateX, translateY, visible]);
+  }, [photo?.id, player, scale, translateX, translateY, visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -86,19 +77,6 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
     return () => clearTimeout(timer);
   }, [livePlaying, player]);
 
-  useEffect(() => {
-    if (!livePlaying || !playbackUri) return;
-
-    try {
-      player.replay();
-      player.play();
-    } catch {
-      setLivePlaying(false);
-      setLiveFallbackVisible(true);
-      setTimeout(() => setLiveFallbackVisible(false), 1600);
-    }
-  }, [livePlaying, playbackUri, player]);
-
   const imageAspect = photo && photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1;
   let displayWidth = SCREEN_WIDTH;
   let displayHeight = displayWidth / imageAspect;
@@ -107,12 +85,6 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
     displayHeight = SCREEN_HEIGHT;
     displayWidth = displayHeight * imageAspect;
   }
-
-  const clampTranslation = (value: number, imageSize: number, viewportSize: number, currentScale: number) => {
-    'worklet';
-    const max = Math.max(0, (imageSize * currentScale - viewportSize) / 2);
-    return Math.min(max, Math.max(-max, value));
-  };
 
   const handleLivePress = useCallback(async () => {
     if (!photo || photo.mediaType !== 'livePhoto') return;
@@ -125,74 +97,34 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       return;
     }
 
-    setPlaybackUri(uri);
-    setLiveFallbackVisible(false);
-    setLivePlaying(true);
-  }, [photo]);
+    try {
+      setPlaybackUri(uri);
+      setLiveFallbackVisible(false);
+      setLivePlaying(true);
+      await player.replaceAsync({ uri });
+      player.replay();
+      player.play();
+    } catch {
+      setLivePlaying(false);
+      setLiveFallbackVisible(true);
+      setTimeout(() => setLiveFallbackVisible(false), 1600);
+    }
+  }, [photo, player]);
 
-  const pinchGesture = Gesture.Pinch()
-    .onBegin(() => {
-      startScale.value = scale.value;
-    })
-    .onUpdate((event) => {
-      const nextScale = Math.min(5, Math.max(1, startScale.value * event.scale));
-      scale.value = nextScale;
-      translateX.value = clampTranslation(translateX.value, displayWidth, SCREEN_WIDTH, nextScale);
-      translateY.value = clampTranslation(translateY.value, displayHeight, SCREEN_HEIGHT, nextScale);
-    })
-    .onEnd(() => {
-      if (scale.value <= 1.01) {
-        scale.value = withTiming(1, { duration: 160 });
-        translateX.value = withTiming(0, { duration: 160 });
-        translateY.value = withTiming(0, { duration: 160 });
-      } else {
-        translateX.value = withTiming(
-          clampTranslation(translateX.value, displayWidth, SCREEN_WIDTH, scale.value),
-          { duration: 120 },
-        );
-        translateY.value = withTiming(
-          clampTranslation(translateY.value, displayHeight, SCREEN_HEIGHT, scale.value),
-          { duration: 120 },
-        );
-      }
-    });
+  const handleZoomStagePress = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapAtRef.current > DOUBLE_TAP_DELAY_MS) {
+      lastTapAtRef.current = now;
+      return;
+    }
 
-  const panGesture = Gesture.Pan()
-    .minPointers(1)
-    .onBegin(() => {
-      startX.value = translateX.value;
-      startY.value = translateY.value;
-    })
-    .onUpdate((event) => {
-      if (scale.value <= 1.01) return;
-      translateX.value = clampTranslation(startX.value + event.translationX, displayWidth, SCREEN_WIDTH, scale.value);
-      translateY.value = clampTranslation(startY.value + event.translationY, displayHeight, SCREEN_HEIGHT, scale.value);
-    });
-
-  const doubleTapGesture = Gesture.Tap()
-    .numberOfTaps(2)
-    .maxDuration(320)
-    .maxDelay(280)
-    .onEnd(() => {
-      const zoomed = scale.value > 1.05;
-      scale.value = withTiming(zoomed ? 1 : 2, { duration: 180 });
-      translateX.value = withTiming(0, { duration: 180 });
-      translateY.value = withTiming(0, { duration: 180 });
-    });
-
-  const liveTapGesture = Gesture.Tap()
-    .numberOfTaps(1)
-    .maxDuration(240)
-    .onEnd(() => {
-      if (photo?.mediaType === 'livePhoto') {
-        runOnJS(handleLivePress)();
-      }
-    });
-
-  const composedGesture = Gesture.Simultaneous(
-    Gesture.Simultaneous(pinchGesture, panGesture),
-    Gesture.Exclusive(doubleTapGesture, liveTapGesture),
-  );
+    lastTapAtRef.current = 0;
+    const nextScale = displayScale > 1.05 ? 1 : 2;
+    scale.value = withTiming(nextScale, { duration: 180 });
+    translateX.value = withTiming(0, { duration: 180 });
+    translateY.value = withTiming(0, { duration: 180 });
+    setDisplayScale(nextScale);
+  }, [displayScale, scale, translateX, translateY]);
 
   const imageStyle = useAnimatedStyle(() => ({
     transform: [
@@ -201,15 +133,6 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       { scale: scale.value },
     ],
   }));
-
-  useAnimatedReaction(
-    () => Math.round(scale.value * 10) / 10,
-    (nextScale, previousScale) => {
-      if (nextScale !== previousScale) {
-        runOnJS(setDisplayScale)(nextScale);
-      }
-    },
-  );
 
   if (!photo) return null;
 
@@ -221,7 +144,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <GestureHandlerRootView style={styles.modalRoot}>
+      <View style={styles.modalRoot}>
         <View style={styles.backdrop}>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
             <MaterialCommunityIcons name="close" size={24} color="#fff" />
@@ -240,7 +163,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
             </View>
           )}
 
-          <GestureDetector gesture={composedGesture}>
+          <Pressable style={styles.zoomPressable} onPress={handleZoomStagePress}>
             <Animated.View key={photo.id} style={styles.zoomStage}>
               <Animated.Image
                 source={{ uri: photo.uri }}
@@ -256,7 +179,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
                 />
               )}
             </Animated.View>
-          </GestureDetector>
+          </Pressable>
 
           {liveFallbackVisible && (
             <View style={styles.liveFallback}>
@@ -270,7 +193,7 @@ export function PhotoZoomModal({ visible, photo, onClose }: Props) {
             </Text>
           </View>
         </View>
-      </GestureHandlerRootView>
+      </View>
     </Modal>
   );
 }
@@ -329,6 +252,10 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  zoomPressable: {
+    flex: 1,
+    width: '100%',
   },
   liveVideo: {
     position: 'absolute',

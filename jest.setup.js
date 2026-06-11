@@ -20,6 +20,27 @@ jest.mock('expo-video', () => ({
   })),
 }));
 
+jest.mock('expo-file-system', () => ({
+  File: jest.fn().mockImplementation((...parts) => {
+    const uri = parts.map((part) => (typeof part === 'string' ? part : part?.uri ?? '')).join('');
+    return {
+      uri,
+      exists: false,
+      size: 0,
+      bytes: jest.fn(() => Promise.resolve(new Uint8Array())),
+      write: jest.fn(),
+      delete: jest.fn(),
+      copy: jest.fn(),
+    };
+  }),
+  Directory: jest.fn().mockImplementation((base, name) => ({
+    uri: `${base}${name}/`,
+    exists: true,
+    create: jest.fn(),
+  })),
+  Paths: { cache: 'file:///cache/' },
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(() => Promise.resolve(null)),
   setItem: jest.fn(() => Promise.resolve()),

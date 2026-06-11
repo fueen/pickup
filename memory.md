@@ -2,6 +2,47 @@
 
 ---
 
+## 2026-06-11 20:3x | Android Motion Photo 播放补强与 release 收口
+
+### 一句话概述
+在 v2.0.1 基础上重新补强 Android `MVIMG_*.jpg` Motion Photo 候选识别、XMP 内嵌 MP4 提取和全屏预览播放稳定性，并同步 README / PRD，准备推送后本地构建 release APK。
+
+### 当前进展 / 关键结论
+- **Motion Photo 候选识别**：`toPhotoAsset()` 会把文件名或 URI 命中 `MVIMG_*.jpg/jpeg` 的照片标记为 `livePhoto` 候选，但不使用 Android `mediaSubtypes: ['livePhoto']` 过滤，避免返回全量照片导致卡顿。
+- **内嵌视频提取**：`photo-asset-utils` 新增 `getEmbeddedMotionPhotoVideoRange()`，从 JPEG 头部 XMP 中读取 `GCamera:MotionPhoto="1"` 与 `Container:Item Item:Mime="video/mp4"` 的长度声明，并把文件尾部 MP4 写入 `expo-file-system` cache。
+- **播放链路修复**：`PhotoZoomModal` 改为点击 LIVE 图标后 `player.replaceAsync({ uri })` 再播放，避免只更新 source 但播放器没有加载新 URI；全屏预览改用 JS 双击缩放，避免 RNGH 手势识别影响 review 预览点击。
+- **UI 小调整**：首页排序按钮去掉文字，仅保留图标，测试锁定 icon-only 行为。
+
+### 验证记录
+- `npx.cmd tsc --noEmit` 通过。
+- `npx.cmd jest --runInBand` 通过：18 个 test suites / 99 个 tests；仍有既有 `react-test-renderer is deprecated` warning。
+- 推送后执行 `android/gradlew.bat assembleRelease`，并把 APK 复制到 `dist/pickup-v2.0.1-release.apk`。
+
+---
+
+## 2026-06-09 18:00 | 项目进展-pickup
+
+### 一句话概述
+尝试为 Android（小米 17U）添加 Motion Photo 检测与播放，经历多轮调试后因缺少真机文件样本无法适配，最终回滚所有改动到 v2.0.1。
+
+### 技术探索过程
+- **expo-media-library 限制**：`mediaSubtypes` 和 `pairedVideoAsset` 都是 `@platform ios`，Android 上不返回任何 Motion Photo 相关信息
+- **`mediaSubtypes: ['livePhoto']` 在 Android 上的危险行为**：该参数被 Android 静默忽略，查询返回全部照片（而非仅 Live Photo），若对其结果逐张调 `getAssetInfoAsync` 会卡死 app。已确认必须保留 `Platform.OS === 'ios'` 守卫
+- **`mediaType: ['pairedVideo']` 无效**：返回的 paired video asset ID 与 parent photo ID 不同，无法通过 ID 匹配关联到原照片
+- **文件内容检测方案**：通过读取 JPEG 文件头 64KB 搜索 XMP 标记（`GCamera:MotionPhoto`、`MotionPhoto`、`Xiaomi` 等），并读取文件尾检查 JPEG EOI 后是否有 MP4 数据。方案已实现但小米 17U 上未检测到
+- **Android 播放方案**：从 Motion Photo JPEG 中提取 EOI 后的 MP4 数据写入缓存，再交给 expo-video 播放。已实现但未经真机验证
+
+### 关键结论
+- 要适配小米动态照片，需要拿到真机上的一张动态照片文件，分析其内部 XMP 元数据标记名称和视频嵌入结构
+- 所有今天改动已通过 `git checkout` 回滚，代码回到 v2.0.1 原始状态
+- 新增的 `src/utils/motion-photo-detector.ts` 已删除
+
+### 下一步
+- 从小米 17U 导出动态照片文件 → 用十六进制查看器分析 XMP 标记和 MP4 嵌入位置 → 根据实际结构重写检测逻辑
+- 可用诊断脚本自动分析，用户只需提供文件路径
+
+---
+
 ## 2026-06-07 15:1x | v2.0.1 Live Photo 与最新排序修复、release 构建与推送
 
 ### 一句话概述
